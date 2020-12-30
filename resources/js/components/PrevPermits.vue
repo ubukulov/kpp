@@ -32,6 +32,9 @@
                     <span v-else-if="item.operation_type == 2">Разгрузка</span>
                     <span v-else>Другие действие</span>
                 </template>
+                <template v-slot:item.created_at="{ item }">
+                    {{convertDateToOurFormat(item.created_at)}}
+                </template>
                 <template v-slot:item.print="{ item }">
                     <v-icon
                         middle
@@ -47,6 +50,7 @@
 
 <script>
     import axios from "axios";
+    import dateformat from "dateformat";
 
     export default {
         data(){
@@ -86,6 +90,8 @@
                     { text: 'Вид операции', value: 'operation_type' },
                     { text: 'Телефон', value: 'phone' },
                     { text: 'Гос.номер', value: 'gov_number' },
+                    { text: 'Марка', value: 'mark_car' },
+                    { text: 'Дата', value: 'created_at' },
                     { text: 'Печать', value: 'print' },
                 ]
             },
@@ -117,6 +123,9 @@
                     typeof value === 'string' &&
                     value.toString().toLocaleUpperCase().indexOf(search) !== -1
             },
+            convertDateToOurFormat(dt){
+                return dateformat(dt, 'dd.mm.yyyy hh:MM');
+            }
         },
         created(){
             this.getPermits();

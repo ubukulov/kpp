@@ -63,9 +63,9 @@
                 </div>
             </form>
 
-            <p class="mb-1">
+            {{--<p class="mb-1">
                 <a href="{{ route('cab.forget-password') }}">Я забыль пароль</a>
-            </p>
+            </p>--}}
         </div>
         <!-- /.login-card-body -->
     </div>

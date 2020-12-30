@@ -37,7 +37,7 @@
             >
                 <v-card flat>
                     <div class="container-fluid">
-                        <kpp-form :datetime="datetime" :companies="companies"></kpp-form>
+                        <kpp-form :datetime="datetime" :companies="companies" :capacity="capacity" :bodytypes="bodytypes"></kpp-form>
                     </div>
 
                 </v-card>
@@ -86,7 +86,9 @@
         },
         props: [
             'datetime',
-            'companies'
+            'companies',
+            'capacity',
+            'bodytypes'
         ],
         created(){
             console.log(this.tab)

@@ -1,20 +1,14 @@
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="index3.html" class="brand-link">
-        <img src="/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-             style="opacity: .8">
-        <span class="brand-text font-weight-light">AdminLTE 3</span>
-    </a>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div class="image">
+            {{--<div class="image">
                 <img src="/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
-            </div>
+            </div>--}}
             <div class="info">
+                <a href="#" class="d-block">{{ Auth::guard('employee')->user()->company->short_ru_name }}</a>
                 <a href="#" class="d-block">{{ Auth::guard('employee')->user()->full_name }}</a>
             </div>
         </div>
@@ -25,38 +19,39 @@
                 <!-- Add icons to the links using the .nav-icon class
                      with font-awesome or any other icon font library -->
                 <li class="nav-item">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link @if(request()->is('admin/dashboard')) active @endif">
+                    <a href="{{ route('cabinet') }}" class="nav-link @if(request()->is('cabinet')) active @endif">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>
                             Панель клиента
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('employees.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                {{--<li class="nav-item">
+                    <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
+                        <i class="nav-icon fas fa-users"></i>
                         <p>
                             Список сотрудников
                         </p>
                     </a>
-                </li>
+                </li>--}}
                 <li class="nav-item">
-                    <a href="{{ route('cabinet.permits.list') }}" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                    <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
+                        <i class="nav-icon fas fa-align-justify"></i>
                         <p>
-                            Заказать пропуск
+                            Список пропусков
                         </p>
                     </a>
                 </li>
+
                 <li class="nav-item">
-                    <a href="{{ route('employees.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                    <a href="{{ route('cabinet.service.index') }}" class="nav-link @if(request()->is('cabinet/services*')) active @endif">
+                        <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Услуги
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
+                {{--<li class="nav-item">
                     <a href="{{ route('employees.index') }}" class="nav-link">
                         <i class="nav-icon fas fa-car-side"></i>
                         <p>
@@ -71,10 +66,10 @@
                             Отследить груз
                         </p>
                     </a>
-                </li>
+                </li>--}}
                 <li class="nav-item">
-                    <a href="{{ route('employees.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                    <a href="{{ route('cabinet.logout') }}" class="nav-link">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>
                             Выйти из кабинета
                         </p>

@@ -15,7 +15,7 @@
                         </div>
 
                         <div class="col-6 text-right">
-                            <a href="{{ route('employees.create') }}" class="btn btn-dark">Добавить</a>
+                            <a href="{{ route('cabinet.employees.create') }}" class="btn btn-dark">Добавить</a>
                         </div>
                     </div>
 
@@ -46,7 +46,7 @@
                             </td>
                             <td>{{ $employee->email }}</td>
                             <td>
-                                    <a href="{{ route('employees.edit', ['employee' => $employee->id]) }}">Ред.</a>
+                                    <a href="{{ route('cabinet.employees.edit', ['employee' => $employee->id]) }}">Ред.</a>
                             </td>
                         </tr>
                         @endforeach

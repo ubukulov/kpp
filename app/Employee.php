@@ -15,7 +15,7 @@ class Employee extends Authenticatable
 
     protected $fillable = [
         'company_id', 'position_id', 'full_name', 'phone', 'email', 'password',
-        'created_at', 'updated_at'
+        'remember_token', 'created_at', 'updated_at'
     ];
 
     public function company()

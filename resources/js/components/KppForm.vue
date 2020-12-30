@@ -9,8 +9,8 @@
                     <div class="row">
                         <div class="col-md-8">
                             <div class="form-group">
-                                <label>Гос.номер(без пробелов, на анг)</label>
-                                <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="1" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                                <label>№тех.паспорта</label>
+                                <input onkeyup="return no_cirilic(this);" placeholder="AB020111" style="text-transform: uppercase;" v-model="tex_number" tabindex="1" type="text" name="tex_number" required class="form-control">
                             </div>
                         </div>
                         <div class="col-md-4" style="padding-top: 52px;">
@@ -18,8 +18,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>№тех.паспорта</label>
-                        <input style="text-transform: uppercase;" v-model="tex_number" tabindex="2" type="text" name="tex_number" required class="form-control">
+                        <label>Гос.номер(без пробелов, на анг)</label>
+                        <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
                     </div>
                     <div class="form-group">
                         <label>Марка авто</label>
@@ -33,6 +33,19 @@
                     <div class="form-group">
                         <label>Дата заезда</label>
                         <input tabindex="5" v-model="date_in" type="text" id="date_in" required name="date_in" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Грузоподъемность ТС</label>
+                        <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
+                        <v-autocomplete
+                            :items="capacity"
+                            class="form-control"
+                            :hint="`${capacity.id}, ${capacity.title}`"
+                            item-value="id"
+                            v-model="capacity_id"
+                            item-text="title"
+                        ></v-autocomplete>
                     </div>
                 </div>
 
@@ -61,10 +74,9 @@
 
                     <div class="form-group">
                         <label>Компания</label>
-<!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
                         <v-autocomplete
                             :items="companies"
-                            :class="form-control"
+                            class="form-control"
                             :hint="`${companies.id}, ${companies.short_en_name}`"
                             :search-input.sync="searchInput"
                             item-value="id"
@@ -81,6 +93,18 @@
                             <option value="2">Разгрузка</option>
                             <option value="3">Другие действие</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Тип кузова</label>
+                        <v-autocomplete
+                            :items="bodytypes"
+                            class="form-control"
+                            :hint="`${bodytypes.id}, ${bodytypes.title}`"
+                            item-value="id"
+                            v-model="bt_id"
+                            item-text="title"
+                        ></v-autocomplete>
                     </div>
                 </div>
 
@@ -136,7 +160,8 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">ФИО</th>
-                    <th scope="col">#вод.удос.</th>
+                    <th scope="col">#Тех.паспорт</th>
+                    <th scope="col">#Вод.удос.</th>
                     <th scope="col">Компания</th>
                     <th scope="col">Вид операции</th>
                     <th scope="col">Телефон</th>
@@ -148,6 +173,7 @@
                 <tr v-for="(permit, i) in permits" :key="i">
                     <th scope="row">{{ permit.id }}</th>
                     <td>{{ permit.last_name }}</td>
+                    <td>{{ permit.tex_number }}</td>
                     <td>{{ permit.ud_number }}</td>
                     <td>{{ permit.company }}</td>
                     <td v-if="permit.operation_type == 1">
@@ -195,21 +221,27 @@
                 permits: [],
                 searchInput: '',
                 company_id: 0,
-                computer_name: 1
+                computer_name: 1,
+                capacity_id: 0,
+                bt_id: 0
             }
         },
         props: [
             'datetime',
-            'companies'
+            'companies',
+            'capacity',
+            'bodytypes'
         ],
         methods: {
             checkCar(){
-                axios.get('/get-car-info/'+this.gov_number)
+                axios.get('/get-car-info/'+this.tex_number)
                     .then(res => {
-                        console.log(res)
-                        this.tex_number = res.data.tex_number
-                        this.mark_car = res.data.mark_car
-                        this.pr_number = res.data.pr_number
+                        console.log(res);
+                        this.gov_number = res.data.gov_number;
+                        this.mark_car = res.data.mark_car;
+                        this.pr_number = res.data.pr_number;
+                        this.capacity_id = res.data.lc_id;
+                        this.bt_id = res.data.bt_id;
                     })
                     .catch(err => {
                         console.log(err)
@@ -221,34 +253,6 @@
                         console.log(res.data.fio)
                         this.last_name = res.data.fio
                         this.phone = res.data.phone
-                    })
-                    .catch(err => {
-                        console.log(err)
-                    })
-            },
-            searchPermit(){
-                this.html = ''
-                let formData = new FormData();
-                formData.append('search', this.search)
-                axios.post('/search/permit', formData)
-                    .then(res => {
-                        console.log(res)
-                        // this.html = '<tr style="background: cadetblue;">'
-                        this.html = this.html + '<th scope="row">'+res.data.id+'</th>'
-                        this.html = this.html + '<td>'+res.data.last_name+'</td>'
-                        this.html = this.html + '<td>'+res.data.ud_number+'</td>'
-                        this.html = this.html + '<td>'+res.data.company+'</td>'
-                        if(res.data.operation_type == 1) {
-                            this.html = this.html + '<td>Погрузка</td>'
-                        } else if(res.data.operation_type == 2) {
-                            this.html = this.html + '<td>Разгрузка</td>'
-                        } else {
-                            this.html = this.html + '<td>Другие действие</td>'
-                        }
-                        this.html = this.html + '<td>'+res.data.phone+'</td>'
-                        this.html = this.html + '<td>'+res.data.gov_number+'</td>'
-                        this.html = this.html + '<td><v-icon middle v-on:click="print_r('+res.data.id+')">mdi-printer</v-icon></td>'
-                        // $("tbody").prepend(this.html)
                     })
                     .catch(err => {
                         console.log(err)
@@ -280,6 +284,12 @@
                 if (this.company_id == 0) {
                     this.errors.push('Укажите компанию');
                 }
+                if (this.capacity_id == 0) {
+                    this.errors.push('Укажите грузоподъемность ТС');
+                }
+                if (this.bt_id == 0) {
+                    this.errors.push('Укажите тип кузова');
+                }
 
                 if (this.errors.length == 0) {
                     const config = {
@@ -296,6 +306,8 @@
                     formData.append('last_name', this.last_name);
                     formData.append('phone', this.phone);
                     formData.append('company_id', this.company_id);
+                    formData.append('lc_id', this.capacity_id);
+                    formData.append('bt_id', this.bt_id);
                     formData.append('operation_type', this.operation_type);
                     formData.append('computer_name', this.computer_name);
                     formData.append('path_docs_fac', $('#path_docs_fac').val());
@@ -311,6 +323,8 @@
                         this.last_name = '';
                         this.phone = '';
                         this.company_id = 0;
+                        this.capacity_id = 0;
+                        this.bt_id = 0;
                         this.operation_type = 1;
                         $('#path_docs_fac').val('');
                         $('#path_docs_back').val('');

@@ -1,5 +1,5 @@
-@extends('admin.admin')
-@push('admin_styles')
+@extends('cabinet.cabinet')
+@push('cabinet_styles')
     <!-- Select2 -->
     <link rel="stylesheet" href="/plugins/select2/css/select2.min.css">
     <link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
@@ -12,18 +12,10 @@
         </div>
         <!-- /.card-header -->
         <!-- form start -->
-        <form action="{{ route('employee.update', ['employee' => $employee->id]) }}" method="POST" role="form">
+        <form action="{{ route('cabinet.employees.update', ['employee' => $employee->id]) }}" method="POST" role="form">
             @csrf
+            @method('PUT')
             <div class="card-body">
-
-                <div class="form-group">
-                    <label>Укажите компанию</label>
-                    <select name="company_id" class="form-control select2bs4" style="width: 100%;">
-                        @foreach($companies as $company)
-                            <option @if($company->id == $employee->company_id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
                 <div class="form-group">
                     <label>Укажите должность</label>
@@ -58,7 +50,7 @@
     </div>
     <!-- /.card -->
 @stop
-@push('admin_scripts')
+@push('cabinet_scripts')
     <!-- Select2 -->
     <script src="/plugins/select2/js/select2.full.min.js"></script>
     <script>

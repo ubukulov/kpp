@@ -12,13 +12,13 @@
                                 <hr>
 
                                 <div class="form-group">
-                                    <label>Гос.номер(без пробелов, на анг)</label>
-                                    <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="1" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                                    <label>№Тех.паспорта</label>
+                                    <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="tex_number" tabindex="1" type="text" placeholder="AP00024215" class="form-control">
                                 </div>
 
                                 <div class="form-group">
-                                    <label>№вод.удостоверения</label>
-                                    <input placeholder="BN203526" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="ud_number" tabindex="6" type="text" name="ud_number" required class="form-control">
+                                    <label>№Вод.удостоверения</label>
+                                    <input placeholder="BN203526" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="ud_number" tabindex="6" type="text" class="form-control">
                                 </div>
 
                                 <div class="form-group">
@@ -45,6 +45,7 @@
                                     <div class="form-group">
                                         <label>Грузоподъемность ТС</label>
                                         <v-select
+                                            class="form-control"
                                             :hint="`${categories_tc.id}, ${categories_tc.title}`"
                                             :items="categories_tc"
                                             v-model="cat_tc_id"
@@ -56,6 +57,7 @@
                                     <div class="form-group">
                                         <label>Тип кузова</label>
                                         <v-select
+                                            class="form-control"
                                             :hint="`${body_types.id}, ${body_types.title}`"
                                             :items="body_types"
                                             v-model="body_type_id"
@@ -67,6 +69,15 @@
                                     <div class="form-check">
                                         <input type="checkbox" v-model="wantToOrder" class="form-check-input" id="exampleCheck1">
                                         <label class="form-check-label" for="exampleCheck1">Я хочу получать выгодные заказы!</label>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                                            <b>Пожалуйста исправьте указанные ошибки:</b>
+                                        <ul style="color: red; padding-left: 15px; list-style: circle; text-align: left;">
+                                            <li v-for="error in errors">{{error}}</li>
+                                        </ul>
+                                        </p>
                                     </div>
 
                                     <div class="form-group">
@@ -114,9 +125,9 @@
     export default {
         data () {
             return {
-                gov_number: '',
+                tex_number: '',
                 company: '',
-                operation_type: '',
+                operation_type: 1,
                 ud_number: '',
                 is_driver: false,
                 wantToOrder: false,
@@ -125,6 +136,7 @@
                 cat_tc_id: 0,
                 body_type_id: 0,
                 png: '',
+                errors: [],
             }
         },
         props: [
@@ -134,52 +146,73 @@
         methods: {
             isDriver(){
                 let formData = new FormData();
-                formData.append('gov_number', this.gov_number)
-                formData.append('ud_number', this.ud_number)
+                formData.append('tex_number', this.tex_number);
+                formData.append('ud_number', this.ud_number);
                 axios.post('/check-driver', formData)
                     .then(res => {
-                        console.log(res)
-                        this.is_driver = true
-                        this.dialog_success = false
+                        console.log(res, res.data.cat_tc_id);
+                        this.is_driver = true;
+                        this.dialog_success = false;
+                        this.cat_tc_id = res.data.cat_tc_id;
+                        this.body_type_id = res.data.body_type_id;
                     })
                     .catch(err => {
-                        console.log(err)
-                        this.png = '<img src="https://www.nicepng.com/png/full/67-677160_wrong-clip-art-clip-art.png" style="max-width: 100%; width: 100px;" />'
-                        this.success_html = '<p style="font-size: 30px; line-height: 30px;">Проверка не пройдена, Вам необходимо пройти первичную регистрацию на КПП.</p>'
-                        this.is_driver = false
-                        this.dialog_success = true
+                        console.log(err);
+                        this.png = '<img src="https://www.nicepng.com/png/full/67-677160_wrong-clip-art-clip-art.png" style="max-width: 100%; width: 100px;" />';
+                        this.success_html = '<p style="font-size: 30px; line-height: 30px;">Проверка не пройдена, Вам необходимо пройти первичную регистрацию на КПП.</p>';
+                        this.is_driver = false;
+                        this.dialog_success = true;
                     })
             },
             orderPermitByDriver(){
                 let formData = new FormData();
-                formData.append('gov_number', this.gov_number)
-                formData.append('ud_number', this.ud_number)
-                formData.append('company', this.company)
-                formData.append('operation_type', this.operation_type)
-                formData.append('cat_tc_id', this.cat_tc_id)
-                formData.append('body_type_id', this.body_type_id)
-                formData.append('wantToOrder', this.wantToOrder)
-                axios.post('/order-permit-by-driver', formData)
-                    .then(res => {
-                        console.log(res)
-                        this.png = '<img src="https://www.nicepng.com/png/detail/362-3624869_icon-success-circle-green-tick-png.png" style="max-width: 100%; width: 100px;" />'
-                        this.success_html = '<p style="font-size: 30px; line-height: 30px;">Пропуск №'+res.data.id+' успешно оформлен!</p>'
-                        if(this.wantToOrder) {
-                            this.success_html = this.success_html + "<p style='color: #000;font-size:18px;'>Для получения информации о заказах, Вы можете написать на WhatsApp <span style='color: green !important;'>(<a style='color: green !important;' href='https://api.whatsapp.com/send?phone=77777022000' target='_blank'>8 777 702 2000</a>)</span>, либо дождаться звонка от нашего менеджера.</p>"
-                        }
-                        this.dialog_success = true;
-                        this.gov_number = '';
-                        this.ud_number = '';
-                        this.company = '';
-                        this.operation_type = '';
-                        this.cat_tc_id = 0;
-                        this.body_type_id = 0;
-                        this.is_driver = false;
-                    })
-                    .catch(err => {
-                        console.log(err)
-                    })
-            },
+                this.errors = [];
+                if (!this.tex_number) {
+                    this.errors.push('Укажите номер тех.паспорта');
+                }
+                if (!this.ud_number) {
+                    this.errors.push('Укажите номер водительского удостоверение');
+                }
+                if (!this.company) {
+                    this.errors.push('Укажите компанию');
+                }
+                if (this.cat_tc_id == 0) {
+                    this.errors.push('Укажите грузоподъемность ТС');
+                }
+                if (this.body_type_id == 0) {
+                    this.errors.push('Укажите тип кузова');
+                }
+
+                if (this.errors.length == 0) {
+                    formData.append('tex_number', this.tex_number);
+                    formData.append('ud_number', this.ud_number);
+                    formData.append('company', this.company);
+                    formData.append('operation_type', this.operation_type);
+                    formData.append('cat_tc_id', this.cat_tc_id);
+                    formData.append('body_type_id', this.body_type_id);
+                    formData.append('wantToOrder', this.wantToOrder);
+                    axios.post('/order-permit-by-driver', formData)
+                        .then(res => {
+                            console.log(res);
+                            this.png = '<img src="https://www.nicepng.com/png/detail/362-3624869_icon-success-circle-green-tick-png.png" style="max-width: 100%; width: 100px;" />';
+                            this.success_html = '<p style="font-size: 30px; line-height: 30px;">Пропуск №'+res.data.id+' успешно оформлен!</p>';
+                            if(this.wantToOrder) {
+                                this.success_html = this.success_html + "<p style='color: #000;font-size:18px;'>Для получения информации о заказах, Вы можете написать на WhatsApp <span style='color: green !important;'>(<a style='color: green !important;' href='https://api.whatsapp.com/send?phone=77777022000' target='_blank'>8 777 702 2000</a>)</span>, либо дождаться звонка от нашего менеджера.</p>";
+                            }
+                            this.dialog_success = true;
+                            this.tex_number = '';
+                            this.ud_number = '';
+                            this.company = '';
+                            this.operation_type = 1;
+                            this.cat_tc_id = 0;
+                            this.body_type_id = 0;
+                            this.is_driver = false;
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                }
+            }
         }
     }
 </script>

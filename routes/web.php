@@ -33,6 +33,4 @@ Route::post('/login', 'AuthController@authenticate')->name('authenticate');
 Route::get('/driver', 'DriverController@index');
 Route::post('/check-driver', 'DriverController@check_driver');
 Route::post('/order-permit-by-driver', 'DriverController@orderPermitByDriver');
-
-
-
+Route::get('/send-file-to-other-server', 'IndexController@sendFileToOtherServerForm');

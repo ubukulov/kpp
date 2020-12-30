@@ -11,11 +11,11 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-6">
-                            <h3 class="card-title">Список </h3>
+                            <h3 class="card-title">Список пропусков</h3>
                         </div>
 
                         <div class="col-6 text-right">
-                            <a href="{{ route('employees.create') }}" class="btn btn-dark">Добавить</a>
+                            <a href="{{ route('cabinet.permits.create') }}" class="btn btn-dark">Добавить</a>
                         </div>
                     </div>
 
@@ -28,26 +28,32 @@
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Компания</th>
-                            <th>Должность</th>
-                            <th>Email</th>
+                            <th>Гос.номер</th>
+                            <th>Тех.паспорт</th>
+                            <th>Операция</th>
+                            <th>Дата заезда</th>
                             <th>Действие</th>
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($employees as $employee)
+                        @foreach($permits as $permit)
                             <tr>
-                                <td>{{ $employee->id }}</td>
-                                <td>{{ $employee->full_name }}</td>
+                                <td>{{$permit->id}}</td>
+                                <td>{{$permit->last_name}}</td>
+                                <td>{{$permit->company}}</td>
+                                <td>{{$permit->gov_number}}</td>
+                                <td>{{$permit->tex_number}}</td>
                                 <td>
-                                    {{ $employee->company->short_ru_name }}
+                                    @if($permit->operation_type == 1)
+                                        Погрузка
+                                    @elseif($permit->operation_type == 2)
+                                        Разгрузка
+                                    @else
+                                        Другие действие
+                                    @endif
                                 </td>
-                                <td>
-                                    {{ $employee->position->title }}
-                                </td>
-                                <td>{{ $employee->email }}</td>
-                                <td>
-                                    <a href="{{ route('employees.edit', ['employee' => $employee->id]) }}">Ред.</a>
-                                </td>
+                                <td>{{ $permit->date_in }}</td>
+                                <td></td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -56,8 +62,10 @@
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Компания</th>
-                            <th>Должность</th>
-                            <th>Email</th>
+                            <th>Гос.номер</th>
+                            <th>Тех.паспорт</th>
+                            <th>Операция</th>
+                            <th>Дата заезда</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>

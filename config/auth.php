@@ -50,6 +50,11 @@ return [
         'employee' => [
             'driver' => 'session',
             'provider' => 'employees',
+        ],
+
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
         ]
     ],
 
@@ -79,6 +84,11 @@ return [
         'employees' => [
             'driver' => 'eloquent',
             'model' => App\Employee::class,
+        ],
+
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Admin::class,
         ],
 
         // 'users' => [
@@ -112,6 +122,12 @@ return [
 
         'employees' => [
             'provider' => 'employees',
+            'table' => 'password_resets',
+            'expire' => 60,
+        ],
+
+        'admins' => [
+            'provider' => 'admins',
             'table' => 'password_resets',
             'expire' => 60,
         ],

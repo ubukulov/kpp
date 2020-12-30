@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Cabinet;
 
-use App\Employee;
+use App\BodyType;
+use App\CategoryTC;
+use App\Driver;
 use App\Http\Controllers\Controller;
-use App\Position;
+use App\Permit;
 use Illuminate\Http\Request;
 use Auth;
 
-class EmployeeController extends Controller
+class PermitController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,8 +20,8 @@ class EmployeeController extends Controller
     public function index()
     {
         $company = Auth::guard('employee')->user()->company;
-        $employees = Employee::where(['company_id' => $company->id])->get();
-        return view('cabinet.employee.index', compact('employees'));
+        $permits = Permit::where(['company_id' => $company->id])->orderBy('id', 'DESC')->get();
+        return view('cabinet.permit.index', compact('permits'));
     }
 
     /**
@@ -29,8 +31,9 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $positions = Position::all();
-        return view('cabinet.employee.create', compact('positions'));
+        $category_tc = CategoryTC::all();
+        $body_type = BodyType::all();
+        return view('cabinet.permit.create', compact('category_tc', 'body_type'));
     }
 
     /**
@@ -42,10 +45,23 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        $data['company_id'] = Auth::guard('employee')->user()->company->id;
-        $data['password'] = bcrypt($data['password']);
-        Employee::create($data);
-        return redirect()->route('cabinet.employees.index');
+        $company = Auth::guard('employee')->user()->company;
+        $data['company_id'] = $company->id;
+        $data['company'] = $company->short_ru_name;
+        $data['is_driver'] = 2;
+        $data['gov_number'] = mb_strtoupper(trim($data['gov_number']));
+        $data['tex_number'] = mb_strtoupper(trim($data['tex_number']));
+        $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
+        $data['last_name'] = mb_strtoupper($data['last_name']);
+        $data['status'] = 'awaiting_print';
+        Permit::create($data);
+        // Если новый водитель, то добавляем в справочник
+        if (!Driver::exists($data['ud_number'])) {
+            Driver::create([
+                'fio' => $data['last_name'], 'phone' => $data['phone'], 'ud_number' => $data['ud_number']
+            ]);
+        }
+        return redirect()->route('cabinet.permits.index');
     }
 
     /**
@@ -67,9 +83,7 @@ class EmployeeController extends Controller
      */
     public function edit($id)
     {
-        $employee = Employee::findOrFail($id);
-        $positions = Position::all();
-        return view('cabinet.employee.edit', compact('employee', 'positions'));
+        //
     }
 
     /**
@@ -81,10 +95,7 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
-        $data = $request->all();
-        $employee->update($data);
-        return redirect()->route('cabinet.employees.index');
+        //
     }
 
     /**
@@ -97,6 +108,4 @@ class EmployeeController extends Controller
     {
         //
     }
-
-
 }

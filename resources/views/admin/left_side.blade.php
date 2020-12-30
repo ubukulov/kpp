@@ -15,7 +15,7 @@
                 <img src="/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block">Alexander Pierce</a>
+                <a href="#" class="d-block">{{ Auth::guard('admin')->user()->full_name }}</a>
             </div>
         </div>
 
@@ -32,7 +32,7 @@
                         </p>
                     </a>
                 </li>
-                <li class="nav-item has-treeview menu-open">
+                <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-copy"></i>
                         <p>
@@ -43,13 +43,13 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="{{ route('position.index') }}" class="nav-link @if(request()->is('admin/position')) active @endif">
+                            <a href="{{ route('position.index') }}" class="nav-link @if(request()->is('admin/position*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список должностей</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('company.index') }}" class="nav-link">
+                            <a href="{{ route('company.index') }}" class="nav-link @if(request()->is('admin/company*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список компании</p>
                             </a>
@@ -57,18 +57,26 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('employee.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                    <a href="{{ route('employee.index') }}" class="nav-link @if(request()->is('admin/employee*')) active @endif">
+                        <i class="nav-icon fas fa-users"></i>
                         <p>
                             Список пользователей
                         </p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.drivers.index') }}" class="nav-link">
+                    <a href="{{ route('admin.drivers.index') }}" class="nav-link @if(request()->is('admin/drivers*')) active @endif">
                         <i class="nav-icon fas fa-chart-pie"></i>
                         <p>
                             Список водителей
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.logout') }}" class="nav-link">
+                        <i class="nav-icon fas fa-sign-out-alt"></i>
+                        <p>
+                            Выйти из админки
                         </p>
                     </a>
                 </li>

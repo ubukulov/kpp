@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\BodyType;
+use App\BT;
+use App\Car;
 use App\Classes\PrintIPP;
 use App\Company;
 use App\Driver;
+use App\LiftCapacity;
 use App\Permit;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use File;
 
 class IndexController extends BaseController
 {
@@ -21,17 +26,19 @@ class IndexController extends BaseController
     public function securityKpp()
     {
         $permits = Permit::orderBy('id', 'DESC')->take(20)->get();
-        return view('kpp', compact('permits'));
+        $lift_capacity = LiftCapacity::all();
+        $body_type = BT::all();
+        return view('kpp', compact('permits', 'lift_capacity', 'body_type'));
     }
 
     public function orderPermitByKpp(Request $request)
     {
         $company = Company::findOrFail($request->input('company_id'));
         $data = $request->except(['path_docs_fac', 'path_docs_back']);
-        $data['company'] = $company->short_ru_name;
+        $data['company'] = $company->short_en_name;
         $com_id = $request->input('computer_name');
         $data['gov_number'] = mb_strtoupper(trim($data['gov_number']));
-        $data['tex_number'] = mb_strtoupper(trim($data['tex_number']));
+        $data['tex_number'] = strtoupper(trim($data['tex_number']));
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
         $permit = Permit::create($data);
@@ -43,31 +50,54 @@ class IndexController extends BaseController
             ]);
         }
 
+        // Если новая машина, то добавляем в справочник
+        if (!Car::exists($data['tex_number'])) {
+            Car::create([
+                'tex_number' => $data['tex_number'], 'gov_number' => $data['gov_number'], 'mark_car' => $data['mark_car'],
+                'pr_number' => mb_strtoupper($data['pr_number']), 'lc_id' => $data['lc_id'], 'bt_id' => $data['bt_id']
+            ]);
+        } else {
+            $car = Car::where(['tex_number' => $data['tex_number']])->first();
+            $car->lc_id = $data['lc_id'];
+            $car->bt_id = $data['bt_id'];
+            $car->save();
+        }
+
+        // Подготовка папок для сохранение картинки
+        $dir = '/uploads/'. substr(md5(microtime()), mt_rand(0, 30), 2) . '/' . substr(md5(microtime()), mt_rand(0, 30), 2);
+        if($request->path_docs_fac && !empty($request->path_docs_fac) || $request->path_docs_back && !empty($request->path_docs_back)) {
+            if(!File::isDirectory(public_path(). $dir)){
+                File::makeDirectory(public_path(). $dir, 0777, true);
+            }
+        }
+
+        // Проверка на наличие картинки (лицевая)
         if ($request->path_docs_fac && !empty($request->path_docs_fac)){
             $image = $request->input('path_docs_fac'); // image base64 encoded
             preg_match("/data:image\/(.*?);/",$image,$image_extension); // extract the image extension
             $image = preg_replace('/data:image\/(.*?);base64,/','',$image); // remove the type part
             $image = str_replace(' ', '+', $image);
             $imageName = $permit->id.'_f_'.time() . '.' . $image_extension[1]; //generating unique file name;
-            \File::put(public_path(). '/uploads/' .$imageName,base64_decode($image));
-            $permit->path_docs_fac = $imageName;
+            File::put(public_path(). $dir.'/'.$imageName,base64_decode($image));
+            $permit->path_docs_fac = $dir.'/'.$imageName;
             $permit->save();
         }
 
+        // Проверка на наличие картинки (обратная)
         if ($request->path_docs_back && !empty($request->path_docs_back)){
             $image2 = $request->input('path_docs_back'); // image base64 encoded
             preg_match("/data:image\/(.*?);/",$image2,$image_extension); // extract the image extension
             $image2 = preg_replace('/data:image\/(.*?);base64,/','',$image2); // remove the type part
             $image2 = str_replace(' ', '+', $image2);
             $imageName2 = $permit->id.'_b_'.time() . '.' . $image_extension[1]; //generating unique file name;
-            \File::put(public_path(). '/uploads/' .$imageName2,base64_decode($image2));
-            $permit->path_docs_back = $imageName2;
+            File::put(public_path(). $dir.'/'.$imageName2,base64_decode($image2));
+            $permit->path_docs_back = $dir.'/'.$imageName2;
             $permit->save();
         }
 
+        // Отправка на печать
         $this->start_print($permit->id, $com_id);
 
-//        return redirect()->route('security.kpp');
         return response(['data' => 'Пропуск успешно создан']);
     }
 
@@ -79,7 +109,7 @@ class IndexController extends BaseController
 
     public function getPrevPermitsForToday()
     {
-        $permits = Permit::where(['is_driver' => 1, 'status' => 'awaiting_print'])->whereDate('created_at', Carbon::today())->orderBy('id', 'DESC')->get();
+        $permits = Permit::where(['status' => 'awaiting_print'])->where('is_driver', '>', 0)->whereDate('created_at', Carbon::today())->orderBy('id', 'DESC')->get();
         return json_encode($permits);
     }
 
@@ -89,10 +119,10 @@ class IndexController extends BaseController
         return json_encode($permit);
     }
 
-    public function getCarInfo($gov_number)
+    public function getCarInfo($tex_number)
     {
-        $gov_number = strtolower(trim($gov_number));
-        $car = Permit::where(['gov_number' => $gov_number])->latest('id')->first();
+        $tex_number = strtolower(trim($tex_number));
+        $car = Car::where(['tex_number' => $tex_number])->first();
         return json_encode($car);
     }
 
@@ -126,7 +156,7 @@ class IndexController extends BaseController
         $permit = Permit::find($permit_id);
 
         if ($request->has('set_date_out_manual') && !empty($request->input('date_out'))) {
-            $date_out = $request->input('date_out');
+            $date_out = date('d.m.Y H:i', strtotime($request->input('date_out')));
         } else {
             $date_out = date('d.m.Y H:i');
         }
@@ -150,7 +180,7 @@ class IndexController extends BaseController
 
             case 2:
                 $computer_name = "HKS-097";
-                $printer_name = "\Zebra ZM400 (203 dpi) - ZPL1";
+                $printer_name = "\Zebra ZM400 (203 dpi) - ZPL";
                 break;
 
             default:
@@ -160,7 +190,6 @@ class IndexController extends BaseController
         }
         $permit = Permit::findOrFail($permit_id);
         $printer = "\\\\".$computer_name.$printer_name;
-        //$printer = "\\\\HTLs-2394\zebra";
         // Open connection to the thermal printer
         $fp = fopen($printer, "w");
         if (!$fp){
@@ -198,9 +227,9 @@ class IndexController extends BaseController
 ^PW812
 ^LL0812
 ^LS0
-^FT101,62^AZN,42,42,TT0003M_^FH\^CI17^F8^FDПРОПУСК №$id^FS^CI0
+^FT66,62^AZN,42,42,TT0003M_^FH\^CI17^F8^FDПРОПУСК №$id^FS^CI0
 ^BY3,3,58^FT499,80^BCN,,N,N
-^FD>;$id^FS
+^FD$id^FS
 ^FT268,115^A0N,27,27,TT0003M_^FH\^CI17^F8^FD$company / $type^FS^CI0
 ^FT66,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВъезд: $date_in^FS^CI0
 ^FT440,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВыезд: ______________^FS^CI0
@@ -223,6 +252,7 @@ HERE;
 
         if ($permit->status == 'awaiting_print') {
             $permit->status = 'printed';
+            $permit->date_in = date('d.m.Y H:i');
             $permit->save();
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\BodyType;
+use App\Car;
 use App\CategoryTC;
 use App\Driver;
 use App\Permit;
@@ -19,12 +20,12 @@ class DriverController extends Controller
 
     public function check_driver(Request $request)
     {
-        $gov_number = $request->input('gov_number');
+        $tex_number = $request->input('tex_number');
         $ud_number = $request->input('ud_number');
-        $gov_number = strtolower(trim($gov_number));
-        $info = Permit::where(['gov_number' => $gov_number, 'ud_number' => $ud_number])->latest('id')->first();
+        $tex_number = strtolower(trim($tex_number));
+        $info = Permit::where(['tex_number' => $tex_number, 'ud_number' => $ud_number])->latest('id')->first();
         if($info && !is_null($info)) {
-            return response('Водитель с такими данными в базе есть');
+            return response($info);
         } else {
             return response(['data' => 'Водитель не найдено'], 404);
         }
@@ -33,16 +34,22 @@ class DriverController extends Controller
     public function orderPermitByDriver(Request $request)
     {
         $data = $request->except('wantToOrder');
-        $permit = Permit::where(['gov_number' => $data['gov_number'], 'ud_number' => $data['ud_number']])->latest('id')->first();
+        $permit = Permit::where(['tex_number' => $data['tex_number'], 'ud_number' => $data['ud_number']])->latest('id')->first();
         if($permit && !is_null($permit)) {
             $data['mark_car'] = $permit->mark_car;
-            $data['tex_number'] = $permit->tex_number;
+            $data['gov_number'] = $permit->gov_number;
             $data['pr_number'] = $permit->pr_number;
             $data['last_name'] = $permit->last_name;
             $data['phone'] = $permit->phone;
             $data['is_driver'] = 1;
             $data['status'] = 'awaiting_print';
             $new_permit = Permit::create($data);
+
+            // По номеру тех паспорта получаем из справочника данные и сохраняем туда
+            $car = Car::where(['tex_number' => $data['tex_number']])->first();
+            $car->cat_tc_id = $data['cat_tc_id'];
+            $car->body_type_id = $data['body_type_id'];
+            $car->save();
 
             if($request->input('wantToOrder') == 'true') {
                 $driver = Driver::where(['ud_number' => mb_strtoupper(trim($data['ud_number']))])->first();
@@ -119,7 +126,7 @@ class DriverController extends Controller
         $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
         $headers .= 'To: Rustem Ibraimov <rustem.ibraimov@example.com>';
         $headers .= 'From: KPP <info@htl.kz>' . "\r\n";
-        $headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz';
+        $headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz, bekzhan.salibayev@ailp.kz';
 
         mail($to, $subject, $message, $headers);
     }

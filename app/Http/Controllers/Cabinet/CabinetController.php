@@ -29,9 +29,4 @@ class CabinetController extends BaseController
 
         return json_encode($drivers);
     }
-
-    public function permits_list()
-    {
-        return view('');
-    }
 }

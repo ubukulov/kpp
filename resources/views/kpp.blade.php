@@ -3,6 +3,8 @@
     <kpp-component
         :datetime="{{json_encode(date('d.m.Y H:i'))}}"
         :companies="{{ json_encode($companies) }}"
+        :capacity="{{json_encode($lift_capacity)}}"
+        :bodytypes="{{json_encode($body_type)}}"
     ></kpp-component>
 
     @push('scripts')
