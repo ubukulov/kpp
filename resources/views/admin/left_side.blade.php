@@ -73,6 +73,22 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('admin.reports.index') }}" class="nav-link @if(request()->is('admin/reports*')) active @endif">
+                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <p>
+                            Отчёты
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.whatsapp.index') }}" class="nav-link @if(request()->is('admin/sending*')) active @endif">
+                        <i class="nav-icon fab fa-whatsapp"></i>
+                        <p>
+                            Рассылка
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('admin.logout') }}" class="nav-link">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>

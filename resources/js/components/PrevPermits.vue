@@ -5,46 +5,146 @@
                 <h3>Список предварительных пропусков</h3>
             </div>
             <hr>
-            <div class="form-group">
-                <label>Компьютер</label>
-                <select v-model="computer_name" tabindex="10" name="computer_name" class="form-control">
-                    <option value="1">КПП №2 (бутик №1)</option>
-                    <option value="2">КПП №2 (бутик №2)</option>
-                </select>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <select v-model="computer_name" tabindex="10" name="computer_name" class="form-control">
+                            <option value="1">КПП №2 (бутик №1)</option>
+                            <option value="2">КПП №2 (бутик №2)</option>
+                            <!--<option value="1">Гега</option>
+                            <option value="2">AILP</option>-->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <button style="color: #fff;" class="btn btn-dark" type="button" @click="getPermits()">Обновить</button>
+                    </div>
+                </div>
             </div>
-            <v-data-table
-                :headers="headers"
-                :items="permits"
-                item-key="name"
-                class="elevation-1"
-                :search="search"
-                :custom-filter="filterOnlyCapsText"
-            >
-                <template v-slot:top>
-                    <v-text-field
-                        v-model="search"
-                        label="Поиск"
-                        class="mx-4"
-                    ></v-text-field>
-                </template>
-                <template v-slot:item.operation_type="{ item }">
-                    <span v-if="item.operation_type == 1">Погрузка</span>
-                    <span v-else-if="item.operation_type == 2">Разгрузка</span>
-                    <span v-else>Другие действие</span>
-                </template>
-                <template v-slot:item.created_at="{ item }">
-                    {{convertDateToOurFormat(item.created_at)}}
-                </template>
-                <template v-slot:item.print="{ item }">
-                    <v-icon
-                        middle
-                        @click="print_r(item.id)"
-                    >
-                        mdi-printer
-                    </v-icon>
-                </template>
-            </v-data-table>
+            <template>
+                <v-data-table
+                    :headers="headers"
+                    :items="permits"
+                    item-key="name"
+                    :server-items-length="permits.length"
+                    class="elevation-1"
+                    :search="search"
+                    :custom-filter="filterOnlyCapsText"
+                >
+                    <template v-slot:top>
+                        <v-text-field
+                            v-model="search"
+                            label="Поиск"
+                            class="mx-4"
+                        ></v-text-field>
+                    </template>
+                    <template v-slot:item.operation_type="{ item }">
+                        <span v-if="item.operation_type == 1">Погрузка</span>
+                        <span v-else-if="item.operation_type == 2">Разгрузка</span>
+                        <span v-else>Другие действия</span>
+                    </template>
+                    <template v-slot:item.created_at="{ item }">
+                        {{convertDateToOurFormat(item.created_at)}}
+                    </template>
+
+                    <template v-slot:item.edit="{ item }">
+                        <v-icon
+                            middle
+                            @click="getPermit(item.id)"
+                        >
+                            mdi-account-edit
+                        </v-icon>
+                    </template>
+
+                </v-data-table>
+            </template>
         </div>
+
+        <template>
+            <v-dialog style="z-index: 99999; position: relative;" v-model="dialog" persistent max-width="800px">
+                <v-card>
+                    <v-card-title>
+                        <span class="headline" style="font-size: 40px !important;">УТОЧНИТЕ КОМПАНИЮ</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container>
+                            <v-row>
+                                <v-col cols="12">
+                                    <div class="form-group">
+                                        <label>Уточните компанию у водителя</label>
+                                        <v-autocomplete
+                                            :items="companies"
+                                            class="form-control"
+                                            style="border: 3px solid blue;"
+                                            :hint="`${companies.id}, ${companies.short_en_name}`"
+                                            :search-input.sync="searchInput"
+                                            item-value="id"
+                                            v-model="company_id"
+                                            item-text="short_en_name"
+                                            autocomplete
+                                        ></v-autocomplete>
+                                    </div>
+                                </v-col>
+
+                                <v-col cols="6" class="prt_col">
+                                    <div>
+                                        <p>Вод. удос:</p> <span>{{ ud_number }}</span>
+                                    </div>
+                                    <div>
+                                        <p>ФИО водителя:</p> <span>{{ last_name }}</span>
+                                    </div>
+                                    <div>
+                                        <p>Номер водителя:</p> <span>{{ phone }}</span>
+                                    </div>
+                                    <div>
+                                        <p>Вид операции:</p> <span>{{ operation_type }}</span>
+                                    </div>
+                                </v-col>
+
+                                <v-col cols="6" class="prt_col">
+                                    <div>
+                                        <p>Тех.паспорт:</p> <span>{{ tex_number }}</span>
+                                    </div>
+                                    <div>
+                                        <p>Гос.номер:</p> <span>{{ gov_number }}</span>
+                                    </div>
+                                    <div>
+                                        <p>Марка авто:</p> <span>{{ mark_car }}</span>
+                                    </div>
+                                    <div>
+                                        <p>Номер прицепа:</p> <span>{{ pr_number }}</span>
+                                    </div>
+                                </v-col>
+
+                                <v-col cols="12">
+                                    <div class="form-group">
+                                        <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                                            <b>Пожалуйста исправьте указанные ошибки:</b>
+                                        <ul style="color: red; padding-left: 15px; list-style: circle; text-align: left;">
+                                            <li v-for="error in errors">{{error}}</li>
+                                        </ul>
+                                        </p>
+                                    </div>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="blue darken-1" @click="closeForm()">Отменить</v-btn>
+                        <v-btn color="success darken-1" @click="print_r(id)">
+                            <v-icon
+                                middle
+                            >
+                                mdi-printer
+                            </v-icon>
+                            &nbsp;Распечатать
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </template>
     </div>
 </template>
 
@@ -55,16 +155,26 @@
     export default {
         data(){
             return {
+                id: 0,
                 permits: [],
                 interval: 0,
                 search: '',
                 calories: '',
-                computer_name: 1
-            }
-        },
-        computed: {
-            headers () {
-                return [
+                computer_name: 1,
+                dialog: false,
+                mark_car: '',
+                gov_number: '',
+                pr_number: '',
+                ud_number: '',
+                tex_number: '',
+                last_name: '',
+                operation_type: '',
+                phone: '',
+                company: '',
+                company_id: 0,
+                searchInput: '',
+                errors: [],
+                headers: [
                     {
                         text: 'ИД',
                         align: 'start',
@@ -81,22 +191,23 @@
                         text: '#вод.удос.',
                         value: 'ud_number',
                         filter: value => {
-                            if (!this.ud_number) return true
+                        if (!this.ud_number) return true
 
-                            return value < parseInt(this.ud_number)
-                        },
+                        return value < parseInt(this.ud_number)
                     },
-                    { text: 'Компания', value: 'company' },
+                    },
                     { text: 'Вид операции', value: 'operation_type' },
                     { text: 'Телефон', value: 'phone' },
                     { text: 'Гос.номер', value: 'gov_number' },
                     { text: 'Марка', value: 'mark_car' },
-                    { text: 'Дата', value: 'created_at' },
-                    { text: 'Печать', value: 'print' },
-                ]
-            },
+                    { text: 'Дата создания', value: 'created_at' },
+                    { text: 'Ред.', value: 'edit' },
+                ],
+            }
         },
-
+        props: [
+            'companies'
+        ],
         methods: {
             getPermits(){
                 axios.get('/get-prev-permits-for-today')
@@ -108,13 +219,22 @@
                     })
             },
             print_r(id){
-                axios.get('/command/print/'+id+"/"+this.computer_name)
-                .then(res => {
-                    console.log(res)
-                })
-                .catch(err => {
-                    console.log(err)
-                })
+                this.errors = [];
+                if (this.company_id == 0) {
+                    this.errors.push('Укажите компанию');
+                }
+                if (this.errors.length == 0) {
+                    axios.get('/command/print/'+id+"/"+this.computer_name+'/'+this.company_id)
+                        .then(res => {
+                            console.log(res);
+                            this.getPermits();
+                            this.dialog = false;
+
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                }
             },
             filterOnlyCapsText (value, search, item) {
                 search = search.toUpperCase();
@@ -124,12 +244,42 @@
                     value.toString().toLocaleUpperCase().indexOf(search) !== -1
             },
             convertDateToOurFormat(dt){
-                return dateformat(dt, 'dd.mm.yyyy hh:MM');
+                return dateformat(dt, 'dd.mm.yyyy HH:MM');
+            },
+            getPermit(id){
+                axios.get('/get-permit-by-id/'+id)
+                .then(res => {
+                    this.id = id;
+                    this.ud_number = res.data.ud_number;
+                    this.tex_number = res.data.tex_number;
+                    this.mark_car = res.data.mark_car;
+                    this.gov_number = res.data.gov_number;
+                    this.pr_number = res.data.pr_number;
+                    this.last_name = res.data.last_name;
+                    if (res.data.operation_type == 1) {
+                        this.operation_type = 'Погрузка';
+                    } else if(res.data.operation_type == 2){
+                        this.operation_type = 'Разгрузка';
+                    } else {
+                        this.operation_type = 'Другие действия';
+                    }
+                    this.phone = res.data.phone;
+                    this.company = res.data.company;
+                    this.dialog = true;
+                })
+                .catch(err => {
+                    console.log(err)
+                })
+            },
+            closeForm(){
+                this.getPermits();
+                this.errors = [];
+                this.dialog = false;
             }
         },
         created(){
             this.getPermits();
-            this.interval = setInterval(() => this.getPermits(), 30000);
+            //this.interval = setInterval(() => this.getPermits(), 30000);
         }
     }
 </script>

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\BodyType;
+use App\BT;
 use App\Car;
-use App\CategoryTC;
+use App\Direction;
 use App\Driver;
+use App\LiftCapacity;
 use App\Permit;
 use Illuminate\Http\Request;
 
@@ -13,9 +14,10 @@ class DriverController extends Controller
 {
     public function index()
     {
-        $categories_tc = CategoryTC::all();
-        $body_types = BodyType::all();
-        return view('driver', compact('categories_tc', 'body_types'));
+        $categories_tc = LiftCapacity::all();
+        $body_types = BT::all();
+        $directions = Direction::all();
+        return view('driver', compact('categories_tc', 'body_types', 'directions'));
     }
 
     public function check_driver(Request $request)
@@ -41,14 +43,25 @@ class DriverController extends Controller
             $data['pr_number'] = $permit->pr_number;
             $data['last_name'] = $permit->last_name;
             $data['phone'] = $permit->phone;
+            $data['from_company'] = $permit->from_company;
             $data['is_driver'] = 1;
+            //$data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
+
+            // Маршруты
+            if ($data['direction_id'] != 0 && $data['direction_id'] != 6) {
+                $direction = Direction::findOrFail($data['direction_id']);
+                $data['to_city'] = mb_strtoupper($direction->title);
+            } else {
+                $data['to_city'] = isset($data['to_city']) ? mb_strtoupper($data['to_city']) : null;
+            }
+
             $data['status'] = 'awaiting_print';
             $new_permit = Permit::create($data);
 
             // По номеру тех паспорта получаем из справочника данные и сохраняем туда
             $car = Car::where(['tex_number' => $data['tex_number']])->first();
-            $car->cat_tc_id = $data['cat_tc_id'];
-            $car->body_type_id = $data['body_type_id'];
+            $car->lc_id = $data['lc_id'];
+            $car->bt_id = $data['bt_id'];
             $car->save();
 
             if($request->input('wantToOrder') == 'true') {
@@ -85,15 +98,15 @@ class DriverController extends Controller
             $type_operation = "Другие действие";
         }
 
-        if($permit->cat_tc_id != 0) {
-            $cat_tc = CategoryTC::findOrFail($permit->cat_tc_id);
+        if($permit->lc_id != 0) {
+            $cat_tc = LiftCapacity::findOrFail($permit->lc_id);
             $tc = $cat_tc->title;
         } else {
             $tc = 'Не указал';
         }
 
-        if($permit->body_type_id != 0) {
-            $body_type = BodyType::findOrFail($permit->body_type_id);
+        if($permit->bt_id != 0) {
+            $body_type = BT::findOrFail($permit->bt_id);
             $bt = $body_type->title;
         } else {
             $bt = 'Не указал' ;

@@ -21,7 +21,7 @@ class AuthController extends Controller
     public function authenticate(Request $request)
     {
         if(Auth::guard('employee')->attempt(['email' => $request->input('email'), 'password' => $request->input('password')], $request->input('remember'))){
-            return redirect()->route('cabinet');
+            return redirect()->route('cabinet.report.index');
         } else {
             return redirect()->back();
         }

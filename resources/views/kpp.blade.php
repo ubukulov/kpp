@@ -5,6 +5,7 @@
         :companies="{{ json_encode($companies) }}"
         :capacity="{{json_encode($lift_capacity)}}"
         :bodytypes="{{json_encode($body_type)}}"
+        :directions="{{json_encode($directions)}}"
     ></kpp-component>
 
     @push('scripts')

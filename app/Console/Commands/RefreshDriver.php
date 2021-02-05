@@ -40,25 +40,18 @@ class RefreshDriver extends Command
      */
     public function handle()
     {
-        Permit::chunk(50, function($permits){
+        Permit::chunk(100, function($permits){
             foreach($permits as $permit){
-                DB::beginTransaction();
-                try {
-                    if(!Driver::exists($permit->ud_number)) {
-                        $fio = trim(mb_strtoupper($permit->last_name));
-                        $phone = trim($permit->phone);
-                        $ud_number = $permit->ud_number;
-                        $ud_number = trim(mb_strtoupper($ud_number));
-                        $ud_number = str_replace(" ", "", $ud_number);
-                        Driver::create([
-                            'fio' => $fio, 'phone' => $phone, 'ud_number' => $ud_number
-                        ]);
-                        DB::commit();
-                        $this->info("Driver: ".$fio." with ".$ud_number." add to table drivers");
-                    }
-                } catch (\Exception $exception) {
-                    DB::rollBack();
-                    $this->info("Driver: ".$permit->last_name." with ".$permit->ud_number." did not add to table drivers");
+                if(!Driver::exists($permit->ud_number)) {
+                    $fio = trim(mb_strtoupper($permit->last_name));
+                    $phone = trim($permit->phone);
+                    $ud_number = $permit->ud_number;
+                    $ud_number = trim(mb_strtoupper($ud_number));
+                    $ud_number = str_replace(" ", "", $ud_number);
+                    Driver::create([
+                        'fio' => $fio, 'phone' => $phone, 'ud_number' => $ud_number
+                    ]);
+                    $this->info("Driver: ".$fio." with ".$ud_number." add to table drivers");
                 }
             }
         });

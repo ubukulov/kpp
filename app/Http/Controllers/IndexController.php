@@ -7,6 +7,7 @@ use App\BT;
 use App\Car;
 use App\Classes\PrintIPP;
 use App\Company;
+use App\Direction;
 use App\Driver;
 use App\LiftCapacity;
 use App\Permit;
@@ -28,7 +29,8 @@ class IndexController extends BaseController
         $permits = Permit::orderBy('id', 'DESC')->take(20)->get();
         $lift_capacity = LiftCapacity::all();
         $body_type = BT::all();
-        return view('kpp', compact('permits', 'lift_capacity', 'body_type'));
+        $directions = Direction::all();
+        return view('kpp', compact('permits', 'lift_capacity', 'body_type', 'directions'));
     }
 
     public function orderPermitByKpp(Request $request)
@@ -41,6 +43,17 @@ class IndexController extends BaseController
         $data['tex_number'] = strtoupper(trim($data['tex_number']));
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
+        $data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
+		$data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
+
+		// Маршруты
+		if ($data['direction_id'] != 0 && $data['direction_id'] != 6) {
+		    $direction = Direction::findOrFail($data['direction_id']);
+		    $data['to_city'] = mb_strtoupper($direction->title);
+        } else {
+            $data['to_city'] = isset($data['to_city']) ? mb_strtoupper($data['to_city']) : null;
+        }
+
         $permit = Permit::create($data);
 
         // Если новый водитель, то добавляем в справочник
@@ -54,12 +67,14 @@ class IndexController extends BaseController
         if (!Car::exists($data['tex_number'])) {
             Car::create([
                 'tex_number' => $data['tex_number'], 'gov_number' => $data['gov_number'], 'mark_car' => $data['mark_car'],
-                'pr_number' => mb_strtoupper($data['pr_number']), 'lc_id' => $data['lc_id'], 'bt_id' => $data['bt_id']
+                'pr_number' => mb_strtoupper($data['pr_number']), 'lc_id' => $data['lc_id'], 'bt_id' => $data['bt_id'],
+                'from_company' => $data['from_company']
             ]);
         } else {
             $car = Car::where(['tex_number' => $data['tex_number']])->first();
             $car->lc_id = $data['lc_id'];
             $car->bt_id = $data['bt_id'];
+            $car->from_company = $data['from_company'];
             $car->save();
         }
 
@@ -103,7 +118,7 @@ class IndexController extends BaseController
 
     public function getPermits()
     {
-        $permits = Permit::orderBy('id', 'DESC')->take(20)->get();
+        $permits = Permit::whereNotNull('date_in')->orderBy('id', 'DESC')->take(20)->get();
         return json_encode($permits);
     }
 
@@ -153,24 +168,40 @@ class IndexController extends BaseController
     public function fixDateOutForCurrentPermit(Request $request)
     {
         $permit_id = (int) $request->input('permit_id');
+        $from_company = $request->input('from_company');
+        $to_city = $request->input('to_city');
         $permit = Permit::find($permit_id);
 
         if ($request->has('set_date_out_manual') && !empty($request->input('date_out'))) {
-            $date_out = date('d.m.Y H:i', strtotime($request->input('date_out')));
+            $date_out = date('Y-m-d H:i:s', strtotime($request->input('date_out')));
         } else {
-            $date_out = date('d.m.Y H:i');
+            $date_out = date('Y-m-d H:i:s');
         }
 
         if($permit && is_null($permit->date_out)){
-            $permit->date_out = $date_out;
-            $permit->save();
-            return response(['data' => 'Дата успешно зафиксирован']);
+            if($permit->date_in < $date_out) {
+                $permit->date_out = $date_out;
+                $permit->from_company = $from_company;
+                $permit->to_city = $to_city;
+                $permit->save();
+                return response(['data' => 'Дата успешно зафиксирован']);
+            } else {
+                return response(['data' => 'Дата выезда больше чем дата заезда'], 400);
+            }
+
         } else{
             return response(['data' => 'Дата уже зафиксирован'], 500);
         }
     }
 
-    public function start_print($permit_id, $com_id)
+    public function getPermitById($permit_id)
+    {
+        $permit = Permit::findOrFail($permit_id);
+        return json_encode($permit);
+    }
+
+    // Метод для печати пропуска
+    public function start_print($permit_id, $com_id, $company_id = 0)
     {
         switch ($com_id) {
             case 1:
@@ -200,9 +231,20 @@ class IndexController extends BaseController
                 ]
             ], 500);
         }
-//        var_dump($fp);
+        if ($company_id != 0){
+            $comp = Company::findOrFail($company_id);
+            $permit->company = $comp->short_en_name;
+            $permit->company_id = $company_id;
+            $permit->save();
+        }
+        if ($permit->status == 'awaiting_print') {
+            $permit->status = 'printed';
+            $permit->date_in = date('Y-m-d H:i:s');
+            $permit->save();
+        }
+
         $id = $permit->id;
-        $date_in = $permit->date_in;
+        $date_in = date("d.m.Y H:i", strtotime($permit->date_in));
         $mark_car = $permit->mark_car;
         $gov_number = $permit->gov_number;
         $fio = $permit->last_name;
@@ -250,10 +292,6 @@ HERE;
             return response(['data' => 'writing failed'], 500);
         }
 
-        if ($permit->status == 'awaiting_print') {
-            $permit->status = 'printed';
-            $permit->date_in = date('d.m.Y H:i');
-            $permit->save();
-        }
+
     }
 }

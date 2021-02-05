@@ -28,42 +28,66 @@
                                 <hr>
 
                                 <div v-if="is_driver" id="driver_pod">
-                                    <div class="form-group">
-                                        <label>В какую компанию?</label>
-                                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">
-                                    </div>
 
                                     <div class="form-group">
                                         <label>Вид операции</label>
                                         <select tabindex="10" v-model="operation_type" id="type" class="form-control">
                                             <option value="1">Погрузка</option>
                                             <option value="2">Разгрузка</option>
-                                            <option value="3">Другие действие</option>
+                                            <option value="3">Другие действия</option>
                                         </select>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Грузоподъемность ТС</label>
-                                        <v-select
-                                            class="form-control"
-                                            :hint="`${categories_tc.id}, ${categories_tc.title}`"
-                                            :items="categories_tc"
-                                            v-model="cat_tc_id"
-                                            item-value="id"
-                                            item-text="title"
-                                        ></v-select>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Грузоподъемность ТС</label>
+                                                <v-select
+                                                    class="form-control"
+                                                    :hint="`${categories_tc.id}, ${categories_tc.title}`"
+                                                    :items="categories_tc"
+                                                    v-model="lc_id"
+                                                    item-value="id"
+                                                    item-text="title"
+                                                ></v-select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Тип кузова</label>
+                                                <v-select
+                                                    class="form-control"
+                                                    :hint="`${body_types.id}, ${body_types.title}`"
+                                                    :items="body_types"
+                                                    v-model="bt_id"
+                                                    item-value="id"
+                                                    item-text="title"
+                                                ></v-select>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Тип кузова</label>
-                                        <v-select
-                                            class="form-control"
-                                            :hint="`${body_types.id}, ${body_types.title}`"
-                                            :items="body_types"
-                                            v-model="body_type_id"
-                                            item-value="id"
-                                            item-text="title"
-                                        ></v-select>
+                                    <div v-if="operation_type != 3" class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Маршрут</label>
+                                                <v-autocomplete
+                                                    :items="directions"
+                                                    class="form-control"
+                                                    :hint="`${directions.id}, ${directions.title}`"
+                                                    item-value="id"
+                                                    v-model="direction_id"
+                                                    item-text="title"
+                                                    autocomplete
+                                                ></v-autocomplete>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div v-if="direction_id == 6" class="form-group">
+                                                <label>Напишите</label>
+                                                <input style="font-size: 16px !important;" type="text" class="form-control" v-model="to_city">
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="form-check">
@@ -81,7 +105,7 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <button @click="orderPermitByDriver()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Заказать пропуск</button>
+                                        <button :disabled="orderButtonDisabled" @click="orderPermitByDriver()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Заказать пропуск</button>
                                     </div>
                                 </div>
                             </div>
@@ -126,22 +150,25 @@
         data () {
             return {
                 tex_number: '',
-                company: '',
                 operation_type: 1,
                 ud_number: '',
                 is_driver: false,
                 wantToOrder: false,
                 dialog_success: false,
                 success_html: '',
-                cat_tc_id: 0,
-                body_type_id: 0,
+                lc_id: 0,
+                bt_id: 0,
                 png: '',
                 errors: [],
+                to_city: '',
+                direction_id: 0,
+                orderButtonDisabled: false
             }
         },
         props: [
             'categories_tc',
-            'body_types'
+            'body_types',
+            'directions'
         ],
         methods: {
             isDriver(){
@@ -150,11 +177,10 @@
                 formData.append('ud_number', this.ud_number);
                 axios.post('/check-driver', formData)
                     .then(res => {
-                        console.log(res, res.data.cat_tc_id);
                         this.is_driver = true;
                         this.dialog_success = false;
-                        this.cat_tc_id = res.data.cat_tc_id;
-                        this.body_type_id = res.data.body_type_id;
+                        this.lc_id = res.data.lc_id;
+                        this.bt_id = res.data.bt_id;
                     })
                     .catch(err => {
                         console.log(err);
@@ -173,24 +199,38 @@
                 if (!this.ud_number) {
                     this.errors.push('Укажите номер водительского удостоверение');
                 }
-                if (!this.company) {
-                    this.errors.push('Укажите компанию');
-                }
-                if (this.cat_tc_id == 0) {
+                if (this.lc_id == 0) {
                     this.errors.push('Укажите грузоподъемность ТС');
                 }
-                if (this.body_type_id == 0) {
+                if (this.bt_id == 0) {
                     this.errors.push('Укажите тип кузова');
                 }
 
+                if (this.operation_type != 3) {
+                    if (this.direction_id == 0) {
+                        this.errors.push('Укажите маршрут');
+                    }
+                    if (this.direction_id == 6) {
+                        if (!this.to_city) {
+                            this.errors.push('Укажите названия маршрута');
+                        }
+                    }
+                }
+
                 if (this.errors.length == 0) {
+                    this.orderButtonDisabled = true;
                     formData.append('tex_number', this.tex_number);
                     formData.append('ud_number', this.ud_number);
-                    formData.append('company', this.company);
                     formData.append('operation_type', this.operation_type);
-                    formData.append('cat_tc_id', this.cat_tc_id);
-                    formData.append('body_type_id', this.body_type_id);
+                    formData.append('lc_id', this.lc_id);
+                    formData.append('bt_id', this.bt_id);
+                    formData.append('direction_id', this.direction_id);
                     formData.append('wantToOrder', this.wantToOrder);
+
+                    if(this.operation_type != 3) {
+                        formData.append('to_city', this.to_city);
+                    }
+
                     axios.post('/order-permit-by-driver', formData)
                         .then(res => {
                             console.log(res);
@@ -202,11 +242,13 @@
                             this.dialog_success = true;
                             this.tex_number = '';
                             this.ud_number = '';
-                            this.company = '';
                             this.operation_type = 1;
-                            this.cat_tc_id = 0;
-                            this.body_type_id = 0;
+                            this.lc_id = 0;
+                            this.bt_id = 0;
                             this.is_driver = false;
+                            this.to_city = '';
+                            this.direction_id = 0;
+                            this.orderButtonDisabled = false;
                         })
                         .catch(err => {
                             console.log(err)

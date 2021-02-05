@@ -21,8 +21,8 @@ class CreateTablePermits extends Migration
             $table->string('company')->nullable();
             $table->string('pr_number')->nullable();
             $table->integer('operation_type')->default(1);
-            $table->string('date_in')->nullable();
-            $table->string('date_out')->nullable();
+            $table->timestamp('date_in')->nullable();
+            $table->timestamp('date_out')->nullable();
             $table->string('last_name')->nullable();
             $table->string('first_name')->nullable();
             $table->string('sur_name')->nullable();

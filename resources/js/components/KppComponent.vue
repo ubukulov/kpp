@@ -37,7 +37,13 @@
             >
                 <v-card flat>
                     <div class="container-fluid">
-                        <kpp-form :datetime="datetime" :companies="companies" :capacity="capacity" :bodytypes="bodytypes"></kpp-form>
+                        <kpp-form
+                            :datetime="datetime"
+                            :companies="companies"
+                            :capacity="capacity"
+                            :bodytypes="bodytypes"
+                            :directions="directions">
+                        </kpp-form>
                     </div>
 
                 </v-card>
@@ -48,7 +54,7 @@
             >
                 <v-card flat>
                     <div class="container-fluid">
-                        <prev-permits ref="prev_permits"></prev-permits>
+                        <prev-permits :companies="companies" ref="prev_permits"></prev-permits>
                     </div>
                 </v-card>
             </v-tab-item>
@@ -88,7 +94,8 @@
             'datetime',
             'companies',
             'capacity',
-            'bodytypes'
+            'bodytypes',
+            'directions'
         ],
         created(){
             console.log(this.tab)

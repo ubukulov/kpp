@@ -14,7 +14,7 @@ video{
     max-width: 100%;
 }
 label{
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
 }
 .form-control:focus{

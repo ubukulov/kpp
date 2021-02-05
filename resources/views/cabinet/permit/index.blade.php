@@ -27,7 +27,6 @@
                         <tr>
                             <th>ID</th>
                             <th>ФИО</th>
-                            <th>Компания</th>
                             <th>Гос.номер</th>
                             <th>Тех.паспорт</th>
                             <th>Операция</th>
@@ -61,7 +60,6 @@
                         <tr>
                             <th>ID</th>
                             <th>ФИО</th>
-                            <th>Компания</th>
                             <th>Гос.номер</th>
                             <th>Тех.паспорт</th>
                             <th>Операция</th>
@@ -90,6 +88,7 @@
             $("#example1").DataTable({
                 "responsive": true,
                 "autoWidth": false,
+                "pageLength": 25,
                 "language": {
                     "url": "/dist/Russian.json"
                 },

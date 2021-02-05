@@ -14,5 +14,7 @@ Route::group(['prefix' => 'cabinet', 'namespace' => 'Cabinet'], function(){
         Route::resource('/employees', 'EmployeeController', ['as' => 'cabinet']);
         Route::resource('/permits', 'PermitController', ['as' => 'cabinet']);
         Route::get('/services', 'ServiceController@index')->name('cabinet.service.index');
+        Route::get('/reports', 'ReportController@index')->name('cabinet.report.index');
+        Route::post('/get/permits', 'PermitController@getPermits');
     });
 });

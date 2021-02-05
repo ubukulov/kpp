@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Cabinet;
 
-use App\BodyType;
-use App\CategoryTC;
+use App\BT;
+use App\Car;
+use App\Direction;
 use App\Driver;
 use App\Http\Controllers\Controller;
+use App\LiftCapacity;
 use App\Permit;
 use Illuminate\Http\Request;
 use Auth;
@@ -20,7 +22,7 @@ class PermitController extends Controller
     public function index()
     {
         $company = Auth::guard('employee')->user()->company;
-        $permits = Permit::where(['company_id' => $company->id])->orderBy('id', 'DESC')->get();
+        $permits = Permit::where(['company_id' => $company->id, 'is_driver' => 2])->orderBy('id', 'DESC')->get();
         return view('cabinet.permit.index', compact('permits'));
     }
 
@@ -31,9 +33,10 @@ class PermitController extends Controller
      */
     public function create()
     {
-        $category_tc = CategoryTC::all();
-        $body_type = BodyType::all();
-        return view('cabinet.permit.create', compact('category_tc', 'body_type'));
+        $category_tc = LiftCapacity::all();
+        $body_type = BT::all();
+        $directions = Direction::all();
+        return view('cabinet.permit.create', compact('category_tc', 'body_type', 'directions'));
     }
 
     /**
@@ -54,12 +57,29 @@ class PermitController extends Controller
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
         $data['status'] = 'awaiting_print';
+
         Permit::create($data);
+
         // Если новый водитель, то добавляем в справочник
         if (!Driver::exists($data['ud_number'])) {
             Driver::create([
                 'fio' => $data['last_name'], 'phone' => $data['phone'], 'ud_number' => $data['ud_number']
             ]);
+        }
+
+        // Если новая машина, то добавляем в справочник
+        if (!Car::exists($data['tex_number'])) {
+            Car::create([
+                'tex_number' => $data['tex_number'], 'gov_number' => $data['gov_number'], 'mark_car' => $data['mark_car'],
+                'pr_number' => mb_strtoupper($data['pr_number']), 'lc_id' => $data['lc_id'], 'bt_id' => $data['bt_id'],
+                'from_company' => $data['from_company']
+            ]);
+        } else {
+            $car = Car::where(['tex_number' => $data['tex_number']])->first();
+            $car->lc_id = $data['lc_id'];
+            $car->bt_id = $data['bt_id'];
+            $car->from_company = $data['from_company'];
+            $car->save();
         }
         return redirect()->route('cabinet.permits.index');
     }
@@ -107,5 +127,14 @@ class PermitController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function getPermits(Request $request)
+    {
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
+        $company_id = $request->input('company_id');
+        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
+        return json_encode($permits);
     }
 }

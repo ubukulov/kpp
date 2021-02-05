@@ -22,26 +22,68 @@
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <label>Гос.номер(без пробелов, на анг)</label>
-                                    <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="1" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                                    <label>№тех.паспорта</label>
+                                    <input onkeyup="return no_cirilic(this);" placeholder="AB020111" style="text-transform: uppercase;" v-model="tex_number" name="tex_number" tabindex="1" type="text" required class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-4" style="padding-top: 30px;">
                                 <button @click="checkCar()" type="button" class="btn btn-warning">Проверить</button>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>№тех.паспорта</label>
-                            <input style="text-transform: uppercase;" v-model="tex_number" tabindex="2" type="text" name="tex_number" required class="form-control">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Гос.номер</label>
+                                    <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Номер прицепа</label>
+                                    <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+                                </div>
+                            </div>
                         </div>
+
                         <div class="form-group">
                             <label>Марка авто</label>
                             <input v-model="mark_car" type="text" tabindex="3" name="mark_car" class="form-control">
                         </div>
-                        <div class="form-group">
-                            <label>Номер прицепа</label>
-                            <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Грузоподъемность ТС</label>
+                                    <select name="lc_id" v-model="lc_id" tabindex="10" class="form-control" style="width: 100%;">
+                                        @foreach($category_tc as $ct)
+                                            <option value="{{ $ct->id }}">{{ $ct->title }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Тип кузова</label>
+                                    <select name="bt_id" v-model="bt_id" tabindex="11" class="form-control" style="width: 100%;">
+                                        @foreach($body_type as $bt)
+                                            <option value="{{ $bt->id }}">{{ $bt->title }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+
+                        <div v-if="operation_type != 3" class="form-group">
+                            <label>Название транспортной компании/частник</label>
+                            <input type="text" class="form-control" required name="from_company" v-model="from_company">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Дата планируемого заезда</label>
+                            <input tabindex="9" value="<?=date('Y-m-d H:i:s')?>" type="text" id="date_in" required name="created_at" class="form-control">
+                        </div>
+
                     </div>
 
                     <div class="col-md-6">
@@ -69,40 +111,30 @@
 
                         <div class="form-group">
                             <label>Вид операции</label>
-                            <select tabindex="8" name="operation_type" id="type" class="form-control">
+                            <select tabindex="8" name="operation_type" v-model="operation_type" id="type" class="form-control">
                                 <option value="1">Погрузка</option>
                                 <option value="2">Разгрузка</option>
-                                <option value="3">Другие действие</option>
+                                <option value="3">Другие действия</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>Дата планируемого заезда</label>
-                            <input tabindex="9" value="<?=date('d.m.Y H:i')?>" type="text" id="date_in" required name="date_in" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>Грузоподъемность ТС</label>
-                            <select name="cat_tc_id" tabindex="10" class="form-control select2bs4" style="width: 100%;">
-                                @foreach($category_tc as $ct)
-                                    <option value="{{ $ct->id }}">{{ $ct->title }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>Тип кузова</label>
-                            <select name="body_type_id" tabindex="11" class="form-control select2bs4" style="width: 100%;">
-                                @foreach($body_type as $bt)
-                                    <option value="{{ $bt->id }}">{{ $bt->title }}</option>
-                                @endforeach
-                            </select>
+                        <div v-if="operation_type != 3" class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Маршрут</label>
+                                    <select tabindex="8" name="direction_id" v-model="direction_id" class="form-control">
+                                        @foreach($directions as $direction)
+                                        <option value="{{$direction->id}}">{{$direction->title}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div v-if="direction_id == 6" class="form-group">
+                                    <label>Напишите</label>
+                                    <input style="font-size: 16px !important;" name="to_city" type="text" required class="form-control" v-model="to_city">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -134,7 +166,7 @@
                 timePicker: true,
                 timePicker24Hour: true,
                 locale: {
-                    format: 'DD.MM.YYYY HH:mm',
+                    format: 'YYYY-MM-DD HH:mm:ss',
                     applyLabel: "OK",
                     cancelLabel: "Отмена",
                     firstDay: 1,
@@ -155,39 +187,32 @@
             el: '#cabinet_create_permit',
             data () {
                 return {
-                    dialog: false,
                     mark_car: '',
                     gov_number: '',
                     tex_number: '',
-                    company: '',
                     pr_number: '',
-                    operation_type: '',
-                    date_in: '',
-                    date_out: '',
+                    operation_type: 1,
                     last_name: '',
+                    from_company: '',
+                    to_city: '',
                     phone: '',
                     ud_number: '',
-                    driver: [],
-                    propusk_id: 0,
-                    is_driver: true,
-                    wantToOrder: false,
-                    dialog_success: false,
-                    success_html: '',
-                    cat_tc_id: 0,
-                    body_type_id: 0,
-                    png: '',
-                    search: '',
-                    html: '',
+                    lc_id: 0,
+                    bt_id: 0,
+                    direction_id: 0,
                 }
             },
             methods: {
                 checkCar(){
-                    axios.get('/get-car-info/'+this.gov_number)
+                    axios.get('/get-car-info/'+this.tex_number)
                         .then(res => {
                             console.log(res)
-                            this.tex_number = res.data.tex_number
+                            this.gov_number = res.data.gov_number
                             this.mark_car = res.data.mark_car
                             this.pr_number = res.data.pr_number
+                            this.lc_id = res.data.lc_id
+                            this.bt_id = res.data.bt_id
+                            this.from_company = res.data.from_company
                         })
                         .catch(err => {
                             console.log(err)
@@ -196,7 +221,6 @@
                 checkDriver(){
                     axios.get('/get-driver-info/'+this.ud_number)
                         .then(res => {
-                            console.log(res.data.fio)
                             this.last_name = res.data.fio
                             this.phone = res.data.phone
                         })
@@ -204,92 +228,6 @@
                             console.log(err)
                         })
                 },
-                closePrintForm(){
-                    this.dialog = false
-                    this.mark_car = ''
-                    this.tex_number = ''
-                    this.date_in = ''
-                    this.gov_number = ''
-                    this.pr_number = ''
-                    this.last_name = ''
-                    this.company = ''
-                    this.ud_number = ''
-                    this.phone = ''
-                },
-                isDriver(){
-                    let formData = new FormData();
-                    formData.append('gov_number', this.gov_number)
-                    formData.append('ud_number', this.ud_number)
-                    axios.post('/check-driver', formData)
-                        .then(res => {
-                            console.log(res)
-                            this.is_driver = true
-                            this.dialog_success = false
-                        })
-                        .catch(err => {
-                            console.log(err)
-                            this.png = '<img src="https://www.nicepng.com/png/full/67-677160_wrong-clip-art-clip-art.png" style="max-width: 100%; width: 100px;" />'
-                            this.success_html = '<p style="font-size: 30px; line-height: 30px;">Проверка не пройдена, Вам необходимо пройти первичную регистрацию на КПП.</p>'
-                            this.is_driver = false
-                            this.dialog_success = true
-                        })
-                },
-                orderPermitByDriver(){
-                    let formData = new FormData();
-                    formData.append('gov_number', this.gov_number)
-                    formData.append('ud_number', this.ud_number)
-                    formData.append('company', this.company)
-                    formData.append('operation_type', this.operation_type)
-                    formData.append('cat_tc_id', this.cat_tc_id)
-                    formData.append('body_type_id', this.body_type_id)
-                    formData.append('wantToOrder', this.wantToOrder)
-                    axios.post('/order-permit-by-driver', formData)
-                        .then(res => {
-                            console.log(res)
-                            this.png = '<img src="https://www.nicepng.com/png/detail/362-3624869_icon-success-circle-green-tick-png.png" style="max-width: 100%; width: 100px;" />'
-                            this.success_html = '<p style="font-size: 30px; line-height: 30px;">Пропуск №'+res.data.id+' успешно оформлен!</p>'
-                            if(this.wantToOrder) {
-                                this.success_html = this.success_html + "<p style='color: #000;font-size:18px;'>Для получения информации о заказах, Вы можете написать на WhatsApp <span style='color: green !important;'>(<a style='color: green !important;' href='https://api.whatsapp.com/send?phone=77777022000' target='_blank'>8 777 702 2000</a>)</span>, либо дождаться звонка от нашего менеджера.</p>"
-                            }
-                            this.dialog_success = true
-                            this.gov_number = ''
-                            this.ud_number = ''
-                            this.company = ''
-                            this.operation_type = ''
-                            this.is_driver = false
-                        })
-                        .catch(err => {
-                            console.log(err)
-                        })
-                },
-                searchPermit(){
-                    this.html = ''
-                    let formData = new FormData();
-                    formData.append('search', this.search)
-                    axios.post('/search/permit', formData)
-                        .then(res => {
-                            console.log(res)
-                            // this.html = '<tr style="background: cadetblue;">'
-                            this.html = this.html + '<th scope="row">'+res.data.id+'</th>'
-                            this.html = this.html + '<td>'+res.data.last_name+'</td>'
-                            this.html = this.html + '<td>'+res.data.ud_number+'</td>'
-                            this.html = this.html + '<td>'+res.data.company+'</td>'
-                            if(res.data.operation_type == 1) {
-                                this.html = this.html + '<td>Погрузка</td>'
-                            } else if(res.data.operation_type == 2) {
-                                this.html = this.html + '<td>Разгрузка</td>'
-                            } else {
-                                this.html = this.html + '<td>Другие действие</td>'
-                            }
-                            this.html = this.html + '<td>'+res.data.phone+'</td>'
-                            this.html = this.html + '<td>'+res.data.gov_number+'</td>'
-                            this.html = this.html + '<td><v-icon middle v-on:click="print_r('+res.data.id+')">mdi-printer</v-icon></td>'
-                            // $("tbody").prepend(this.html)
-                        })
-                        .catch(err => {
-                            console.log(err)
-                        })
-                }
             }
         });
     </script>

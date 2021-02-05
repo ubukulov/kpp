@@ -1,7 +1,7 @@
 <template>
     <div class="row" style="background: #5c966b; height: 100vh;">
         <div class="col-md-12">
-            <div style="width: 700px; max-width: 100%; margin: 50px auto; text-align: center;">
+            <div style="width: 800px; max-width: 100%; margin: 50px auto; text-align: center;">
                 <div class="col-md-12">
                     <div class="form-group">
                         <v-checkbox
@@ -20,15 +20,13 @@
                     <button @click="fixDateOut()" type="button" class="btn btn-info">Зафиксировать дату выезда</button>
                 </div>
 
-
-
                 <div class="col-md-12">
                     <div v-if="success" class="alert alert-success" role="alert" style="font-size: 40px;">
                         Дата выезда зафиксирована успешно!
                     </div>
 
                     <div v-if="failure" class="alert alert-warning" role="alert" style="font-size: 40px;">
-                        Внимание!!! Дата выезда уже была ранее зафиксирована!
+                        {{ failure_text }}
                     </div>
                 </div>
             </div>
@@ -50,6 +48,7 @@
                 date_out: '',
                 success: false,
                 failure: false,
+                failure_text: '',
                 setDateOutByHand: false,
                 interval: 0,
             }
@@ -72,19 +71,22 @@
                     }
                     axios.post('/fix-date-out-for-current-permit', formData)
                         .then(res => {
-                            console.log(res)
+                            console.log(res);
                             this.success = true;
                             this.permit_id = null;
                             this.failure = false;
                         })
                         .catch(err => {
-                            console.log(err);
+                            if(err.response.status == 500) {
+                                this.failure_text = 'Внимание!!! Дата выезда уже была ранее зафиксирована!';
+                            } else {
+                                this.failure_text = 'Внимание!!! Дата выезда не может быть меньше даты въезда. Проверьте еще раз!';
+                            }
                             this.failure = true;
                             this.success = false;
-                            this.permit_id = null
+                            this.permit_id = null;
                         })
                 }
-
             },
             closeInfo(){
                 this.success = false;
@@ -92,7 +94,7 @@
             }
         },
         created(){
-            this.interval = setInterval(() => this.closeInfo(), 3000);
+            this.interval = setInterval(() => this.closeInfo(), 5000);
         }
     }
 </script>

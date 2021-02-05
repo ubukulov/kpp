@@ -18,14 +18,14 @@
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class
                      with font-awesome or any other icon font library -->
-                <li class="nav-item">
+                {{--<li class="nav-item">
                     <a href="{{ route('cabinet') }}" class="nav-link @if(request()->is('cabinet')) active @endif">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>
                             Панель клиента
                         </p>
                     </a>
-                </li>
+                </li>--}}
                 {{--<li class="nav-item">
                     <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
                         <i class="nav-icon fas fa-users"></i>
@@ -34,23 +34,33 @@
                         </p>
                     </a>
                 </li>--}}
+
                 <li class="nav-item">
-                    <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
-                        <i class="nav-icon fas fa-align-justify"></i>
+                    <a href="{{ route('cabinet.report.index') }}" class="nav-link @if(request()->is('cabinet/reports*')) active @endif">
+                        <i class="nav-icon fas fa-chart-pie"></i>
                         <p>
-                            Список пропусков
+                            Отчёты
                         </p>
                     </a>
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
+                        <i class="nav-icon fas fa-align-justify"></i>
+                        <p>
+                            Оформление пропуска
+                        </p>
+                    </a>
+                </li>
+
+                {{--<li class="nav-item">
                     <a href="{{ route('cabinet.service.index') }}" class="nav-link @if(request()->is('cabinet/services*')) active @endif">
                         <i class="nav-icon fas fa-poll"></i>
                         <p>
                             Услуги
                         </p>
                     </a>
-                </li>
+                </li>--}}
                 {{--<li class="nav-item">
                     <a href="{{ route('employees.index') }}" class="nav-link">
                         <i class="nav-icon fas fa-car-side"></i>

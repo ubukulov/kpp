@@ -1,8 +1,6 @@
 <template>
     <div class="row">
         <div class="col-md-12 left_content">
-            <div><h3>Разрешение на въезд</h3></div>
-            <hr>
             <div class="row">
                 <div class="col-md-6">
                     <h4 style="font-style: italic;">Данные о машине</h4>
@@ -17,35 +15,70 @@
                             <button @click="checkCar()" type="button" class="btn btn-warning">Проверить</button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Гос.номер(без пробелов, на анг)</label>
-                        <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Гос.номер</label>
+                                <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Номер прицепа</label>
+                                <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+                            </div>
+                        </div>
                     </div>
+
+
                     <div class="form-group">
                         <label>Марка авто</label>
                         <input v-model="mark_car" type="text" tabindex="3" name="mark_car" class="form-control">
                     </div>
-                    <div class="form-group">
-                        <label>Номер прицепа</label>
-                        <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+
+
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Грузоподъемность ТС</label>
+                                <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
+                                <v-autocomplete
+                                    :items="capacity"
+                                    class="form-control"
+                                    :hint="`${capacity.id}, ${capacity.title}`"
+                                    item-value="id"
+                                    v-model="capacity_id"
+                                    item-text="title"
+                                ></v-autocomplete>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Тип кузова</label>
+                                <v-autocomplete
+                                    :items="bodytypes"
+                                    class="form-control"
+                                    :hint="`${bodytypes.id}, ${bodytypes.title}`"
+                                    item-value="id"
+                                    v-model="bt_id"
+                                    item-text="title"
+                                ></v-autocomplete>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="operation_type != 3" class="form-group">
+                        <label>Название транспортной компании/частник</label>
+                        <input type="text" class="form-control" v-model="from_company">
                     </div>
 
                     <div class="form-group">
                         <label>Дата заезда</label>
-                        <input tabindex="5" v-model="date_in" type="text" id="date_in" required name="date_in" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Грузоподъемность ТС</label>
-                        <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
-                        <v-autocomplete
-                            :items="capacity"
-                            class="form-control"
-                            :hint="`${capacity.id}, ${capacity.title}`"
-                            item-value="id"
-                            v-model="capacity_id"
-                            item-text="title"
-                        ></v-autocomplete>
+                        <!--                        <input tabindex="5" v-model="date_in" type="text" id="date_in" required name="date_in" class="form-control">-->
+                        <datetime input-class="form-control" type="datetime" v-model="date_in" format="yyyy-MM-dd HH:mm" value-zone="Asia/Almaty" :phrases="{ok: 'ОК', cancel: 'Отмена'}"></datetime>
                     </div>
                 </div>
 
@@ -62,9 +95,14 @@
                             <button @click="checkDriver()" style="color: #fff;" type="button" class="btn btn-dark">Проверить</button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>ФИО</label>
-                        <input style="text-transform: uppercase;" v-model="last_name" tabindex="7" type="text" name="last_name" required class="form-control">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>ФИО</label>
+                                <input style="text-transform: uppercase;" v-model="last_name" tabindex="7" type="text" name="last_name" required class="form-control">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -91,21 +129,35 @@
                         <select v-model="operation_type" tabindex="10" name="operation_type" id="type" class="form-control">
                             <option value="1">Погрузка</option>
                             <option value="2">Разгрузка</option>
-                            <option value="3">Другие действие</option>
+                            <option value="3">Другие действия</option>
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label>Тип кузова</label>
-                        <v-autocomplete
-                            :items="bodytypes"
-                            class="form-control"
-                            :hint="`${bodytypes.id}, ${bodytypes.title}`"
-                            item-value="id"
-                            v-model="bt_id"
-                            item-text="title"
-                        ></v-autocomplete>
+                    <div v-if="operation_type != 3" class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Маршрут</label>
+                                <v-autocomplete
+                                    :items="directions"
+                                    class="form-control"
+                                    :hint="`${directions.id}, ${directions.title}`"
+                                    item-value="id"
+                                    v-model="direction_id"
+                                    item-text="title"
+                                    autocomplete
+                                ></v-autocomplete>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div v-if="direction_id == 6" class="form-group">
+                                <label>Напишите</label>
+                                <input style="font-size: 16px !important;" type="text" class="form-control" v-model="to_city">
+                            </div>
+                        </div>
                     </div>
+
+
+
                 </div>
 
                 <div class="col-md-12">
@@ -140,11 +192,13 @@
                         <select v-model="computer_name" tabindex="10" name="computer_name" class="form-control">
                             <option value="1">КПП №2 (бутик №1)</option>
                             <option value="2">КПП №2 (бутик №2)</option>
+                            <!--<option value="1">Гега</option>
+                            <option value="2">AILP</option>-->
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <button @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
+                        <button :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
                     </div>
                 </div>
             </div>
@@ -183,7 +237,7 @@
                         Разгрузка
                     </td>
                     <td v-else>
-                        Другие действие
+                        Другие действия
                     </td>
                     <td>{{ permit.phone }}</td>
                     <td>{{ permit.gov_number }}</td>
@@ -204,14 +258,19 @@
 
 <script>
     import axios from 'axios'
+    import { Datetime } from 'vue-datetime';
+    import 'vue-datetime/dist/vue-datetime.css'
     export default {
+        components: {
+            datetime: Datetime
+        },
         data(){
             return {
                 gov_number: '',
                 tex_number: '',
                 mark_car: '',
                 pr_number: '',
-                date_in: '',
+                date_in: this.currentDateTime(),
                 ud_number: '',
                 last_name: '',
                 phone: '',
@@ -223,14 +282,19 @@
                 company_id: 0,
                 computer_name: 1,
                 capacity_id: 0,
-                bt_id: 0
+                bt_id: 0,
+                from_company: '',
+                to_city: '',
+                direction_id: 0,
+                orderButtonDisabled: false
             }
         },
         props: [
             'datetime',
             'companies',
             'capacity',
-            'bodytypes'
+            'bodytypes',
+            'directions'
         ],
         methods: {
             checkCar(){
@@ -242,6 +306,7 @@
                         this.pr_number = res.data.pr_number;
                         this.capacity_id = res.data.lc_id;
                         this.bt_id = res.data.bt_id;
+                        this.from_company = res.data.from_company;
                     })
                     .catch(err => {
                         console.log(err)
@@ -291,7 +356,22 @@
                     this.errors.push('Укажите тип кузова');
                 }
 
+                if (this.operation_type != 3) {
+                    if (this.direction_id == 0) {
+                        this.errors.push('Укажите маршрут');
+                    }
+                    if (!this.from_company) {
+                        this.errors.push('Укажите транспортной компании/частник');
+                    }
+                    if (this.direction_id == 6) {
+                        if (!this.to_city) {
+                            this.errors.push('Укажите названия маршрута ');
+                        }
+                    }
+                }
+
                 if (this.errors.length == 0) {
+                    this.orderButtonDisabled = true;
                     const config = {
                         headers: { 'content-type': 'multipart/form-data' }
                     };
@@ -310,8 +390,16 @@
                     formData.append('bt_id', this.bt_id);
                     formData.append('operation_type', this.operation_type);
                     formData.append('computer_name', this.computer_name);
+                    formData.append('direction_id', this.direction_id);
+
+                    if(this.operation_type != 3) {
+                        formData.append('from_company', this.from_company);
+                        formData.append('to_city', this.to_city);
+                    }
+
                     formData.append('path_docs_fac', $('#path_docs_fac').val());
                     formData.append('path_docs_back', $('#path_docs_back').val());
+
                     axios.post('/order-permit-by-kpp', formData, config)
                     .then(res => {
                         this.gov_number = '';
@@ -321,14 +409,21 @@
                         this.date_in = this.currentDateTime();
                         this.ud_number = '';
                         this.last_name = '';
+                        this.from_company = '';
+                        this.to_city = '';
                         this.phone = '';
                         this.company_id = 0;
                         this.capacity_id = 0;
+                        this.direction_id = 0;
                         this.bt_id = 0;
                         this.operation_type = 1;
                         $('#path_docs_fac').val('');
                         $('#path_docs_back').val('');
                         this.permits = this.getPermits();
+                        this.orderButtonDisabled = false;
+                        $("body,html").animate({
+                            scrollTop: 0
+                        }, 800);
                     })
                     .catch(err => {
                         console.log(err)
@@ -355,13 +450,14 @@
             },
             currentDateTime(){
                 let d = new Date();
-                return ((d.getDate() < 10)?"0":"") + d.getDate() +"."+(((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) +"."+ d.getFullYear()+" "+((d.getHours() < 10)?"0":"") + d.getHours() +":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
+                //return ((d.getDate() < 10)?"0":"") + d.getDate() +"."+(((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) +"."+ d.getFullYear()+" "+((d.getHours() < 10)?"0":"") + d.getHours() +":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
+                return d.getFullYear()+ "-" + (((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) + "-" + ((d.getDate() < 10)?"0":"") + d.getDate() +"T"+ ((d.getHours() < 10)?"0":"") + d.getHours() + ":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
             }
         },
         created(){
-            this.date_in = this.datetime;
+            //this.date_in = this.currentDateTime();
             this.getPermits();
-            console.log(this.currentDateTime())
+            console.log("date_in",this.currentDateTime());
         }
     }
 </script>
