@@ -27,9 +27,10 @@
                         <tr>
                             <th>ID</th>
                             <th>ФИО</th>
-                            <th>Компания</th>
                             <th>Должность</th>
+                            <th>Телефон</th>
                             <th>Email</th>
+                            <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
                         </thead>
@@ -39,12 +40,15 @@
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->full_name }}</td>
                             <td>
-                                {{ $employee->company->short_ru_name }}
-                            </td>
-                            <td>
                                 {{ $employee->position->title }}
                             </td>
+                            <td>{{ $employee->phone }}</td>
                             <td>{{ $employee->email }}</td>
+                            <td>
+                                <a target="_blank" href="{{ route('employee.badge', ['id' => $employee->id]) }}">
+                                    <i class="fa fa-print"></i>
+                                </a>
+                            </td>
                             <td>
                                     <a href="{{ route('cabinet.employees.edit', ['employee' => $employee->id]) }}">Ред.</a>
                             </td>
@@ -58,6 +62,7 @@
                             <th>Компания</th>
                             <th>Должность</th>
                             <th>Email</th>
+                            <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>

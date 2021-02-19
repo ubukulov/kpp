@@ -29,6 +29,10 @@
                 SCANGO
                 <v-icon>mdi-qrcode-scan</v-icon>
             </v-tab>
+            <v-tab href="#tab-5">
+                Контроль сотрудника
+                <v-icon>mdi-qrcode-scan</v-icon>
+            </v-tab>
         </v-tabs>
 
         <v-tabs-items v-model="tab">
@@ -75,6 +79,16 @@
                 <v-card flat>
                     <div class="container-fluid">
                         <scan-go></scan-go>
+                    </div>
+                </v-card>
+            </v-tab-item>
+
+            <v-tab-item
+                :value="'tab-5'"
+            >
+                <v-card flat>
+                    <div class="container-fluid">
+                        <personal-control></personal-control>
                     </div>
                 </v-card>
             </v-tab-item>

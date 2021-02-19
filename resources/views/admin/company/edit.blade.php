@@ -9,6 +9,7 @@
         <!-- form start -->
         <form action="{{ route('company.update', ['company' => $company->id]) }}" method="POST" role="form">
             @csrf
+            @method('PUT')
             <div class="card-body">
                 <div class="form-group">
                     <label>Полное наименование компании</label>

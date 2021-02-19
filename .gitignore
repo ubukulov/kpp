@@ -12,3 +12,4 @@ npm-debug.log
 yarn-error.log
 /public/uploads/
 /public/1.txt
+/public/lib/

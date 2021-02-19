@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\BodyType;
-use App\BT;
-use App\Car;
-use App\Classes\PrintIPP;
-use App\Company;
-use App\Direction;
-use App\Driver;
-use App\LiftCapacity;
-use App\Permit;
+use App\Models\BT;
+use App\Models\Car;
+use App\Models\Company;
+use App\Models\Direction;
+use App\Models\Driver;
+use App\Models\LiftCapacity;
+use App\Models\Permit;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Mike42\Escpos\Printer;
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use File;
+use Auth;
 
 class IndexController extends BaseController
 {
@@ -111,7 +109,7 @@ class IndexController extends BaseController
         }
 
         // Отправка на печать
-        $this->start_print($permit->id, $com_id);
+        $this->start_print($permit->id);
 
         return response(['data' => 'Пропуск успешно создан']);
     }
@@ -201,24 +199,12 @@ class IndexController extends BaseController
     }
 
     // Метод для печати пропуска
-    public function start_print($permit_id, $com_id, $company_id = 0)
+    public function start_print($permit_id, $company_id = 0)
     {
-        switch ($com_id) {
-            case 1:
-                $computer_name = "DL-0210";
-                $printer_name = "\Zebra ZM400 (203 dpi) - ZPL";
-                break;
+        $user = Auth::user();
+        $computer_name = $user->computer_name;
+        $printer_name = $user->printer_name;
 
-            case 2:
-                $computer_name = "HKS-097";
-                $printer_name = "\Zebra ZM400 (203 dpi) - ZPL";
-                break;
-
-            default:
-                $computer_name = "DL-0210";
-                $printer_name = "\Zebra ZM400 (203 dpi) - ZPL";
-                break;
-        }
         $permit = Permit::findOrFail($permit_id);
         $printer = "\\\\".$computer_name.$printer_name;
         // Open connection to the thermal printer

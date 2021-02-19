@@ -32,17 +32,17 @@
 
                 <div class="form-group">
                     <label>Телефон</label>
-                    <input type="text" class="form-control" name="phone" required>
+                    <input type="text" class="form-control" name="phone">
                 </div>
 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" class="form-control" name="email" required>
+                    <input type="email" class="form-control" name="email">
                 </div>
 
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="text" class="form-control" name="password" required>
+                    <input type="text" class="form-control" name="password">
                 </div>
             </div>
             <!-- /.card-body -->

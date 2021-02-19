@@ -1,38 +1,105 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Авторизоваться</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Форма авторизации</title>
-
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-
-    <!-- Custom styles for this template -->
-    <link href="/css/signin.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- icheck bootstrap -->
+    <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 </head>
-<body class="text-center">
-    <form class="form-signin" method="post" action="{{route('authenticate')}}">
-        @csrf
+<body class="hold-transition login-page">
+<div class="login-box">
+    <div class="login-logo">
         <img class="mb-4" src="/img/logo.png" alt="">
-        <h1 class="h3 mb-3 font-weight-normal">Пожалуйста авторизуйтесь</h1>
+    </div>
+    <!-- /.login-logo -->
+    <div class="card">
+        <div class="card-body login-card-body">
+            <p class="login-box-msg">Авторизуйтесь, чтобы войти</p>
+            <form action="{{ route('authenticate') }}" method="post">
+                @csrf
+                <div class="input-group mb-3">
+                    <input type="email" name="email" value="{{ old('email') }}" required class="form-control @error('email') is-invalid @enderror" placeholder="Email">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-envelope"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="password" name="password" required class="form-control @error('password') is-invalid @enderror" placeholder="Password">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <div class="icheck-primary">
+                            <input type="checkbox" name="remember" id="remember">
+                            <label for="remember">
+                                Запомните меня
+                            </label>
+                        </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+                    </div>
+                    <!-- /.col -->
+                </div>
+                @if(session('error'))
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-        <div class="form-group">
-            <label for="inputEmail" class="sr-only">Email</label>
-            <input type="email" id="inputEmail" name="email" class="form-control" placeholder="Email" required autofocus>
-        </div>
+                @if($errors->any())
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </form>
 
-        <div class="form-group">
-            <label for="inputPassword" class="sr-only">Пароль</label>
-            <input type="password" id="inputPassword" name="password" class="form-control" placeholder="Пароль" required>
+            {{--<p class="mb-1">
+                <a href="{{ route('cab.forget-password') }}">Я забыль пароль</a>
+            </p>--}}
         </div>
+        <!-- /.login-card-body -->
+    </div>
+</div>
+<!-- /.login-box -->
 
-        <div class="form-group">
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
-        </div>
-    </form>
+<!-- jQuery -->
+<script src="/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="/dist/js/adminlte.min.js"></script>
+
 </body>
 </html>

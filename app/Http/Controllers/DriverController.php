@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\BT;
-use App\Car;
-use App\Direction;
-use App\Driver;
-use App\LiftCapacity;
-use App\Permit;
+use App\Models\BT;
+use App\Models\Car;
+use App\Models\Direction;
+use App\Models\Driver;
+use App\Models\LiftCapacity;
+use App\Models\Permit;
 use Illuminate\Http\Request;
 
 class DriverController extends Controller

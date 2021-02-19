@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
 
     <title>КПП - разрешение на въезд</title>
+    @stack('styles')
 </head>
 <body>
 <div id="app">
@@ -24,15 +25,17 @@
 
 <!-- Optional JavaScript -->
 <script src="/js/app.js"></script>
+
 @stack('scripts')
+
 <script type="text/javascript">
     function no_cirilic(input){
         let re = /[а-яё\. ]/gi;
         input.value = input.value.replace(re, '')
     }
-	setTimeout(function(){
+	/*setTimeout(function(){
 	   window.location.reload(1);
-	}, 1000*60*60);
+	}, 1000*60*60);*/
 </script>
 </body>
 </html>

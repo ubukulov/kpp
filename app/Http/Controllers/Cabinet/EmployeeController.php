@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Cabinet;
 
-use App\Employee;
+use App\Models\User;
 use App\Http\Controllers\Controller;
-use App\Position;
+use App\Models\Position;
+use chillerlan\QRCode\QRCode;
 use Illuminate\Http\Request;
 use Auth;
 
@@ -17,8 +18,8 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $company = Auth::guard('employee')->user()->company;
-        $employees = Employee::where(['company_id' => $company->id])->get();
+        $company = Auth::user()->company;
+        $employees = User::where(['company_id' => $company->id])->get();
         return view('cabinet.employee.index', compact('employees'));
     }
 
@@ -42,9 +43,17 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        $data['company_id'] = Auth::guard('employee')->user()->company->id;
+        $data['company_id'] = Auth::user()->company->id;
         $data['password'] = bcrypt($data['password']);
-        Employee::create($data);
+        $user = User::create($data);
+
+        // если у пользователя не задан uuid, то его генерируем и сохраняем
+        if(empty($user->uuid)){
+            $str = $user->id."-".$user->full_name;
+            $user->uuid = base64_encode($str);
+            $user->save();
+        }
+
         return redirect()->route('cabinet.employees.index');
     }
 
@@ -67,7 +76,7 @@ class EmployeeController extends Controller
      */
     public function edit($id)
     {
-        $employee = Employee::findOrFail($id);
+        $employee = User::findOrFail($id);
         $positions = Position::all();
         return view('cabinet.employee.edit', compact('employee', 'positions'));
     }
@@ -81,9 +90,17 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
+        $user = User::findOrFail($id);
         $data = $request->all();
-        $employee->update($data);
+
+        // если у пользователя не задан uuid, то его генерируем и сохраняем
+        if(empty($user->uuid)) {
+            $str = $user->id."-".$user->full_name;
+            $data['uuid'] = base64_encode($str);
+        }
+
+        $user->update($data);
+
         return redirect()->route('cabinet.employees.index');
     }
 
@@ -98,5 +115,19 @@ class EmployeeController extends Controller
         //
     }
 
+    public function badge($id)
+    {
+        $user = User::findOrFail($id);
 
+        // если у пользователя не задан uuid, то его генерируем и сохраняем
+        if(empty($user->uuid)) {
+            $str = $user->id."-".$user->full_name;
+            $user->uuid = base64_encode($str);
+            $user->save();
+        }
+
+        $code = $user->uuid;
+
+        return view('cabinet.employee.badge', compact('user', 'code'));
+    }
 }

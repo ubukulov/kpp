@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Cabinet;
 
-use App\Driver;
+use App\Models\Driver;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Auth;

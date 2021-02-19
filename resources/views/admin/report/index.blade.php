@@ -205,6 +205,8 @@
                         { text: 'Телефон', value: 'phone' },
                         { text: 'Груз.под', value: 'lc_id' },
                         { text: 'Тип кузова', value: 'bt_id' },
+                        { text: 'Название т.к/частник', value: 'from_company' },
+                        { text: 'Маршрут', value: 'to_city' },
                         { text: 'Оформил', value: 'is_driver' },
                         { text: 'Дата заезда', value: 'date_in' },
                         { text: 'Дата выезда', value: 'date_out' },

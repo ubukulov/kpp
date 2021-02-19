@@ -33,12 +33,12 @@
 
                 <div class="form-group">
                     <label>Телефон</label>
-                    <input type="text" value="{{ $employee->phone }}" class="form-control" name="phone" required>
+                    <input type="text" value="{{ $employee->phone }}" class="form-control" name="phone">
                 </div>
 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" value="{{ $employee->email }}" class="form-control" name="email" required>
+                    <input type="email" value="{{ $employee->email }}" class="form-control" name="email">
                 </div>
             </div>
             <!-- /.card-body -->

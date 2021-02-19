@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\BodyType;
-use App\CategoryTC;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use mysqli;
 
 class ScangoController extends Controller
 {

@@ -10,7 +10,7 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        Sk::sendHttpRequest();
+        //Sk::sendHttpRequest();
         return view('cabinet.service.index');
     }
 }

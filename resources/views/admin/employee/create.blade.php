@@ -41,17 +41,51 @@
 
                 <div class="form-group">
                     <label>Телефон</label>
-                    <input type="text" class="form-control" name="phone" required>
+                    <input type="text" class="form-control" name="phone">
                 </div>
 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" class="form-control" name="email" required>
+                    <input type="email" class="form-control" name="email">
                 </div>
 
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="text" class="form-control" name="password" required>
+                    <input type="text" class="form-control" name="password">
+                </div>
+
+                <hr>
+
+                <div style="background: #ccc; padding: 5px;">
+                    <p>Укажите роли и разрешение к ним</p>
+                    <div class="form-group">
+                        <label>Выберите ролей</label>
+                        <select name="roles[]" class="form-control" multiple>
+                            @foreach($roles as $role)
+                                <option value="{{$role->id}}">{{$role->name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Укажите разрешение</label>
+                        <select name="permissions[]" class="form-control" multiple>
+                            @foreach($permissions as $permission)
+                                <option value="{{$permission->id}}">{{$permission->name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <p>Для операторов КПП указать обязательно. Остальным пользователям не нужно</p>
+                    <div class="form-group">
+                        <label>Названия компьютера</label>
+                        <input type="text" name="computer_name" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Названия принтера</label>
+                        <input type="text" name="printer_name" class="form-control">
+                    </div>
                 </div>
             </div>
             <!-- /.card-body -->

@@ -8,8 +8,8 @@
                 <img src="/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
             </div>--}}
             <div class="info">
-                <a href="#" class="d-block">{{ Auth::guard('employee')->user()->company->short_ru_name }}</a>
-                <a href="#" class="d-block">{{ Auth::guard('employee')->user()->full_name }}</a>
+                <a href="#" class="d-block">{{ Auth::user()->company->short_ru_name }}</a>
+                <a href="#" class="d-block">{{ Auth::user()->full_name }}</a>
             </div>
         </div>
 
@@ -26,14 +26,14 @@
                         </p>
                     </a>
                 </li>--}}
-                {{--<li class="nav-item">
+                <li class="nav-item">
                     <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
                         <i class="nav-icon fas fa-users"></i>
                         <p>
                             Список сотрудников
                         </p>
                     </a>
-                </li>--}}
+                </li>
 
                 <li class="nav-item">
                     <a href="{{ route('cabinet.report.index') }}" class="nav-link @if(request()->is('cabinet/reports*')) active @endif">
@@ -78,7 +78,7 @@
                     </a>
                 </li>--}}
                 <li class="nav-item">
-                    <a href="{{ route('cabinet.logout') }}" class="nav-link">
+                    <a href="{{ route('logout') }}" class="nav-link">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>
                             Выйти из кабинета

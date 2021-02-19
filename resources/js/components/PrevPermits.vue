@@ -8,16 +8,6 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <select v-model="computer_name" tabindex="10" name="computer_name" class="form-control">
-                            <option value="1">КПП №2 (бутик №1)</option>
-                            <option value="2">КПП №2 (бутик №2)</option>
-                            <!--<option value="1">Гега</option>
-                            <option value="2">AILP</option>-->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
                         <button style="color: #fff;" class="btn btn-dark" type="button" @click="getPermits()">Обновить</button>
                     </div>
                 </div>
@@ -215,7 +205,11 @@
                         this.permits = res.data;
                     })
                     .catch(err => {
-                        console.log(err)
+                        if(err.response.status == 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
                     })
             },
             print_r(id){
@@ -224,15 +218,18 @@
                     this.errors.push('Укажите компанию');
                 }
                 if (this.errors.length == 0) {
-                    axios.get('/command/print/'+id+"/"+this.computer_name+'/'+this.company_id)
+                    axios.get('/command/print/'+id+"/"+this.company_id)
                         .then(res => {
                             console.log(res);
                             this.getPermits();
                             this.dialog = false;
-
                         })
                         .catch(err => {
-                            console.log(err)
+                            if(err.response.status == 401) {
+                                window.location.href = '/login';
+                            } else {
+                                console.log(err)
+                            }
                         })
                 }
             },
@@ -268,7 +265,11 @@
                     this.dialog = true;
                 })
                 .catch(err => {
-                    console.log(err)
+                    if(err.response.status == 401) {
+                        window.location.href = '/login';
+                    } else {
+                        console.log(err)
+                    }
                 })
             },
             closeForm(){

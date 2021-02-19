@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{{ Auth::guard('employee')->user()->company->short_en_name }} | Личный кабинет</title>
+    <title>{{ Auth::user()->company->short_en_name }} | Личный кабинет</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Font Awesome -->

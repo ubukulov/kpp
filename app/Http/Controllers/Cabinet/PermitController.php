@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Cabinet;
 
-use App\BT;
-use App\Car;
-use App\Direction;
-use App\Driver;
+use App\Models\BT;
+use App\Models\Car;
+use App\Models\Direction;
+use App\Models\Driver;
 use App\Http\Controllers\Controller;
-use App\LiftCapacity;
-use App\Permit;
+use App\Models\LiftCapacity;
+use App\Models\Permit;
 use Illuminate\Http\Request;
 use Auth;
 
@@ -21,7 +21,7 @@ class PermitController extends Controller
      */
     public function index()
     {
-        $company = Auth::guard('employee')->user()->company;
+        $company = Auth::user()->company;
         $permits = Permit::where(['company_id' => $company->id, 'is_driver' => 2])->orderBy('id', 'DESC')->get();
         return view('cabinet.permit.index', compact('permits'));
     }
@@ -48,7 +48,7 @@ class PermitController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        $company = Auth::guard('employee')->user()->company;
+        $company = Auth::user()->company;
         $data['company_id'] = $company->id;
         $data['company'] = $company->short_ru_name;
         $data['is_driver'] = 2;

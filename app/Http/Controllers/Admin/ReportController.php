@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Company;
+use App\Models\Company;
 use App\Http\Controllers\Controller;
-use App\Permit;
+use App\Models\Permit;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller

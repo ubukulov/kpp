@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Driver;
+use App\Models\Driver;
 use App\Http\Controllers\Controller;
-use App\Permit;
-use Illuminate\Http\Request;
 
 class DriverController extends Controller
 {

@@ -4,23 +4,48 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Auth;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseController
 {
     public function loginForm()
     {
-    	//dd(strtotime('1998-03-26'));
     	return view('login');
     }
 
     public function authenticate(Request $request)
     {
-    	$credentials = $request->only('email', 'password');
-    	//dd($data);
-    	if(Auth::attempt($credentials)) {
-    		return redirect()->route('security.kpp');
-    	} else {
-    		return redirect()->route('login');
-    	}
+        $credentials = $request->only('email', 'password');
+    	$remember = $request->input('remember');
+
+        $messages = [
+            'email.required' => 'Поле Email обязательно',
+            'password.required' => 'Поле пароль обязательно'
+        ];
+
+    	$validator = Validator::make($credentials, [
+            'email' => 'required|email',
+            'password' => 'required',
+        ], $messages);
+
+        if ($validator->fails()) {
+            return redirect()->route('login')->withErrors($validator)->withInput();
+        } else {
+            if(Auth::attempt($credentials, $remember)) {
+                if (Auth::user()->hasRole('kpp-operator')) {
+                    return redirect()->route('security.kpp');
+                } else {
+                    return redirect()->route('cabinet.report.index');
+                }
+            } else {
+                return back()->with('error', 'По введенному Email или пароль не найден пользователь');
+            }
+        }
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('login');
     }
 }

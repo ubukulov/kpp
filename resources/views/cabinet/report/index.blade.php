@@ -169,7 +169,7 @@
             vuetify: new Vuetify(),
             data(){
                 return {
-                    company_id: <?php echo Auth::guard('employee')->user()->company_id ?>,
+                    company_id: <?php echo Auth::user()->company_id ?>,
                     search: '',
                     download_btn: false,
                     searchInput: '',

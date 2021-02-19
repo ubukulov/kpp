@@ -79,6 +79,8 @@
                         .catch(err => {
                             if(err.response.status == 500) {
                                 this.failure_text = 'Внимание!!! Дата выезда уже была ранее зафиксирована!';
+                            } else if(err.response.status == 401) {
+                                window.location.href = '/login';
                             } else {
                                 this.failure_text = 'Внимание!!! Дата выезда не может быть меньше даты въезда. Проверьте еще раз!';
                             }

@@ -22,13 +22,13 @@ Vue.use(Vuetify);
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
-Vue.component('cabinet-component', require('./components/CabinetComponent.vue').default);
 Vue.component('driver-component', require('./components/DriverComponent.vue').default);
 Vue.component('kpp-component', require('./components/KppComponent.vue').default);
 Vue.component('kpp-form', require('./components/KppForm.vue').default);
 Vue.component('prev-permits', require('./components/PrevPermits.vue').default);
 Vue.component('fix-date-out-time', require('./components/FixDateOutTime.vue').default);
 Vue.component('scan-go', require('./components/SCANGO.vue').default);
+Vue.component('personal-control', require('./components/PersonalControl.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

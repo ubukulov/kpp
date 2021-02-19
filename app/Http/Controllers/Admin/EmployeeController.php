@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Company;
-use App\Employee;
+use App\Models\Company;
+use App\Models\User;
 use App\Http\Controllers\Controller;
-use App\Position;
+use App\Models\Permission;
+use App\Models\Position;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -17,7 +19,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = Employee::all();
+        $employees = User::all();
         return view('admin.employee.index', compact('employees'));
     }
 
@@ -30,7 +32,9 @@ class EmployeeController extends Controller
     {
         $companies = Company::all();
         $positions = Position::all();
-        return view('admin.employee.create', compact('companies', 'positions'));
+        $roles = Role::all();
+        $permissions = Permission::all();
+        return view('admin.employee.create', compact('companies', 'positions', 'roles', 'permissions'));
     }
 
     /**
@@ -43,7 +47,25 @@ class EmployeeController extends Controller
     {
         $data = $request->all();
         $data['password'] = bcrypt($data['password']);
-        Employee::create($data);
+        $user = User::create($data);
+
+        // если у пользователя не задан uuid, то его генерируем и сохраняем
+        $str = $user->id."-".$user->full_name;
+        $user->uuid = base64_encode($str);
+        $user->save();
+
+        // присвоение ролей к пользователю
+        foreach($request->input('roles') as $item) {
+            $role = Role::findOrFail($item);
+            $user->roles()->attach($role);
+        }
+
+        // дать разрешение к пользователю
+        foreach($request->input('permissions') as $value) {
+            $permission = Permission::findOrFail($value);
+            $user->permissions()->attach($permission);
+        }
+
         return redirect()->route('employee.index');
     }
 
@@ -66,8 +88,12 @@ class EmployeeController extends Controller
      */
     public function edit($id)
     {
-        $employee = Employee::findOrFail($id);
-        return view('admin.employee.edit', compact('employee'));
+        $employee = User::findOrFail($id);
+        $roles = Role::all();
+        $permissions = Permission::all();
+        $companies = Company::all();
+        $positions = Position::all();
+        return view('admin.employee.edit', compact('employee', 'roles', 'permissions', 'companies', 'positions'));
     }
 
     /**
@@ -79,8 +105,32 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
-        $employee->update($request->all());
+        $user = User::findOrFail($id);
+        $data = $request->all();
+        // если у пользователя не задан uuid, то его генерируем и сохраняем
+        if(empty($user->uuid)) {
+            $str = $user->id."-".$user->full_name;
+            $data['uuid'] = base64_encode($str);
+        }
+
+        $user->update($data);
+
+        // присвоение ролей к пользователю
+        foreach($request->input('roles') as $item) {
+            $role = Role::findOrFail($item);
+            if(!$user->hasRole($role->slug)) {
+                $user->roles()->attach($role);
+            }
+        }
+
+        // дать разрешение к пользователю
+        foreach($request->input('permissions') as $value) {
+            $permission = Permission::findOrFail($value);
+            if(!$user->hasPermission($permission->slug)) {
+                $user->permissions()->attach($permission);
+            }
+        }
+
         return redirect()->route('employee.index');
     }
 

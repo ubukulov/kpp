@@ -1,13 +1,11 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CategoryTC extends Model
+class Position extends Model
 {
-    protected $table = 'categories_tc';
-
     protected $fillable = [
         'title', 'created_at', 'updated_at'
     ];

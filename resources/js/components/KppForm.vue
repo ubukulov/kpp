@@ -71,8 +71,13 @@
                     </div>
 
                     <div v-if="operation_type != 3" class="form-group">
-                        <label>Название транспортной компании/частник</label>
+                        <label>Собственник по техпаспорту/частник</label>
                         <input type="text" class="form-control" v-model="from_company">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Какая транспортная компания наняла?</label>
+                        <input type="text" class="form-control" v-model="employer_name">
                     </div>
 
                     <div class="form-group">
@@ -188,16 +193,6 @@
 
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label>Компьютер</label>
-                        <select v-model="computer_name" tabindex="10" name="computer_name" class="form-control">
-                            <option value="1">КПП №2 (бутик №1)</option>
-                            <option value="2">КПП №2 (бутик №2)</option>
-                            <!--<option value="1">Гега</option>
-                            <option value="2">AILP</option>-->
-                        </select>
-                    </div>
-
-                    <div class="form-group">
                         <button :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
                     </div>
                 </div>
@@ -280,13 +275,13 @@
                 permits: [],
                 searchInput: '',
                 company_id: 0,
-                computer_name: 1,
                 capacity_id: 0,
                 bt_id: 0,
                 from_company: '',
                 to_city: '',
                 direction_id: 0,
-                orderButtonDisabled: false
+                orderButtonDisabled: false,
+                employer_name: '',
             }
         },
         props: [
@@ -309,7 +304,11 @@
                         this.from_company = res.data.from_company;
                     })
                     .catch(err => {
-                        console.log(err)
+                        if(err.response.status == 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
                     })
             },
             checkDriver(){
@@ -320,7 +319,11 @@
                         this.phone = res.data.phone
                     })
                     .catch(err => {
-                        console.log(err)
+                        if(err.response.status == 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
                     })
             },
             createPermitByKpp(){
@@ -354,6 +357,9 @@
                 }
                 if (this.bt_id == 0) {
                     this.errors.push('Укажите тип кузова');
+                }
+                if (!this.employer_name) {
+                    this.errors.push('Укажите наниматель');
                 }
 
                 if (this.operation_type != 3) {
@@ -391,6 +397,7 @@
                     formData.append('operation_type', this.operation_type);
                     formData.append('computer_name', this.computer_name);
                     formData.append('direction_id', this.direction_id);
+                    formData.append('employer_name', this.employer_name);
 
                     if(this.operation_type != 3) {
                         formData.append('from_company', this.from_company);
@@ -426,7 +433,11 @@
                         }, 800);
                     })
                     .catch(err => {
-                        console.log(err)
+                        if(err.response.status == 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
                     })
                 }
             },
@@ -436,16 +447,24 @@
                         this.permits = res.data;
                     })
                     .catch(err => {
-                        console.log(err)
+                        if(err.response.status == 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
                     })
             },
             print_r(id){
-                axios.get('/command/print/'+id+'/'+this.computer_name)
+                axios.get('/command/print/'+id)
                 .then(res => {
                     console.log(res)
                 })
                 .catch(err => {
-                    console.log(err)
+                    if(err.response.status == 401) {
+                        window.location.href = '/login';
+                    } else {
+                        console.log(err)
+                    }
                 })
             },
             currentDateTime(){
@@ -461,7 +480,3 @@
         }
     }
 </script>
-
-<style scoped>
-
-</style>
