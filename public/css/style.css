@@ -126,3 +126,22 @@ input,select, button{
 .loginUsernameLabel{
     font-size:20px;
 }
+.div_block{
+    height: 100px;
+    text-align: center;
+    width: 500px;
+    margin: 0 auto;
+    padding-top: 28px;
+    font-size: 30px;
+    color: #fff;
+}
+.success_div{
+    background: green;
+}
+.failure_div{
+    background: red;
+}
+.warning_div{
+    background: yellow;
+    color: #000;
+}

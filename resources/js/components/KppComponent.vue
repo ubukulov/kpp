@@ -29,10 +29,10 @@
                 SCANGO
                 <v-icon>mdi-qrcode-scan</v-icon>
             </v-tab>
-            <v-tab href="#tab-5">
+            <!--<v-tab href="#tab-5">
                 Контроль сотрудника
                 <v-icon>mdi-qrcode-scan</v-icon>
-            </v-tab>
+            </v-tab>-->
         </v-tabs>
 
         <v-tabs-items v-model="tab">
@@ -83,7 +83,7 @@
                 </v-card>
             </v-tab-item>
 
-            <v-tab-item
+            <!--<v-tab-item
                 :value="'tab-5'"
             >
                 <v-card flat>
@@ -91,7 +91,7 @@
                         <personal-control></personal-control>
                     </div>
                 </v-card>
-            </v-tab-item>
+            </v-tab-item>-->
         </v-tabs-items>
     </v-card>
     </v-app>

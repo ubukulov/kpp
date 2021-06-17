@@ -75,6 +75,8 @@
                             this.success = true;
                             this.permit_id = null;
                             this.failure = false;
+                            this.setDateOutByHand = false;
+                            this.date_out = '';
                         })
                         .catch(err => {
                             if(err.response.status == 500) {

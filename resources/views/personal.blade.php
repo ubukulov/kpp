@@ -44,7 +44,7 @@
 
 @section('content')
     <div class="scango-phone">
-        <span>Нужна помощь?!<br> Позвоните: 2051</span><br>или: 2112, 2212
+        <span>Нужна помощь2?!<br> Позвоните: 2051</span><br>или: 2112, 2212
     </div>
 
     <div class="scango-barcode" align="center">

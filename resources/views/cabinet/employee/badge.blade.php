@@ -66,7 +66,7 @@
 
                 <div class="col-md-12">
                     <div>
-                        <img src="/lib/sample-gd.php?code={{ $code }}" height="100">
+                        <img src="/lib/sample-gd.php?code={{ $user->getUuid() }}" height="100">
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                 <?php
                 use chillerlan\QRCode\QRCode;
                 // quick and simple:
-                echo '<img src="'.(new QRCode)->render($code).'" alt="QR Code" />';
+                echo '<img src="'.(new QRCode)->render($user->getUuid()).'" alt="QR Code" />';
                 ?>
             </div>
 

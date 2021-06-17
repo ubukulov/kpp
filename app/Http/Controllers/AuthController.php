@@ -34,6 +34,10 @@ class AuthController extends BaseController
             if(Auth::attempt($credentials, $remember)) {
                 if (Auth::user()->hasRole('kpp-operator')) {
                     return redirect()->route('security.kpp');
+                } elseif (Auth::user()->hasRole('personal-control')){
+                    return redirect()->route('personal.control');
+                } elseif(Auth::user()->hasRole('otdel-kadrov')) {
+                    return redirect()->route('cabinet.employees.index');
                 } else {
                     return redirect()->route('cabinet.report.index');
                 }

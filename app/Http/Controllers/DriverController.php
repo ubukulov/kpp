@@ -48,7 +48,7 @@ class DriverController extends Controller
             //$data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
 
             // Маршруты
-            if ($data['direction_id'] != 0 && $data['direction_id'] != 6) {
+            if (isset($data['direction_id']) && $data['direction_id'] != 0 && $data['direction_id'] != 6) {
                 $direction = Direction::findOrFail($data['direction_id']);
                 $data['to_city'] = mb_strtoupper($direction->title);
             } else {
@@ -60,8 +60,12 @@ class DriverController extends Controller
 
             // По номеру тех паспорта получаем из справочника данные и сохраняем туда
             $car = Car::where(['tex_number' => $data['tex_number']])->first();
-            $car->lc_id = $data['lc_id'];
-            $car->bt_id = $data['bt_id'];
+            if(isset($data['lc_id'])) {
+				$car->lc_id = $data['lc_id'];
+			}
+			if(isset($data['bt_id'])) {
+				$car->bt_id = $data['bt_id'];
+			}
             $car->save();
 
             if($request->input('wantToOrder') == 'true') {
@@ -74,14 +78,14 @@ class DriverController extends Controller
             }
             return json_encode($new_permit);
         } else {
-            return response(['data' => 'При формирование пропуска произошло ошибка'], 500);
+            return response(['data' => 'Не найдено! Попробуйте вести правильные данные'], 404);
         }
     }
 
     public function sendMail($permit)
     {
-        $to      = 'Rustem.Ibraimov@htl.kz';
-        $subject = 'Водитель хочеть заказ!!!';
+        $to      = 'Alexandr.Konovalov@htl.kz';
+        $subject = 'Водитель хочет получить заказы!';
         $fio = $permit->last_name;
         $phone = $permit->phone;
         $gov_number = $permit->gov_number;
@@ -115,10 +119,10 @@ class DriverController extends Controller
         $message = '
         <html>
         <head>
-          <title>Водител выразил желания работать!</title>
+          <title>Водитель выразил желание получать заказы!</title>
         </head>
         <body>
-          <p>Водител выразил желания работать!</p>
+          <p>Водитель выразил желание получать заказы!</p>
           <table>
             <tr>
               <th>ФИО</th><th>Телефон</th><th>Номер машины</th><th>Номер вод.удос</th>
@@ -137,9 +141,9 @@ class DriverController extends Controller
 
         $headers  = 'MIME-Version: 1.0' . "\r\n";
         $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
-        $headers .= 'To: Rustem Ibraimov <rustem.ibraimov@example.com>';
+        $headers .= 'To: Alexandr Konovalov <Alexandr.Konovalov@htl.kz>';
         $headers .= 'From: KPP <info@htl.kz>' . "\r\n";
-        $headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz, bekzhan.salibayev@ailp.kz';
+        $headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz, bekzhan.salibayev@ailp.kz, Nurken.Ramankul@htl.kz';
 
         mail($to, $subject, $message, $headers);
     }

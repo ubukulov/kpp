@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/css/report_menu.css">
 @endpush
 @section('content')
     <div class="row">
@@ -17,7 +18,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-12">
-                            <h3 class="card-title">Сформировать отчёт</h3>
+                            @include('admin.partials.reports_menu')
                         </div>
                     </div>
 

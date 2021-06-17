@@ -54,6 +54,24 @@
                                 <p>Список компании</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('department.index') }}" class="nav-link @if(request()->is('admin/department*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Подразделение</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('role.index') }}" class="nav-link @if(request()->is('admin/role*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Роль</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('permission.index') }}" class="nav-link @if(request()->is('admin/permission*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Разрешение</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item">

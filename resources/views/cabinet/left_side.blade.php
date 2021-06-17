@@ -26,6 +26,7 @@
                         </p>
                     </a>
                 </li>--}}
+                @role('otdel-kadrov')
                 <li class="nav-item">
                     <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
                         <i class="nav-icon fas fa-users"></i>
@@ -34,6 +35,7 @@
                         </p>
                     </a>
                 </li>
+                @endrole
 
                 <li class="nav-item">
                     <a href="{{ route('cabinet.report.index') }}" class="nav-link @if(request()->is('cabinet/reports*')) active @endif">
@@ -44,6 +46,18 @@
                     </a>
                 </li>
 
+                @if(Auth::user()->company->id == 2)
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.kpp.samsung') }}" class="nav-link @if(request()->is('cabinet/kpp*')) active @endif">
+                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <p>
+                            КПП
+                        </p>
+                    </a>
+                </li>
+                @endif
+
+                @if(\Gate::allows('create-permit'))
                 <li class="nav-item">
                     <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
                         <i class="nav-icon fas fa-align-justify"></i>
@@ -52,6 +66,7 @@
                         </p>
                     </a>
                 </li>
+                @endif
 
                 {{--<li class="nav-item">
                     <a href="{{ route('cabinet.service.index') }}" class="nav-link @if(request()->is('cabinet/services*')) active @endif">

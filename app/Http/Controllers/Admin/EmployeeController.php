@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Company;
+use App\Models\Department;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Position;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use File;
+use Image;
 
 class EmployeeController extends Controller
 {
@@ -19,7 +22,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = User::all();
+        $employees = User::orderBy('id', 'DESC')->get();
         return view('admin.employee.index', compact('employees'));
     }
 
@@ -34,7 +37,8 @@ class EmployeeController extends Controller
         $positions = Position::all();
         $roles = Role::all();
         $permissions = Permission::all();
-        return view('admin.employee.create', compact('companies', 'positions', 'roles', 'permissions'));
+        $departments = Department::all();
+        return view('admin.employee.create', compact('companies', 'positions', 'roles', 'permissions', 'departments'));
     }
 
     /**
@@ -46,7 +50,7 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        $data['password'] = bcrypt($data['password']);
+        $data['password'] = (empty($data['password'])) ? null :bcrypt($data['password']);
         $user = User::create($data);
 
         // если у пользователя не задан uuid, то его генерируем и сохраняем
@@ -54,16 +58,29 @@ class EmployeeController extends Controller
         $user->uuid = base64_encode($str);
         $user->save();
 
+        // Зафиксируем статусы
+        if ($user->hasWorkingStatus()) {
+            if ($user->getWorkingStatus()->status != $data['status']) {
+                $user->createUserHistory($user, $data);
+            }
+        } else {
+            $user->createUserHistory($user, $data);
+        }
+
         // присвоение ролей к пользователю
-        foreach($request->input('roles') as $item) {
-            $role = Role::findOrFail($item);
-            $user->roles()->attach($role);
+        if(!empty($data['roles'])) {
+            foreach($data['roles'] as $item) {
+                $role = Role::findOrFail($item);
+                $user->roles()->attach($role);
+            }
         }
 
         // дать разрешение к пользователю
-        foreach($request->input('permissions') as $value) {
-            $permission = Permission::findOrFail($value);
-            $user->permissions()->attach($permission);
+        if (!empty($data['permissions'])) {
+            foreach($data['permissions'] as $value) {
+                $permission = Permission::findOrFail($value);
+                $user->permissions()->attach($permission);
+            }
         }
 
         return redirect()->route('employee.index');
@@ -93,7 +110,8 @@ class EmployeeController extends Controller
         $permissions = Permission::all();
         $companies = Company::all();
         $positions = Position::all();
-        return view('admin.employee.edit', compact('employee', 'roles', 'permissions', 'companies', 'positions'));
+        $departments = Department::all();
+        return view('admin.employee.edit', compact('employee', 'roles', 'permissions', 'companies', 'positions', 'departments'));
     }
 
     /**
@@ -115,20 +133,63 @@ class EmployeeController extends Controller
 
         $user->update($data);
 
+        // Зафиксируем статусы
+        if ($user->hasWorkingStatus()) {
+            if ($user->getWorkingStatus()->status != $data['status']) {
+                $user->createUserHistory($user, $data);
+            }
+        } else {
+            $user->createUserHistory($user, $data);
+        }
+
         // присвоение ролей к пользователю
-        foreach($request->input('roles') as $item) {
-            $role = Role::findOrFail($item);
-            if(!$user->hasRole($role->slug)) {
-                $user->roles()->attach($role);
+        if (!empty($data['roles'])) {
+            foreach($data['roles'] as $item) {
+                $role = Role::findOrFail($item);
+                if(!$user->hasRole($role->slug)) {
+                    $user->roles()->attach($role);
+                }
             }
         }
 
         // дать разрешение к пользователю
-        foreach($request->input('permissions') as $value) {
-            $permission = Permission::findOrFail($value);
-            if(!$user->hasPermission($permission->slug)) {
-                $user->permissions()->attach($permission);
+        if (!empty($data['permissions'])) {
+            foreach($data['permissions'] as $value) {
+                $permission = Permission::findOrFail($value);
+                if(!$user->hasPermission($permission->slug)) {
+                    $user->permissions()->attach($permission);
+                }
             }
+        }
+
+        // Проверка на наличие картинки (лицевая)
+        if ($request->path_docs_fac && !empty($request->path_docs_fac)){
+            // Подготовка папок для сохранение картинки
+            $dir = '/users_photos/'. substr(md5(microtime()), mt_rand(0, 30), 2) . '/' . substr(md5(microtime()), mt_rand(0, 30), 2);
+            if(!File::isDirectory(public_path(). $dir)){
+                File::makeDirectory(public_path(). $dir, 0777, true);
+            }
+
+            if(!empty($user->image)){
+                unlink(public_path() . $user->image);
+            }
+
+            $image = $request->input('path_docs_fac'); // image base64 encoded
+            preg_match("/data:image\/(.*?);/",$image,$image_extension); // extract the image extension
+            $image = preg_replace('/data:image\/(.*?);base64,/','',$image); // remove the type part
+            $image = str_replace(' ', '+', $image);
+            $imageName = $user->id.'_f_'.time() . '.' . $image_extension[1]; //generating unique file name;
+            $imageName2 = $user->id.'_l_'.time() . '.' . $image_extension[1]; //generating unique file name;
+            //File::put(public_path(). $dir.'/'.$imageName,base64_decode($image));
+
+            // create instance
+            $img = Image::make(base64_decode($image));
+            $img->save(public_path() . $dir . '/'.$imageName2);
+            // resize image to fixed size
+            $img->resize(200, 150);
+            $img->save(public_path() . $dir . '/'.$imageName);
+            $user->image = $dir.'/'.$imageName;
+            $user->save();
         }
 
         return redirect()->route('employee.index');
@@ -143,5 +204,18 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function badge($id)
+    {
+        $user = User::findOrFail($id);
+        return view('admin.employee.badge', compact('user'));
+    }
+
+    public function badges($ids)
+    {
+        $ids = explode(",", $ids);
+        $users = User::whereIn('id', $ids)->get();
+        return view('admin.employee.badges', compact('users'));
     }
 }

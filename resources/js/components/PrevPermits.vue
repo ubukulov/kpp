@@ -60,7 +60,7 @@
                     <v-card-text>
                         <v-container>
                             <v-row>
-                                <v-col cols="12">
+                                <v-col cols="6">
                                     <div class="form-group">
                                         <label>Уточните компанию у водителя</label>
                                         <v-autocomplete
@@ -72,6 +72,22 @@
                                             item-value="id"
                                             v-model="company_id"
                                             item-text="short_en_name"
+                                            autocomplete
+                                        ></v-autocomplete>
+                                    </div>
+                                </v-col>
+
+                                <v-col cols="6">
+                                    <div class="form-group">
+                                        <label>Иностранная машина?</label>
+                                        <v-autocomplete
+                                            :items="foreign_cars"
+                                            class="form-control"
+                                            style="border: 3px solid blue;"
+                                            :hint="`${foreign_cars.id}, ${foreign_cars.text}`"
+                                            item-value="f_id"
+                                            v-model="foreign_car"
+                                            item-text="text"
                                             autocomplete
                                         ></v-autocomplete>
                                     </div>
@@ -162,6 +178,7 @@
                 phone: '',
                 company: '',
                 company_id: 0,
+                foreign_car: 0,
                 searchInput: '',
                 errors: [],
                 headers: [
@@ -193,6 +210,17 @@
                     { text: 'Дата создания', value: 'created_at' },
                     { text: 'Ред.', value: 'edit' },
                 ],
+                foreign_cars: [
+                    {
+                        f_id: 0, text: 'Не указано'
+                    },
+                    {
+                        f_id: 1, text: 'Казахстанская'
+                    },
+                    {
+                        f_id: 2, text: 'Иностранная'
+                    }
+                ]
             }
         },
         props: [
@@ -217,8 +245,12 @@
                 if (this.company_id == 0) {
                     this.errors.push('Укажите компанию');
                 }
+                if (this.foreign_car == 0) {
+                    this.errors.push('Машина иностранная?');
+                }
+
                 if (this.errors.length == 0) {
-                    axios.get('/command/print/'+id+"/"+this.company_id)
+                    axios.get('/command/print/'+id+"/"+this.company_id+"/"+this.foreign_car)
                         .then(res => {
                             console.log(res);
                             this.getPermits();

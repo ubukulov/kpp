@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Driver;
-use App\Permit;
+use App\Models\Driver;
+use App\Models\Permit;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

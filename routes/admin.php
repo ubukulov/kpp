@@ -16,8 +16,13 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
         # Company's routes
         Route::resource('/company', 'CompanyController');
 
+        # Department's routes
+        Route::resource('/department', 'DepartmentController');
+
         # Employee's routes
         Route::resource('/employee', 'EmployeeController');
+        Route::get('/employee/{id}/badge', 'EmployeeController@badge')->name('admin.employee.badge');
+        Route::get('/employee/badges/{ids}', 'EmployeeController@badges');
 
         # Driver's routes
         Route::get('/drivers', 'DriverController@index')->name('admin.drivers.index');
@@ -25,9 +30,16 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
         # Reports
         Route::get('/reports', 'ReportController@index')->name('admin.reports.index');
         Route::post('/get/permits', 'ReportController@getPermits');
+        Route::get('/reports/statistics', 'ReportController@statistics')->name('admin.reports.statistics');
 
         # Рассылка по WhatsApp
-        Route::get('/sending-by-whatsapp', 'AdminController@getSendByWhatsApp')->name('admin.whatsapp.index');
-        Route::post('/sending-by-whatsapp', 'AdminController@sendByWhatsApp')->name('admin.whatsapp.send');
+        //Route::get('/sending-by-whatsapp', 'AdminController@getSendByWhatsApp')->name('admin.whatsapp.index');
+        //Route::post('/sending-by-whatsapp', 'AdminController@sendByWhatsApp')->name('admin.whatsapp.send');
+
+        # Роль
+        Route::resource('/role', 'RoleController');
+
+        # Разрешение
+        Route::resource('/permission', 'PermissionController');
     });
 });

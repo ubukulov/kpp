@@ -13,9 +13,9 @@ class User extends Authenticatable
     use Notifiable, HasRolesAndPermissions;
 
     protected $fillable = [
-        'company_id', 'position_id', 'full_name', 'phone', 'email', 'password',
-        'computer_name', 'printer_name',
-        'remember_token', 'uuid', 'created_at', 'updated_at'
+        'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'email', 'password',
+        'computer_name', 'printer_name', 'kpp_name',
+        'remember_token', 'uuid', 'image', 'created_at', 'updated_at'
     ];
 
     public function company()
@@ -26,5 +26,65 @@ class User extends Authenticatable
     public function position()
     {
         return $this->belongsTo('App\Models\Position');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function setUuidIfNot()
+    {
+        $str = $this->id."-".$this->full_name;
+        $this->uuid = base64_encode($str);
+        $this->save();
+    }
+
+    public function getUuid()
+    {
+        if(empty($this->uuid)) {
+            $this->setUuidIfNot();
+        }
+        return $this->uuid;
+    }
+
+    public function getWorkingStatusAll()
+    {
+        return $this->hasMany(UserHistory::class, 'user_id');
+    }
+
+    public function hasWorkingStatus()
+    {
+        return ($this->getWorkingStatusAll()->count() != 0) ? true : false;
+    }
+
+    public function createUserHistory(User $user, $data)
+    {
+        $data['user_id'] = $user->id;
+        UserHistory::create($data);
+    }
+
+    public function getWorkingStatus()
+    {
+        $user_history = UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
+        if(!$user_history){
+            UserHistory::create(['user_id' => $this->id, 'status' => 'works']);
+            return UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
+        }
+
+        return $user_history;
+    }
+
+    public function hasWorkPermission()
+    {
+        $current_status = $this->getWorkingStatus();
+        if ($current_status) {
+            // если есть история, то проверяем его статус
+            if($current_status->status == 'fired') {
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 }

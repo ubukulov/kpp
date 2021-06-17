@@ -36,14 +36,13 @@ class IndexController extends BaseController
         $company = Company::findOrFail($request->input('company_id'));
         $data = $request->except(['path_docs_fac', 'path_docs_back']);
         $data['company'] = $company->short_en_name;
-        $com_id = $request->input('computer_name');
         $data['gov_number'] = mb_strtoupper(trim($data['gov_number']));
         $data['tex_number'] = strtoupper(trim($data['tex_number']));
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
         $data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
 		$data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
-
+        $data['kpp_name'] = Auth::user()->kpp_name;
 		// Маршруты
 		if ($data['direction_id'] != 0 && $data['direction_id'] != 6) {
 		    $direction = Direction::findOrFail($data['direction_id']);
@@ -66,12 +65,13 @@ class IndexController extends BaseController
             Car::create([
                 'tex_number' => $data['tex_number'], 'gov_number' => $data['gov_number'], 'mark_car' => $data['mark_car'],
                 'pr_number' => mb_strtoupper($data['pr_number']), 'lc_id' => $data['lc_id'], 'bt_id' => $data['bt_id'],
-                'from_company' => $data['from_company']
+                'from_company' => $data['from_company'], 'foreign_car' => $data['foreign_car']
             ]);
         } else {
             $car = Car::where(['tex_number' => $data['tex_number']])->first();
             $car->lc_id = $data['lc_id'];
             $car->bt_id = $data['bt_id'];
+            $car->foreign_car = $data['foreign_car'];
             $car->from_company = $data['from_company'];
             $car->save();
         }
@@ -116,13 +116,14 @@ class IndexController extends BaseController
 
     public function getPermits()
     {
-        $permits = Permit::whereNotNull('date_in')->orderBy('id', 'DESC')->take(20)->get();
+        $user = Auth::user();
+        $permits = Permit::whereNotNull('date_in')->where(['kpp_name' => $user->kpp_name])->orderBy('id', 'DESC')->take(15)->get();
         return json_encode($permits);
     }
 
     public function getPrevPermitsForToday()
     {
-        $permits = Permit::where(['status' => 'awaiting_print'])->where('is_driver', '>', 0)->whereDate('created_at', Carbon::today())->orderBy('id', 'DESC')->get();
+        $permits = Permit::where(['status' => 'awaiting_print'])->where('tex_number', '<>', 'AA123456')->where('is_driver', '>', 0)->whereDate('created_at', Carbon::today())->orderBy('id', 'DESC')->get();
         return json_encode($permits);
     }
 
@@ -199,11 +200,12 @@ class IndexController extends BaseController
     }
 
     // Метод для печати пропуска
-    public function start_print($permit_id, $company_id = 0)
+    public function start_print($permit_id, $company_id = 0, $foreign_car = 0)
     {
         $user = Auth::user();
         $computer_name = $user->computer_name;
         $printer_name = $user->printer_name;
+        $kpp_name = $user->kpp_name;
 
         $permit = Permit::findOrFail($permit_id);
         $printer = "\\\\".$computer_name.$printer_name;
@@ -221,8 +223,15 @@ class IndexController extends BaseController
             $comp = Company::findOrFail($company_id);
             $permit->company = $comp->short_en_name;
             $permit->company_id = $company_id;
+            $permit->kpp_name = $kpp_name;
             $permit->save();
         }
+
+        if ($foreign_car != 0){
+            $permit->foreign_car = $foreign_car;
+            $permit->save();
+        }
+
         if ($permit->status == 'awaiting_print') {
             $permit->status = 'printed';
             $permit->date_in = date('Y-m-d H:i:s');

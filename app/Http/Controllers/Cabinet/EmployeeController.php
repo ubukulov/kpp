@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Models\Company;
+use App\Models\Department;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Models\Position;
-use chillerlan\QRCode\QRCode;
 use Illuminate\Http\Request;
 use Auth;
 
@@ -30,8 +31,10 @@ class EmployeeController extends Controller
      */
     public function create()
     {
+        $companies = Company::all();
         $positions = Position::all();
-        return view('cabinet.employee.create', compact('positions'));
+        $departments = Department::all();
+        return view('cabinet.employee.create', compact('positions', 'companies', 'departments'));
     }
 
     /**
@@ -52,6 +55,15 @@ class EmployeeController extends Controller
             $str = $user->id."-".$user->full_name;
             $user->uuid = base64_encode($str);
             $user->save();
+        }
+
+        // Зафиксируем статусы
+        if ($user->hasWorkingStatus()) {
+            if ($user->getWorkingStatus()->status != $data['status']) {
+                $user->createUserHistory($user, $data);
+            }
+        } else {
+            $user->createUserHistory($user, $data);
         }
 
         return redirect()->route('cabinet.employees.index');
@@ -77,8 +89,10 @@ class EmployeeController extends Controller
     public function edit($id)
     {
         $employee = User::findOrFail($id);
+        $companies = Company::all();
         $positions = Position::all();
-        return view('cabinet.employee.edit', compact('employee', 'positions'));
+        $departments = Department::all();
+        return view('cabinet.employee.edit', compact('employee', 'positions', 'companies', 'departments'));
     }
 
     /**
@@ -97,6 +111,15 @@ class EmployeeController extends Controller
         if(empty($user->uuid)) {
             $str = $user->id."-".$user->full_name;
             $data['uuid'] = base64_encode($str);
+        }
+
+        // Зафиксируем статусы
+        if ($user->hasWorkingStatus()) {
+            if ($user->getWorkingStatus()->status != $data['status']) {
+                $user->createUserHistory($user, $data);
+            }
+        } else {
+            $user->createUserHistory($user, $data);
         }
 
         $user->update($data);
@@ -118,16 +141,13 @@ class EmployeeController extends Controller
     public function badge($id)
     {
         $user = User::findOrFail($id);
+        return view('cabinet.employee.badge', compact('user'));
+    }
 
-        // если у пользователя не задан uuid, то его генерируем и сохраняем
-        if(empty($user->uuid)) {
-            $str = $user->id."-".$user->full_name;
-            $user->uuid = base64_encode($str);
-            $user->save();
-        }
-
-        $code = $user->uuid;
-
-        return view('cabinet.employee.badge', compact('user', 'code'));
+    public function badges($ids)
+    {
+        $ids = explode(",", $ids);
+        $users = User::whereIn('id', $ids)->get();
+        return view('cabinet.employee.badges', compact('users'));
     }
 }

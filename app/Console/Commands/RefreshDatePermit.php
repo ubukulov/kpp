@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Permit;
+use App\Models\Permit;
 
 class RefreshDatePermit extends Command
 {

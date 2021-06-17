@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Car;
-use App\Permit;
+use App\Models\Car;
+use App\Models\Permit;
 use Illuminate\Console\Command;
 
 class RefreshCar extends Command

@@ -37,10 +37,7 @@
                         <input v-model="mark_car" type="text" tabindex="3" name="mark_car" class="form-control">
                     </div>
 
-
-
                     <div class="row">
-
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Грузоподъемность ТС</label>
@@ -161,7 +158,14 @@
                         </div>
                     </div>
 
-
+                    <div class="form-group">
+                        <label>Иностранная машина?</label>
+                        <select v-model="foreign_car" tabindex="10" name="foreign_car" class="form-control">
+                            <option value="0">Не указано</option>
+                            <option value="1">Казахстанская</option>
+                            <option value="2">Иностранная</option>
+                        </select>
+                    </div>
 
                 </div>
 
@@ -193,7 +197,8 @@
 
                 <div class="col-md-12">
                     <div class="form-group">
-                        <button :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
+                        <button id="ppb" :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
+                        &nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-warning" @click="enablePrintButton()">Активировать кнопку</button>
                     </div>
                 </div>
             </div>
@@ -282,6 +287,7 @@
                 direction_id: 0,
                 orderButtonDisabled: false,
                 employer_name: '',
+                foreign_car: 0,
             }
         },
         props: [
@@ -301,6 +307,7 @@
                         this.pr_number = res.data.pr_number;
                         this.capacity_id = res.data.lc_id;
                         this.bt_id = res.data.bt_id;
+                        this.foreign_car = res.data.foreign_car;
                         this.from_company = res.data.from_company;
                     })
                     .catch(err => {
@@ -376,6 +383,10 @@
                     }
                 }
 
+                if (this.foreign_car == 0) {
+                    this.errors.push('Укажите поле "Машина иностранная?"');
+                }
+
                 if (this.errors.length == 0) {
                     this.orderButtonDisabled = true;
                     const config = {
@@ -398,6 +409,7 @@
                     formData.append('computer_name', this.computer_name);
                     formData.append('direction_id', this.direction_id);
                     formData.append('employer_name', this.employer_name);
+                    formData.append('foreign_car', this.foreign_car);
 
                     if(this.operation_type != 3) {
                         formData.append('from_company', this.from_company);
@@ -417,6 +429,7 @@
                         this.ud_number = '';
                         this.last_name = '';
                         this.from_company = '';
+                        this.employer_name = '';
                         this.to_city = '';
                         this.phone = '';
                         this.company_id = 0;
@@ -436,7 +449,7 @@
                         if(err.response.status == 401) {
                             window.location.href = '/login';
                         } else {
-                            console.log(err)
+                            console.log(err);
                         }
                     })
                 }
@@ -471,6 +484,9 @@
                 let d = new Date();
                 //return ((d.getDate() < 10)?"0":"") + d.getDate() +"."+(((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) +"."+ d.getFullYear()+" "+((d.getHours() < 10)?"0":"") + d.getHours() +":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
                 return d.getFullYear()+ "-" + (((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) + "-" + ((d.getDate() < 10)?"0":"") + d.getDate() +"T"+ ((d.getHours() < 10)?"0":"") + d.getHours() + ":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
+            },
+            enablePrintButton(){
+                $("#ppb").removeAttr('disabled');
             }
         },
         created(){

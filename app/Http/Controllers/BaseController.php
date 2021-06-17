@@ -10,7 +10,7 @@ class BaseController extends Controller
 {
     public function __construct()
     {
-        $companies = Company::where('type_company', '!=', 'undefined')->get();
+        $companies = Company::orderBy('short_en_name')->get();
         View::share('companies', $companies);
     }
 }

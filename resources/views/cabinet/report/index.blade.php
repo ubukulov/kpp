@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/css/report_menu.css">
 @endpush
 @section('content')
     <div class="row">
@@ -17,7 +18,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-12">
-                            <h3 class="card-title">Отчет по пропускам</h3>
+                            @include('cabinet.partials.report_menu')
                         </div>
                     </div>
 
@@ -30,7 +31,7 @@
                                 <template>
                                     <v-container>
                                         <v-row>
-                                            <v-col md="4">
+                                            <v-col md="3">
                                                 <v-menu
                                                     v-model="menu2"
                                                     :close-on-content-click="false"
@@ -53,8 +54,9 @@
                                                 </v-menu>
                                             </v-col>
 
-                                            <v-col md="4">
+                                            <v-col md="3">
                                                 <v-menu
+                                                    class="menu3"
                                                     v-model="menu3"
                                                     :close-on-content-click="false"
                                                     :nudge-right="40"
@@ -76,8 +78,19 @@
                                                 </v-menu>
                                             </v-col>
 
-                                            <v-col md="4">
+                                            <v-col md="6">
                                                 <v-btn type="button" @click="getPermits()" class="primary">Показать</v-btn>
+                                                <v-btn style="margin-left: 10px;" type="button" @click="downloadReport()" class="success">Скачать отчёт</v-btn>
+                                            </v-col>
+
+                                            <v-col md="12">
+                                                <div v-if="progress_circule" class="text-center">
+                                                    <v-progress-circular
+                                                        style="width: 100px; height: 100px;"
+                                                        indeterminate
+                                                        color="primary"
+                                                    ></v-progress-circular>
+                                                </div>
                                             </v-col>
                                         </v-row>
                                     </v-container>
@@ -192,6 +205,9 @@
                         { text: 'Дата заезда', value: 'date_in' },
                         { text: 'Дата выезда', value: 'date_out' },
                     ],
+                    menu2: false,
+                    menu3: false,
+                    progress_circule: false,
                 }
             },
             methods: {
@@ -209,6 +225,23 @@
                         .catch(err => {
                             console.log(err)
                         })
+                },
+                downloadReport(){
+                    this.progress_circule = true;
+                    let formData = new FormData();
+                    formData.append('from_date', this.from_date);
+                    formData.append('to_date', this.to_date);
+                    formData.append('company_id', this.company_id);
+                    axios.post('/cabinet/reports/download-report', formData)
+                        .then(res => {
+                            console.log(res.data);
+                            window.location.href = res.data;
+                            this.progress_circule = false;
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        })
+
                 },
                 toExcel() {
                     var workbook = XLSX.utils.table_to_book(document.getElementById('printTable'));
