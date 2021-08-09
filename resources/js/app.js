@@ -29,6 +29,9 @@ Vue.component('prev-permits', require('./components/PrevPermits.vue').default);
 Vue.component('fix-date-out-time', require('./components/FixDateOutTime.vue').default);
 Vue.component('scan-go', require('./components/SCANGO.vue').default);
 Vue.component('personal-control', require('./components/PersonalControl.vue').default);
+Vue.component('search', require('./components/SearchComponent.vue').default);
+Vue.component('kt', require('./components/KT.vue').default);
+Vue.component('kt-operator-task-create', require('./components/KT_OperatorTaskCreate.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

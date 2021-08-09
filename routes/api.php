@@ -17,9 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/order-permit-by-driver', 'DriverController@orderPermitByDriver');
+
 Route::group(['namespace' => 'API'], function(){
     Route::get('/get-driver-info-by-phone/{phone}', 'ApiController@getDriverInfoByPhone');
     Route::get('/get-companies-info', 'ApiController@getCompaniesInfo');
-    Route::post('/order-permit-by-driver', 'DriverController@orderPermitByDriver');
     Route::post('/sync-permit-status-with-other-platform', 'ApiController@changePermitStatus');
 });

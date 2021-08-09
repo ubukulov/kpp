@@ -41,5 +41,11 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 
         # Разрешение
         Route::resource('/permission', 'PermissionController');
+
+        # Container Address
+        Route::resource('/container-address', 'ContainerAddressController', ['as' => 'admin']);
+
+        # Container
+        Route::resource('/containers', 'ContainerController', ['as' => 'admin']);
     });
 });

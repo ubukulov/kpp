@@ -30,6 +30,7 @@
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Подразделение</th>
+                            <th>Статус</th>
                             <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
@@ -43,6 +44,7 @@
                             <td>
                                 {{ $employee->department->title }}
                             </td>
+                            <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
                             <td>
                                 <a target="_blank" href="{{ route('employee.badge', ['id' => $employee->id]) }}">
                                     <i class="fa fa-print"></i>
@@ -60,6 +62,7 @@
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Подразделение</th>
+                            <th>Статус</th>
                             <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>

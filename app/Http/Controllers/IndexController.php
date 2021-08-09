@@ -147,6 +147,12 @@ class IndexController extends BaseController
         return json_encode($driver);
     }
 
+    public function getNotCompletedPermitsForWeek()
+    {
+        $permits = Permit::whereNull('date_out')->whereNotNull('date_in')->where('created_at', '>=', Carbon::now()->subDays(7))->orderBy('id', 'DESC')->get();
+        return response()->json($permits);
+    }
+
     public function searchPermit(Request $request)
     {
         $search_word = trim($request->input('search'));

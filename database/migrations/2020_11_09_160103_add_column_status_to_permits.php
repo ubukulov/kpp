@@ -14,7 +14,7 @@ class AddColumnStatusToPermits extends Migration
     public function up()
     {
         Schema::table('permits', function (Blueprint $table) {
-            $table->enum('status', ['printed', 'awaiting_print'])->after('cat_tc_id');
+            $table->enum('status', ['printed', 'awaiting_print', 'deleted'])->after('cat_tc_id');
         });
     }
 

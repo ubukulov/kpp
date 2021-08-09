@@ -79,7 +79,7 @@ use chillerlan\QRCode\QRCode;
                     <div class="contact-info">
                         <p style="font-weight: bold;text-align: center;font-size: 18px; margin-bottom: 5px !important;white-space: normal;">{{ $user->full_name }}</p>
                         <p style="font-weight: bold;text-align: center;font-size: 16px; margin-bottom: 5px !important;white-space: normal;">{{ $user->position->title }}</p>
-                        <p style="font-weight: normal;text-align: center;font-size: 16px; margin-bottom: 5px !important;">{{ $user->company->short_ru_name }}</p>
+                        <p style="font-weight: normal;text-align: center;font-size: 16px; margin-bottom: 5px !important;white-space: normal;">{{ $user->company->short_ru_name }}</p>
                     </div>
                     <div class="qr-code">
                         <?php

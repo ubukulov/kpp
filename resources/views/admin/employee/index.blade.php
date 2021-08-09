@@ -33,6 +33,7 @@
                             <th>Компания</th>
                             <th>Отдел</th>
                             <th>Должность</th>
+                            <th>Статус</th>
 {{--                            <th>Email</th>--}}
                             <th>Бейджик</th>
                             <th>Действие</th>
@@ -57,6 +58,7 @@
                             <td>
                                 {{ $employee->position->title }}
                             </td>
+                            <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
 {{--                            <td>{{ $employee->email }}</td>--}}
                             <td>
                                 <a target="_blank" href="{{ route('admin.employee.badge', ['id' => $employee->id]) }}">
@@ -76,6 +78,7 @@
                             <th>Компания</th>
                             <th>Отдел</th>
                             <th>Должность</th>
+                            <th>Статус</th>
 {{--                            <th>Email</th>--}}
                             <th>Действие</th>
                         </tr>

@@ -38,10 +38,10 @@
                         <p>
                             Справочники
                             <i class="fas fa-angle-left right"></i>
-                            <span class="badge badge-info right">6</span>
+                            <span class="badge badge-info right">7</span>
                         </p>
                     </a>
-                    <ul class="nav nav-treeview">
+                    <ul class="nav nav-treeview" style="margin-left: 15px;">
                         <li class="nav-item">
                             <a href="{{ route('position.index') }}" class="nav-link @if(request()->is('admin/position*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
@@ -70,6 +70,18 @@
                             <a href="{{ route('permission.index') }}" class="nav-link @if(request()->is('admin/permission*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Разрешение</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.containers.index') }}" class="nav-link @if(request()->is('admin/containers*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Список контейнеров</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.container-address.index') }}" class="nav-link @if(request()->is('admin/container-address*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Контейнер: Адресы</p>
                             </a>
                         </li>
                     </ul>

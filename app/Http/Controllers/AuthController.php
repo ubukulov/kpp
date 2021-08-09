@@ -38,6 +38,10 @@ class AuthController extends BaseController
                     return redirect()->route('personal.control');
                 } elseif(Auth::user()->hasRole('otdel-kadrov')) {
                     return redirect()->route('cabinet.employees.index');
+                } elseif(Auth::user()->hasRole('kt-operator')) {
+                    return redirect()->route('kt.kt_operator');
+                } elseif(Auth::user()->hasRole('kt-crane')) {
+                    return redirect()->route('kt.kt_crane');
                 } else {
                     return redirect()->route('cabinet.report.index');
                 }

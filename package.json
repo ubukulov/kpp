@@ -31,6 +31,7 @@
         "vue-datetime": "^1.0.0-beta.14",
         "vuejs-datetimepicker": "^1.1.13",
         "vuetify": "^2.3.16",
+        "vuex": "^3.6.2",
         "weekstart": "^1.0.1"
     }
 }

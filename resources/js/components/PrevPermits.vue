@@ -17,10 +17,8 @@
                     :headers="headers"
                     :items="permits"
                     item-key="name"
-                    :server-items-length="permits.length"
                     class="elevation-1"
                     :search="search"
-                    :custom-filter="filterOnlyCapsText"
                 >
                     <template v-slot:top>
                         <v-text-field
@@ -197,11 +195,6 @@
                     {
                         text: '#вод.удос.',
                         value: 'ud_number',
-                        filter: value => {
-                        if (!this.ud_number) return true
-
-                        return value < parseInt(this.ud_number)
-                    },
                     },
                     { text: 'Вид операции', value: 'operation_type' },
                     { text: 'Телефон', value: 'phone' },
@@ -264,13 +257,6 @@
                             }
                         })
                 }
-            },
-            filterOnlyCapsText (value, search, item) {
-                search = search.toUpperCase();
-                return value != null &&
-                    search != null &&
-                    typeof value === 'string' &&
-                    value.toString().toLocaleUpperCase().indexOf(search) !== -1
             },
             convertDateToOurFormat(dt){
                 return dateformat(dt, 'dd.mm.yyyy HH:MM');
