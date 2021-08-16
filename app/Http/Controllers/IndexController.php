@@ -41,6 +41,7 @@ class IndexController extends BaseController
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
         $data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
+        $data['incoming_container_number'] = (isset($data['incoming_container_number'])) ? strtoupper($data['incoming_container_number']) : null;
 		$data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
         $data['kpp_name'] = Auth::user()->kpp_name;
 		// Маршруты
@@ -59,6 +60,9 @@ class IndexController extends BaseController
                 'fio' => $data['last_name'], 'phone' => $data['phone'], 'ud_number' => $data['ud_number']
             ]);
         }
+
+        // Отправляем смс к водителяем
+        //Driver::send_sms($data['phone']);
 
         // Если новая машина, то добавляем в справочник
         if (!Car::exists($data['tex_number'])) {
@@ -174,6 +178,7 @@ class IndexController extends BaseController
     {
         $permit_id = (int) $request->input('permit_id');
         $from_company = $request->input('from_company');
+        $outgoing_container_number = $request->input('outgoing_container_number');
         $to_city = $request->input('to_city');
         $permit = Permit::find($permit_id);
 
@@ -186,6 +191,10 @@ class IndexController extends BaseController
         if($permit && is_null($permit->date_out)){
             if($permit->date_in < $date_out) {
                 $permit->date_out = $date_out;
+                if (!empty($outgoing_container_number)) {
+                    $permit->outgoing_container_number = $outgoing_container_number;
+                }
+
                 $permit->from_company = $from_company;
                 $permit->to_city = $to_city;
                 $permit->save();

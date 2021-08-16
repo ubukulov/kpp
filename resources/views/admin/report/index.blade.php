@@ -209,6 +209,8 @@
                         { text: 'Название т.к/частник', value: 'from_company' },
                         { text: 'Маршрут', value: 'to_city' },
                         { text: 'Оформил', value: 'is_driver' },
+                        { text: 'Контейнер (входящий)', value: 'incoming_container_number' },
+                        { text: 'Контейнер (исходящий)', value: 'outgoing_container_number' },
                         { text: 'Дата заезда', value: 'date_in' },
                         { text: 'Дата выезда', value: 'date_out' },
                     ],

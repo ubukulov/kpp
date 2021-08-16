@@ -37,7 +37,7 @@
 
                         <div class="form-group">
                             <button style="float: left;" onclick="window.location.href = '/container-terminals'" type="button" class="btn btn-primary">Назад</button>
-                            <button style="float: right;" @click="createContainerTask()"  name="create_task" type="button" class="btn btn-success">Создать заявку</button>
+                            <button :disabled="disabled" style="float: right;" @click="createContainerTask()"  name="create_task" type="button" class="btn btn-success">Создать заявку</button>
                         </div>
                     </div>
 
@@ -76,6 +76,7 @@
                 trans_type: 'train',
                 document_base: '',
                 upload_file: '',
+                disabled: false
             }
         },
         methods: {
@@ -91,6 +92,7 @@
 
                 if (this.errors.length == 0) {
                     this.overlay = true;
+                    this.disabled = true;
                     const config = {
                         headers: { 'content-type': 'multipart/form-data' }
                     };

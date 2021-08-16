@@ -69,7 +69,7 @@ class ReportController extends Controller
             $date_out = new Carbon($permit->date_out);
             $diff = $date_in->diff($date_out);*/
             // Учитываем только те машины которые находились на территории более 2 часа
-            if ($permit->count_hero >= 2) { //$diff->h >= 2
+            if ($permit->count_hero > 2) { //$diff->h >= 2
                 if ($permit->lc_id == 1) $leg += 1;
                 if ($permit->lc_id == 2) $d10 += 1;
                 if ($permit->lc_id == 3) $gru += 1;

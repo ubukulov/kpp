@@ -29,24 +29,24 @@ class AuthController extends BaseController
         ], $messages);
 
         if ($validator->fails()) {
-            return redirect()->route('login')->withErrors($validator)->withInput();
+            return response()->json($validator->errors(), 400);
         } else {
             if(Auth::attempt($credentials, $remember)) {
                 if (Auth::user()->hasRole('kpp-operator')) {
-                    return redirect()->route('security.kpp');
+                    return response(route('security.kpp'));
                 } elseif (Auth::user()->hasRole('personal-control')){
-                    return redirect()->route('personal.control');
+                    return response(route('personal.control'));
                 } elseif(Auth::user()->hasRole('otdel-kadrov')) {
-                    return redirect()->route('cabinet.employees.index');
+                    return response(route('cabinet.employees.index'));
                 } elseif(Auth::user()->hasRole('kt-operator')) {
-                    return redirect()->route('kt.kt_operator');
+                    return response(route('kt.kt_operator'));
                 } elseif(Auth::user()->hasRole('kt-crane')) {
-                    return redirect()->route('kt.kt_crane');
+                    return response(route('kt.kt_crane'));
                 } else {
-                    return redirect()->route('cabinet.report.index');
+                    return response(route('cabinet.report.index'));
                 }
             } else {
-                return back()->with('error', 'По введенному Email или пароль не найден пользователь');
+                return response('По введенному Email или пароль не найден пользователь', 404);
             }
         }
     }

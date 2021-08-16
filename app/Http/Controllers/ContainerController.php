@@ -39,7 +39,8 @@ class ContainerController extends Controller
     public function getFreeRows(Request $request)
     {
         $zone = $request->input('zone');
-        return response()->json(ContainerAddress::getFreeRows($zone));
+        $container_id = $request->input('container_id');
+        return response()->json(ContainerAddress::getFreeRows($zone, $container_id));
     }
 
     public function getFreePlaces(Request $request)
@@ -535,10 +536,11 @@ class ContainerController extends Controller
                     // добавляем в остатки
                     foreach ($container_ids as $container_id => $container_number) {
                         $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => 1])->first();
-                        if ($container_stock) {
-                            ContainerStock::create(['container_id' => $container_id, 'container_address_id' => 1, 'state' => $container_states[$container_id]]);
+                        if (!$container_stock) {
+                            $container_stock = ContainerStock::create(['container_id' => $container_id, 'container_address_id' => 1, 'state' => $container_states[$container_id]]);
                             $container_address = ContainerAddress::findOrFail(1);
                             // Зафиксируем в лог
+
                             ContainerLog::create([
                                 'user_id' => Auth::id(), 'container_id' => $container_id, 'container_number' => $container_number,
                                 'operation_type' => 'incoming', 'address_from' => $container_task->trans_type,

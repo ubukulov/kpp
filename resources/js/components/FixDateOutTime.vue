@@ -14,6 +14,19 @@
                     <div class="form-group">
                         <input ref="permit" autofocus v-on:keyup.enter="fixDateOut()" type="text" v-model="permit_id" class="form-control" placeholder="Введите номер пропуска">
                     </div>
+
+                    <div class="form-group">
+                        <input style="text-transform: uppercase;" onkeyup="return no_cirilic(this);" min="11" max="11" maxlength="11" type="text" v-model="outgoing_container_number" class="form-control" placeholder="Введите номер контейнера (ABCD1234567)">
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                        <b>Пожалуйста исправьте указанные ошибки:</b>
+                    <ul style="color: red; padding-left: 15px; list-style: circle; text-align: left;">
+                        <li v-for="error in errors">{{error}}</li>
+                    </ul>
+                    </p>
                 </div>
 
                 <div class="col-md-12">
@@ -51,6 +64,8 @@
                 failure_text: '',
                 setDateOutByHand: false,
                 interval: 0,
+                outgoing_container_number: '',
+                errors: []
             }
         },
         watch: {
@@ -62,18 +77,28 @@
         },
         methods: {
             fixDateOut(){
+                this.errors = [];
+                if (this.outgoing_container_number && this.outgoing_container_number.length < 11) {
+                    this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
+                }
+                if (!this.permit_id) {
+                    this.errors.push('Укажите номер пропуска');
+                }
                 let formData = new FormData();
                 if (this.permit_id != null && this.permit_id.length != 0) {
                     formData.append('permit_id', this.permit_id);
+                    formData.append('outgoing_container_number', this.outgoing_container_number);
                     if (this.setDateOutByHand) {
                         formData.append('set_date_out_manual', this.setDateOutByHand);
                         formData.append('date_out', this.date_out);
                     }
-                    axios.post('/fix-date-out-for-current-permit', formData)
+                    if (this.errors.length == 0) {
+                        axios.post('/fix-date-out-for-current-permit', formData)
                         .then(res => {
                             console.log(res);
                             this.success = true;
                             this.permit_id = null;
+                            this.outgoing_container_number = '';
                             this.failure = false;
                             this.setDateOutByHand = false;
                             this.date_out = '';
@@ -90,6 +115,7 @@
                             this.success = false;
                             this.permit_id = null;
                         })
+                    }
                 }
             },
             closeInfo(){

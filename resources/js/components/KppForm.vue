@@ -38,7 +38,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Грузоподъемность ТС</label>
                                 <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
@@ -52,7 +52,7 @@
                                 ></v-autocomplete>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label>Тип кузова</label>
                                 <v-autocomplete
@@ -63,6 +63,12 @@
                                     v-model="bt_id"
                                     item-text="title"
                                 ></v-autocomplete>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label style="color: red;">Номер контейнера (новые)</label>
+                                <input placeholder="ABCD1234567" onkeyup="return no_cirilic(this);" min="11" max="11" maxlength="11" style="text-transform: uppercase;font-size: 16px !important;" v-model="incoming_container_number" type="text" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -129,6 +135,7 @@
                     <div class="form-group">
                         <label>Вид операции</label>
                         <select v-model="operation_type" tabindex="10" name="operation_type" id="type" class="form-control">
+                            <option value="0"></option>
                             <option value="1">Погрузка</option>
                             <option value="2">Разгрузка</option>
                             <option value="3">Другие действия</option>
@@ -275,7 +282,7 @@
                 last_name: '',
                 phone: '',
                 company: '',
-                operation_type: 1,
+                operation_type: 0,
                 errors: [],
                 permits: [],
                 searchInput: '',
@@ -287,6 +294,7 @@
                 direction_id: 0,
                 orderButtonDisabled: false,
                 employer_name: '',
+                incoming_container_number: '',
                 foreign_car: 0,
             }
         },
@@ -359,6 +367,9 @@
                 if (this.company_id == 0) {
                     this.errors.push('Укажите компанию');
                 }
+                if (this.operation_type == 0) {
+                    this.errors.push('Укажите вид операции');
+                }
                 if (this.capacity_id == 0) {
                     this.errors.push('Укажите грузоподъемность ТС');
                 }
@@ -367,6 +378,9 @@
                 }
                 if (!this.employer_name) {
                     this.errors.push('Укажите наниматель');
+                }
+                if (this.incoming_container_number && this.incoming_container_number.length < 11) {
+                    this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                 }
 
                 if (this.operation_type != 3) {
@@ -410,6 +424,7 @@
                     formData.append('direction_id', this.direction_id);
                     formData.append('employer_name', this.employer_name);
                     formData.append('foreign_car', this.foreign_car);
+                    formData.append('incoming_container_number', this.incoming_container_number);
 
                     if(this.operation_type != 3) {
                         formData.append('from_company', this.from_company);
@@ -436,7 +451,7 @@
                         this.capacity_id = 0;
                         this.direction_id = 0;
                         this.bt_id = 0;
-                        this.operation_type = 1;
+                        this.operation_type = 0;
                         $('#path_docs_fac').val('');
                         $('#path_docs_back').val('');
                         this.permits = this.getPermits();

@@ -18,6 +18,7 @@ class CreateTableDrivers extends Migration
             $table->string('fio');
             $table->string('phone');
             $table->string('ud_number'); // номер водительского удостоверение
+            $table->timestamp('last_time')->nullable();
 
             $table->index('ud_number');
             $table->timestamps();

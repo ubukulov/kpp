@@ -5,38 +5,34 @@
                 <v-window v-model="step">
                     <v-window-item :value="1">
                         <div class="row">
-                            <div class="col-md-6">
-
-                            </div>
-
-                            <div class="col-md-6 text-right">
+                            <div class="col-md-12 text-right">
                                 <a style="color: #fff;" class="btn btn-primary" href="/logout">Выйти из аккаунта</a>
                             </div>
                             <br><br>
                         </div>
+                        <br>
                         <div class="form-group">
-                            <label>Зона</label>
-                            <v-autocomplete
+                            <v-select
                                 :items="zones"
-                                class="form-control"
                                 :hint="`${zones.zone}, ${zones.title}`"
                                 item-value="zone"
                                 v-model="zone_id"
-                                @change="getFreeRows()"
+                                label="Зона"
+                                outlined
                                 item-text="title"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Тип техники</label>
-                            <v-autocomplete
+                            <v-select
                                 :items="techniques"
-                                class="form-control"
+                                label="Тип техники"
                                 :hint="`${techniques.id}, ${techniques.name}`"
                                 item-value="id"
                                 v-model="technique_id"
+                                outlined
                                 item-text="name"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <v-divider></v-divider>
@@ -44,7 +40,7 @@
                         <v-card-actions>
                             <v-spacer></v-spacer>
                             <v-btn
-                                v-if="container_id !==0, technique_id !== 0"
+                                v-if="zone_id !==0, technique_id !== 0"
                                 color="primary"
                                 depressed
                                 @click="step++"
@@ -116,57 +112,57 @@
                     <!-- Пункт Размещение -->
                     <v-window-item :value="3">
                         <div class="form-group">
-                            <label>Зона</label>
-                            <v-autocomplete
+                            <v-select
                                 :items="zones"
-                                class="form-control"
+                                outlined
+                                label="Зона"
                                 :hint="`${zones.zone}, ${zones.title}`"
                                 item-value="zone"
                                 v-model="zone_id"
                                 @change="getFreeRows()"
                                 item-text="title"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Ряд</label>
-                            <v-autocomplete
+                            <v-select
                                 :disabled="is_row"
+                                label="Ряд"
                                 :items="rows"
                                 :hint="`${rows.row}`"
                                 item-value="row"
-                                class="form-control"
+                                outlined
                                 v-model="row_id"
                                 item-text="row"
                                 @change="getFreePlaces()"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Место</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Место"
                                 :disabled="is_place"
                                 :items="places"
                                 :hint="`${places.place}`"
                                 item-value="place"
                                 item-text="place"
-                                class="form-control"
+                                outlined
                                 v-model="place_id"
                                 @change="getFreeFloors()"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Ярус</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Ярус"
                                 :disabled="is_floor"
                                 :items="floors"
                                 :hint="`${floors.floor}`"
                                 item-value="floor"
                                 item-text="floor"
-                                class="form-control"
+                                outlined
                                 v-model="floor_id"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <v-divider></v-divider>
@@ -234,57 +230,57 @@
                     <!-- Пункт Перемещение -->
                     <v-window-item :value="6">
                         <div class="form-group">
-                            <label>Зона</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Зона"
                                 :items="zones"
-                                class="form-control"
+                                outlined
                                 :hint="`${zones.zone}, ${zones.title}`"
                                 item-value="zone"
                                 v-model="zone_id"
                                 @change="getFreeRows()"
                                 item-text="title"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Ряд</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Ряд"
                                 :disabled="is_row"
                                 :items="rows"
                                 :hint="`${rows.row}`"
                                 item-value="row"
-                                class="form-control"
+                                outlined
                                 v-model="row_id"
                                 item-text="row"
                                 @change="getFreePlaces()"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Место</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Место"
                                 :disabled="is_place"
                                 :items="places"
                                 :hint="`${places.place}`"
                                 item-value="place"
                                 item-text="place"
-                                class="form-control"
+                                outlined
                                 v-model="place_id"
                                 @change="getFreeFloors()"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <div class="form-group">
-                            <label>Ярус</label>
-                            <v-autocomplete
+                            <v-select
+                                label="Ярус"
                                 :disabled="is_floor"
                                 :items="floors"
                                 :hint="`${floors.floor}`"
                                 item-value="floor"
                                 item-text="floor"
-                                class="form-control"
+                                outlined
                                 v-model="floor_id"
-                            ></v-autocomplete>
+                            ></v-select>
                         </div>
 
                         <v-divider></v-divider>
@@ -391,6 +387,13 @@
                     <!-- ./Пункт Выдачи -->
                 </v-window>
             </template>
+
+            <v-overlay :value="overlay">
+                <v-progress-circular
+                    indeterminate
+                    size="64"
+                ></v-progress-circular>
+            </v-overlay>
         </div>
     </div>
 </template>
@@ -423,13 +426,15 @@
                 is_shipping: true,
                 is_moving: true,
                 current_container_address: '',
-
+                overlay: false
             }
         },
         methods: {
             getZones(){
+                this.overlay = true;
                 axios.get('/container-crane/get-zones')
                     .then(res => {
+                        this.overlay = false;
                         this.zones = res.data;
                         console.log(this.zones)
                     })
@@ -448,8 +453,10 @@
                 })
             },
             getTechniques(){
+                this.overlay = true;
                 axios.get('/container-crane/get-techniques')
                     .then(res => {
+                        this.overlay = false;
                         this.techniques = res.data;
                     })
                     .catch(err => {
@@ -457,19 +464,30 @@
                     })
             },
             getFreeRows(){
+                this.overlay = true;
+                this.rows = [];
+                this.places = [];
+                this.floors = [];
+                this.row_id = 0;
+                this.place_id = 0;
+                this.floor_id = 0;
                 let formData = new FormData();
                 formData.append('zone', this.zone_id);
+                formData.append('container_id', this.container_id);
                 axios.post('/container-crane/container/search-and-getting-free-rows', formData)
                     .then(res => {
+                        this.overlay = false;
                         this.rows = res.data;
                         this.is_row = false;
                         console.log(this.rows)
                     })
                     .catch(err => {
                         console.log(err)
+                        this.overlay = false;
                     })
             },
             getFreePlaces(){
+                this.overlay = true;
                 let formData = new FormData();
                 this.places = [];
                 this.floors = [];
@@ -480,15 +498,18 @@
                 formData.append('container_id', this.container_id);
                 axios.post('/container-crane/container/search-and-getting-free-places', formData)
                     .then(res => {
+                        this.overlay = false;
                         this.places = res.data;
                         this.is_place = false;
                         console.log(this.places)
                     })
                     .catch(err => {
                         console.log(err)
+                        this.overlay = false;
                     })
             },
             getFreeFloors(){
+                this.overlay = true;
                 this.floors = [];
                 this.floor_id = 0;
                 let formData = new FormData();
@@ -498,15 +519,18 @@
                 formData.append('container_id', this.container_id);
                 axios.post('/container-crane/container/search-and-getting-free-floors', formData)
                     .then(res => {
+                        this.overlay = false;
                         this.floors = res.data;
                         this.is_floor = false;
                         console.log(this.floors)
                     })
                     .catch(err => {
                         console.log(err)
+                        this.overlay = false;
                     })
             },
             receiveContainer(){
+                this.overlay = true;
                 let formData = new FormData();
                 formData.append('zone', this.zone_id);
                 formData.append('row', this.row_id);
@@ -516,6 +540,7 @@
                 formData.append('technique_id', this.technique_id);
                 axios.post('/container-crane/container/receive-container-change', formData)
                 .then(res => {
+                    this.overlay = false;
                     console.log(res);
                     this.info_result = res.data.data;
                     this.step = 5;
@@ -530,9 +555,11 @@
                 })
                 .catch(err => {
                     console.log(err)
+                    this.overlay = false;
                 })
             },
             getInfoForContainer(){
+                this.overlay = true;
                 this.row_id = 0;
                 this.place_id = 0;
                 this.floor_id = 0;
@@ -540,6 +567,7 @@
                 formData.append('container_number', this.container_number);
                 axios.post('/container-crane/get-info-for-container', formData)
                 .then(res => {
+                    this.overlay = false;
                     this.info_container = res.data.data.text;
                     this.container_id = res.data.data.container_id;
                     this.container_number = res.data.data.container_number;
@@ -567,11 +595,13 @@
                         this.is_receive = true;
                         this.is_shipping = true;
                         this.is_moving = true;
+                        this.overlay = false;
                     }
                     console.log(err.response)
                 })
             },
             moveContainer(){
+                this.overlay = true;
                 let formData = new FormData();
                 formData.append('zone', this.zone_id);
                 formData.append('row', this.row_id);
@@ -582,6 +612,7 @@
                 axios.post('/container-crane/container/moving-container-change', formData)
                     .then(res => {
                         console.log(res);
+                        this.overlay = false;
                         this.info_result = res.data.data;
                         this.step = 8;
                         this.container_id = 0;
@@ -595,14 +626,18 @@
                     })
                     .catch(err => {
                         console.log(err)
+                        this.overlay = false;
                     })
             },
             isMoving(){
+                this.overlay = true;
                 // step = 6
                 let formData = new FormData();
                 formData.append('container_id', this.container_id);
                 axios.post('/container-crane/checking-the-container-for-movement', formData)
                     .then(res => {
+                        this.overlay = false;
+                        this.getFreeRows();
                         console.log(res);
                         this.step = 6;
                     })
@@ -612,17 +647,20 @@
                             this.is_receive = true;
                             this.is_shipping = true;
                             this.is_moving = true;
+                            this.overlay = false;
                         }
                         console.log(err.response)
                     })
             },
             isReceive(){
+                this.overlay = true;
                 let formData = new FormData();
                 formData.append('container_id', this.container_id);
                 axios.post('/container-crane/checking-the-container-for-dispensing', formData)
                     .then(res => {
                         console.log(res);
                         this.step = 9;
+                        this.overlay = false;
                     })
                     .catch(err => {
                         if(err.response.status == 403) {
@@ -630,17 +668,20 @@
                             this.is_receive = true;
                             this.is_shipping = true;
                             this.is_moving = true;
+                            this.overlay = false;
                         }
                         console.log(err.response)
                     })
             },
             shippingContainer() {
+                this.overlay = true;
                 let formData = new FormData();
                 formData.append('container_id', this.container_id);
                 formData.append('technique_id', this.technique_id);
                 axios.post('/container-crane/container/shipping-container-change', formData)
                     .then(res => {
                         console.log(res);
+                        this.overlay = false;
                         this.info_result = res.data.data;
                         this.step = 10;
                         this.container_id = 0;
@@ -657,11 +698,11 @@
                     })
                     .catch(err => {
                         console.log(err)
+                        this.overlay = false;
                     })
             }
         },
         created() {
-            this.getContainers();
             this.getTechniques();
             this.getZones();
         }
@@ -677,5 +718,12 @@
     }
     .v-application--wrap {
         min-height: auto !important;
+    }
+    .v-select__selection {
+        font-weight: bold !important;
+    }
+    .v-application--is-ltr .v-text-field .v-label {
+        font-size: 24px !important;
+        font-weight: normal !important;
     }
 </style>
