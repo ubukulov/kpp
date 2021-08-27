@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContainerAddress;
 use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;

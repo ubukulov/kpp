@@ -144,6 +144,7 @@ class EmployeeController extends Controller
 
         // присвоение ролей к пользователю
         if (!empty($data['roles'])) {
+            $user->roles()->detach();
             foreach($data['roles'] as $item) {
                 $role = Role::findOrFail($item);
                 if(!$user->hasRole($role->slug)) {
@@ -154,6 +155,7 @@ class EmployeeController extends Controller
 
         // дать разрешение к пользователю
         if (!empty($data['permissions'])) {
+            $user->permissions()->detach();
             foreach($data['permissions'] as $value) {
                 $permission = Permission::findOrFail($value);
                 if(!$user->hasPermission($permission->slug)) {

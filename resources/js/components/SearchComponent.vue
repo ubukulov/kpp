@@ -47,9 +47,67 @@
                             >
                                 mdi-printer
                             </v-icon>
+                            &nbsp;&nbsp;
+                            <v-icon
+                                v-if="item.status === 'printed'"
+                                title="Перенести в архив"
+                                middle
+                                @click="showArchiveForm(item.id)"
+                            >
+                                mdi-archive
+                            </v-icon>
                         </template>
                     </v-data-table>
                 </v-card>
+            </template>
+
+            <template>
+                <v-dialog style="z-index: 99999; position: relative;" v-model="dialog" persistent max-width="800px">
+                    <v-card>
+                        <v-card-title>
+                            <span class="headline" style="font-size: 40px !important;">Перенести в архив пропуск №{{ permit_id }}</span>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container>
+                                <v-row>
+                                    <v-col cols="12">
+                                        <div class="form-group">
+                                            <label>Укажите причину</label>
+                                            <v-textarea
+                                                background-color="amber lighten-4"
+                                                color="orange orange-darken-4"
+                                                v-model="note"
+                                            ></v-textarea>
+                                        </div>
+                                    </v-col>
+
+                                    <v-col cols="12">
+                                        <div class="form-group">
+                                            <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                                                <b>Пожалуйста исправьте указанные ошибки:</b>
+                                            <ul style="color: red; padding-left: 15px; list-style: circle; text-align: left;">
+                                                <li v-for="error in errors">{{error}}</li>
+                                            </ul>
+                                            </p>
+                                        </div>
+                                    </v-col>
+                                </v-row>
+                            </v-container>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="blue darken-1" @click="closeArchiveForm()">Отменить</v-btn>
+                            <v-btn color="success darken-1" @click="putArchive()">
+                                <v-icon
+                                    middle
+                                >
+                                    mdi-archive
+                                </v-icon>
+                                &nbsp;Перенести в архив
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
             </template>
         </div>
     </div>
@@ -75,20 +133,24 @@
                         sortable: true,
                         value: 'last_name',
                     },
-                    {
-                        text: '#вод.удос.',
-                        value: 'ud_number',
-                    },
+                    { text: '#Тех.паспорт', value: 'tex_number'},
+                    { text: '#Вод.удос.', value: 'ud_number'},
                     { text: 'Вид операции', value: 'operation_type' },
                     { text: 'Телефон', value: 'phone' },
                     { text: 'Гос.номер', value: 'gov_number' },
                     { text: 'Марка', value: 'mark_car' },
                     { text: 'Дата заезда', value: 'date_in' },
-                    { text: 'КПП', value: 'kpp_name' },
+                    { text: 'Дата выезда', value: 'date_out' },
+                    { text: 'Вх.контейнер', value: 'incoming_container_number' },
+                    { text: 'Исх.контейнер', value: 'outgoing_container_number' },
                     { text: 'Печать', value: 'edit' },
                 ],
                 listNotCompletedPermits: [],
                 isLoaded: true,
+                dialog: false,
+                note: '',
+                errors: [],
+                permit_id: 0,
             }
         },
         methods: {
@@ -116,6 +178,41 @@
                             console.log(err)
                         }
                     })
+            },
+            showArchiveForm(id){
+                this.errors = [];
+                this.permit_id = id;
+                this.dialog = true;
+            },
+            putArchive(){
+                this.errors = [];
+                if (!this.note) {
+                    this.errors.push('Укажите причину');
+                }
+                if (this.errors.length === 0) {
+                    let formData = new FormData();
+                    formData.append('permit_id', this.permit_id);
+                    formData.append('note', this.note);
+                    axios.post(`/permit/${this.permit_id}/put-to-archive`, formData)
+                        .then(res => {
+                            console.log(res);
+                            this.dialog = false;
+                            this.listNotCompletedPermits = this.getNotCompletedPermitsList();
+                            this.permit_id = 0;
+                            this.note = '';
+                            this.errors = [];
+                        })
+                        .catch(err => {
+                            if (err.response.status === 403) {
+                                this.errors.push(err.response.data);
+                            }
+                        })
+                }
+            },
+            closeArchiveForm(){
+                this.dialog = false;
+                this.note = '';
+                this.errors = [];
             },
         },
         created(){

@@ -38,7 +38,7 @@
                         <p>
                             Справочники
                             <i class="fas fa-angle-left right"></i>
-                            <span class="badge badge-info right">7</span>
+                            <span class="badge badge-info right">8</span>
                         </p>
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px;">
@@ -84,6 +84,12 @@
                                 <p>Контейнер: Адресы</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.technique.index') }}" class="nav-link @if(request()->is('admin/technique*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Список техников</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -96,7 +102,7 @@
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('admin.drivers.index') }}" class="nav-link @if(request()->is('admin/drivers*')) active @endif">
-                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <i class="nav-icon fas fa-people-carry"></i>
                         <p>
                             Список водителей
                         </p>
@@ -107,6 +113,14 @@
                         <i class="nav-icon fas fa-chart-pie"></i>
                         <p>
                             Отчёты
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.permits.index') }}" class="nav-link @if(request()->is('admin/permits*')) active @endif">
+                        <i class="nav-icon fas fa-list"></i>
+                        <p>
+                            Пропуски
                         </p>
                     </a>
                 </li>

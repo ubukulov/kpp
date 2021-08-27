@@ -67,6 +67,8 @@
                         </tr>
                         </tfoot>
                     </table>
+
+                    {{ $container_address->links() }}
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -87,6 +89,8 @@
             $("#example1").DataTable({
                 "responsive": true,
                 "autoWidth": false,
+                "bPaginate": false,
+                "info": false,
                 "language": {
                     "url": "/dist/Russian.json"
                 },

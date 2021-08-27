@@ -32,6 +32,8 @@ Vue.component('personal-control', require('./components/PersonalControl.vue').de
 Vue.component('search', require('./components/SearchComponent.vue').default);
 Vue.component('kt', require('./components/KT.vue').default);
 Vue.component('kt-operator-task-create', require('./components/KT_OperatorTaskCreate.vue').default);
+Vue.component('kpp', require('./components/KPP.vue').default);
+Vue.component('kpp-form2', require('./components/KppForm2.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

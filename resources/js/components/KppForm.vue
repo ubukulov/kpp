@@ -26,7 +26,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Номер прицепа</label>
-                                <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+                                <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -42,27 +42,27 @@
                             <div class="form-group">
                                 <label>Грузоподъемность ТС</label>
                                 <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
-                                <v-autocomplete
+                                <v-select
                                     :items="capacity"
                                     class="form-control"
                                     :hint="`${capacity.id}, ${capacity.title}`"
                                     item-value="id"
                                     v-model="capacity_id"
                                     item-text="title"
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Тип кузова</label>
-                                <v-autocomplete
+                                <v-select
                                     :items="bodytypes"
                                     class="form-control"
                                     :hint="`${bodytypes.id}, ${bodytypes.title}`"
                                     item-value="id"
                                     v-model="bt_id"
                                     item-text="title"
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -73,7 +73,7 @@
                         </div>
                     </div>
 
-                    <div v-if="operation_type != 3" class="form-group">
+                    <div v-if="operation_type !== 3" class="form-group">
                         <label>Собственник по техпаспорту/частник</label>
                         <input type="text" class="form-control" v-model="from_company">
                     </div>
@@ -142,23 +142,22 @@
                         </select>
                     </div>
 
-                    <div v-if="operation_type != 3" class="row">
+                    <div v-if="operation_type !== 3" class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Маршрут</label>
-                                <v-autocomplete
+                                <v-select
                                     :items="directions"
                                     class="form-control"
                                     :hint="`${directions.id}, ${directions.title}`"
                                     item-value="id"
                                     v-model="direction_id"
                                     item-text="title"
-                                    autocomplete
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div v-if="direction_id == 6" class="form-group">
+                            <div v-if="direction_id === 6" class="form-group">
                                 <label>Напишите</label>
                                 <input style="font-size: 16px !important;" type="text" class="form-control" v-model="to_city">
                             </div>
@@ -204,8 +203,7 @@
 
                 <div class="col-md-12">
                     <div class="form-group">
-                        <button id="ppb" :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
-                        &nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-warning" @click="enablePrintButton()">Активировать кнопку</button>
+                        <button @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
                     </div>
                 </div>
             </div>
@@ -227,7 +225,7 @@
                     <th scope="col">Вид операции</th>
                     <th scope="col">Телефон</th>
                     <th scope="col">Гос.номер</th>
-                    <th scope="col">Печать</th>
+                    <th scope="col">Действие</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -237,10 +235,10 @@
                     <td>{{ permit.tex_number }}</td>
                     <td>{{ permit.ud_number }}</td>
                     <td>{{ permit.company }}</td>
-                    <td v-if="permit.operation_type == 1">
+                    <td v-if="permit.operation_type === 1">
                         Погрузка
                     </td>
-                    <td v-else-if="permit.operation_type == 2">
+                    <td v-else-if="permit.operation_type === 2">
                         Разгрузка
                     </td>
                     <td v-else>
@@ -250,6 +248,7 @@
                     <td>{{ permit.gov_number }}</td>
                     <td>
                         <v-icon
+                            title="Распечатать пропуск"
                             middle
                             @click="print_r(permit.id)"
                         >
@@ -292,7 +291,6 @@
                 from_company: '',
                 to_city: '',
                 direction_id: 0,
-                orderButtonDisabled: false,
                 employer_name: '',
                 incoming_container_number: '',
                 foreign_car: 0,
@@ -309,7 +307,6 @@
             checkCar(){
                 axios.get('/get-car-info/'+this.tex_number)
                     .then(res => {
-                        console.log(res);
                         this.gov_number = res.data.gov_number;
                         this.mark_car = res.data.mark_car;
                         this.pr_number = res.data.pr_number;
@@ -319,7 +316,7 @@
                         this.from_company = res.data.from_company;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -329,12 +326,11 @@
             checkDriver(){
                 axios.get('/get-driver-info/'+this.ud_number)
                     .then(res => {
-                        console.log(res.data.fio)
-                        this.last_name = res.data.fio
-                        this.phone = res.data.phone
+                        this.last_name = res.data.fio;
+                        this.phone = res.data.phone;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -364,16 +360,16 @@
                 if (!this.phone) {
                     this.errors.push('Укажите телефон');
                 }
-                if (this.company_id == 0) {
+                if (this.company_id === 0) {
                     this.errors.push('Укажите компанию');
                 }
-                if (this.operation_type == 0) {
+                if (this.operation_type === 0) {
                     this.errors.push('Укажите вид операции');
                 }
-                if (this.capacity_id == 0) {
+                if (this.capacity_id === 0) {
                     this.errors.push('Укажите грузоподъемность ТС');
                 }
-                if (this.bt_id == 0) {
+                if (this.bt_id === 0) {
                     this.errors.push('Укажите тип кузова');
                 }
                 if (!this.employer_name) {
@@ -382,27 +378,28 @@
                 if (this.incoming_container_number && this.incoming_container_number.length < 11) {
                     this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                 }
-
-                if (this.operation_type != 3) {
-                    if (this.direction_id == 0) {
+                if (this.company_id === 91 && this.operation_type === 2) {
+                    if (!this.incoming_container_number) {
+                        this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
+                    }
+                }
+                if (this.operation_type !== 3) {
+                    if (this.direction_id === 0) {
                         this.errors.push('Укажите маршрут');
                     }
                     if (!this.from_company) {
                         this.errors.push('Укажите транспортной компании/частник');
                     }
-                    if (this.direction_id == 6) {
+                    if (this.direction_id === 6) {
                         if (!this.to_city) {
                             this.errors.push('Укажите названия маршрута ');
                         }
                     }
                 }
-
-                if (this.foreign_car == 0) {
+                if (this.foreign_car === 0) {
                     this.errors.push('Укажите поле "Машина иностранная?"');
                 }
-
-                if (this.errors.length == 0) {
-                    this.orderButtonDisabled = true;
+                if (this.errors.length === 0) {
                     const config = {
                         headers: { 'content-type': 'multipart/form-data' }
                     };
@@ -426,7 +423,7 @@
                     formData.append('foreign_car', this.foreign_car);
                     formData.append('incoming_container_number', this.incoming_container_number);
 
-                    if(this.operation_type != 3) {
+                    if(this.operation_type !== 3) {
                         formData.append('from_company', this.from_company);
                         formData.append('to_city', this.to_city);
                     }
@@ -445,6 +442,7 @@
                         this.last_name = '';
                         this.from_company = '';
                         this.employer_name = '';
+                        this.incoming_container_number = '';
                         this.to_city = '';
                         this.phone = '';
                         this.company_id = 0;
@@ -455,16 +453,16 @@
                         $('#path_docs_fac').val('');
                         $('#path_docs_back').val('');
                         this.permits = this.getPermits();
-                        this.orderButtonDisabled = false;
                         $("body,html").animate({
                             scrollTop: 0
                         }, 800);
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
-                        } else {
-                            console.log(err);
+                        }
+                        if (err.response.status === 403) {
+                            this.errors.push(err.response.data);
                         }
                     })
                 }
@@ -475,7 +473,7 @@
                         this.permits = res.data;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -488,7 +486,7 @@
                     console.log(res)
                 })
                 .catch(err => {
-                    if(err.response.status == 401) {
+                    if(err.response.status === 401) {
                         window.location.href = '/login';
                     } else {
                         console.log(err)
@@ -497,17 +495,11 @@
             },
             currentDateTime(){
                 let d = new Date();
-                //return ((d.getDate() < 10)?"0":"") + d.getDate() +"."+(((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) +"."+ d.getFullYear()+" "+((d.getHours() < 10)?"0":"") + d.getHours() +":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
                 return d.getFullYear()+ "-" + (((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) + "-" + ((d.getDate() < 10)?"0":"") + d.getDate() +"T"+ ((d.getHours() < 10)?"0":"") + d.getHours() + ":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
             },
-            enablePrintButton(){
-                $("#ppb").removeAttr('disabled');
-            }
         },
         created(){
-            //this.date_in = this.currentDateTime();
             this.getPermits();
-            console.log("date_in",this.currentDateTime());
         }
     }
 </script>

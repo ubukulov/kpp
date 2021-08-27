@@ -15,7 +15,7 @@ class PositionController extends Controller
      */
     public function index()
     {
-        $positions = Position::orderBy('id', 'DESC')->get();
+        $positions = Position::orderBy('id', 'DESC')->paginate(20);
         return view('admin.position.index', compact('positions'));
     }
 

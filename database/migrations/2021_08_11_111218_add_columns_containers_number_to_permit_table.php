@@ -16,6 +16,7 @@ class AddColumnsContainersNumberToPermitTable extends Migration
         Schema::table('permits', function (Blueprint $table) {
             $table->string('incoming_container_number')->after('status')->nullable();
             $table->string('outgoing_container_number')->after('status')->nullable();
+            $table->string('note')->after('outgoing_container_number')->nullable();
         });
     }
 
@@ -27,7 +28,7 @@ class AddColumnsContainersNumberToPermitTable extends Migration
     public function down()
     {
         Schema::table('permits', function (Blueprint $table) {
-            $table->dropColumn(['incoming_container_number', 'outgoing_container_number']);
+            $table->dropColumn(['incoming_container_number', 'outgoing_container_number', 'note']);
         });
     }
 }

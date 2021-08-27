@@ -10,7 +10,7 @@ class ContainerAddress extends Model
     protected $table = 'container_address';
 
     protected $fillable = [
-        'id', 'title', 'zone', 'kind', 'row', 'place', 'floor', 'name', 'space'
+        'id', 'title', 'zone', 'kind', 'row', 'place', 'floor', 'name'
     ];
 
     /*
@@ -22,17 +22,24 @@ class ContainerAddress extends Model
         });
     }*/
 
-    public static function getFreeRows($zone, $container_id)
+    public static function getFreeRows($data)
     {
+        $zone = $data['zone'];
+        $container_id = $data['container_id'];
+        /*
         if (isset($_SESSION['not_place'])) {
             unset($_SESSION['not_place']);
         }
-        $container = Container::findOrFail($container_id);
+        $container = Container::findOrFail($container_id);*/
         $container_address = ContainerAddress::whereZone($zone)
+                ->select('container_address.row')
                 ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
                 ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
+                ->groupBy('container_address.row')
                 ->get();
 
+        return $container_address;
+        /*
         $arr = [];
         foreach($container_address as $address) {
             if (isset($_SESSION['not_place']) && $_SESSION['not_place'] == $address->row.$address->place) {
@@ -45,32 +52,38 @@ class ContainerAddress extends Model
                 }
             }
 
-            if ($container->container_type == '40') {
+            if ($container->container_type == '40' || $container->container_type == '45') {
                 if ($address->container_type == '20') {
                     $_SESSION['not_place'] = $address->row.$address->place;
                 }
             }
 
             if ($container->container_type == '20') {
-                if ($address->container_type == '40') {
+                if ($address->container_type == '40' || $container->container_type == '45') {
                     $_SESSION['not_place'] = $address->row.$address->place;
                 }
             }
         }
 
-        return array_keys($arr);
+        return array_keys($arr);*/
     }
 
-    public static function getFreePlaces($zone, $row, $container_id)
+    public static function getFreePlaces($data)
     {
-        $container = Container::findOrFail($container_id);
+        $zone = $data['zone'];
+        $row = $data['row'];
+        $container_id = $data['container_id'];
+        //$container = Container::findOrFail($container_id);
         $container_address = ContainerAddress::whereZone($zone)
+            ->select('container_address.place')
             ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
             ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
             ->whereRow($row)
+            ->groupBy('container_address.place')
             ->get();
-
-        if ($container->container_type == '40') {
+        return $container_address;
+        /*
+        if ($container->container_type == '40' || $container->container_type == '45') {
             $not_places = [];
             $prev_place = 1;
             $arr = [];
@@ -85,7 +98,7 @@ class ContainerAddress extends Model
                     $not_places[] = $address->place;
                 }
 
-                if ($address->container_type == '40') {
+                if ($address->container_type == '40' || $container->container_type == '45') {
                     if ($address->place == $prev_place) {
                         $arr[$address->place] = $i;
                         $i++;
@@ -110,7 +123,7 @@ class ContainerAddress extends Model
         } else {
             $not_places = [];
             foreach ($container_address as $key=>$address) {
-                if ($address->container_type == '40') {
+                if ($address->container_type == '40' || $container->container_type == '45') {
                     $not_places[] = $address->place;
                 }
             }
@@ -118,20 +131,28 @@ class ContainerAddress extends Model
             return $container_address->filter(function($value, $key) use ($not_places){
                 return (!in_array($value->place, $not_places));
             })->groupBy('place')->keys();
-        }
+        }*/
     }
 
-    public static function getFreeFloors($zone, $row, $place, $container_id)
+    public static function getFreeFloors($data)
     {
-        $container = Container::findOrFail($container_id);
+        $zone = $data['zone'];
+        $row = $data['row'];
+        $place = $data['place'];
+        $container_id = $data['container_id'];
+        //$container = Container::findOrFail($container_id);
         $container_address = ContainerAddress::whereZone($zone)
+            ->select('container_address.floor')
             ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
             ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
             ->whereRow($row)
             ->wherePlace($place)
+            ->groupBy('container_address.floor')
             ->get();
 
-        if ($container->container_type == '40') {
+        return $container_address;
+        /*
+        if ($container->container_type == '40' || $container->container_type == '45') {
             $arr = [];
             foreach ($container_address as $key=>$address) {
                 if ($address->container_type == null) {
@@ -186,6 +207,6 @@ class ContainerAddress extends Model
             }
 
             return $arr1;
-        }
+        }*/
     }
 }

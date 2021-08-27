@@ -41,16 +41,25 @@ class IndexController extends BaseController
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
         $data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
+        $data['foreign_car'] = (isset($data['foreign_car'])) ? mb_strtoupper($data['foreign_car']) : 0;
         $data['incoming_container_number'] = (isset($data['incoming_container_number'])) ? strtoupper($data['incoming_container_number']) : null;
 		$data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
         $data['kpp_name'] = Auth::user()->kpp_name;
 		// Маршруты
-		if ($data['direction_id'] != 0 && $data['direction_id'] != 6) {
+		if (isset($data['direction_id']) && $data['direction_id'] != 0 && $data['direction_id'] != 6) {
 		    $direction = Direction::findOrFail($data['direction_id']);
 		    $data['to_city'] = mb_strtoupper($direction->title);
         } else {
             $data['to_city'] = isset($data['to_city']) ? mb_strtoupper($data['to_city']) : null;
         }
+
+		/*$permit = Permit::where(['tex_number' => $data['tex_number'], 'ud_number' => $data['ud_number'], 'status' => 'printed'])
+                    ->whereNull('date_out')
+                    ->whereDate('date_in', Carbon::now())
+                    ->first();
+		if ($permit) {
+		    return response('Запрещено. Пропуск уже оформлен c такими данными.', 403);
+        }*/
 
         $permit = Permit::create($data);
 
@@ -121,7 +130,7 @@ class IndexController extends BaseController
     public function getPermits()
     {
         $user = Auth::user();
-        $permits = Permit::whereNotNull('date_in')->where(['kpp_name' => $user->kpp_name])->orderBy('id', 'DESC')->take(15)->get();
+        $permits = Permit::whereNotNull('date_in')->where(['kpp_name' => $user->kpp_name, 'status' => 'printed'])->orderBy('id', 'DESC')->take(15)->get();
         return json_encode($permits);
     }
 
@@ -155,6 +164,21 @@ class IndexController extends BaseController
     {
         $permits = Permit::whereNull('date_out')->whereNotNull('date_in')->where('created_at', '>=', Carbon::now()->subDays(7))->orderBy('id', 'DESC')->get();
         return response()->json($permits);
+    }
+
+    public function putToArchive(Request $request)
+    {
+        $permit_id = (int) $request->input('permit_id');
+        $note = $request->input('note');
+        $permit = Permit::findOrFail($permit_id);
+        if (is_null($permit->date_out)) {
+            $permit->status = 'deleted';
+            $permit->note = $note;
+            $permit->save();
+            return response('Пропуск успешно перемещен в архив', 200);
+        } else {
+            return response('Запрещено. У пропуска дата выезда фиксирован.', 403);
+        }
     }
 
     public function searchPermit(Request $request)
@@ -262,6 +286,7 @@ class IndexController extends BaseController
         $phone = $permit->phone;
         $ud_number = $permit->ud_number;
         $tex_number = $permit->tex_number;
+        $incoming_container_number = $permit->incoming_container_number;
         $pr_number = (!empty($permit->pr_number)) ? $permit->pr_number : '';
         if($permit->operation_type == 1) {
             $type = 'Погрузка';
@@ -293,6 +318,8 @@ class IndexController extends BaseController
 ^FT440,250^AZN,28,29,TT0003M_^FH\^CI17^F8^FD$gov_number ($mark_car)^FS^CI0
 ^FT440,288^AZN,28,29,TT0003M_^FH\^CI17^F8^FDКузов: $tex_number^FS^CI0
 ^FT440,331^AZN,28,29,TT0003M_^FH\^CI17^F8^FDПрицеп: $pr_number^FS^CI0
+^FT66,373^A@N,28,29,TT0003M_^FH\^CI17^F8^FDВх.конт: $incoming_container_number^FS^CI0
+^FT440,373^A@N,28,29,TT0003M_^FH\^CI17^F8^FDИсх.конт:____________^FS^CI0
 ^PQ1,0,1,Y^XZ
 HERE;
 

@@ -38,26 +38,17 @@ class ContainerController extends Controller
 
     public function getFreeRows(Request $request)
     {
-        $zone = $request->input('zone');
-        $container_id = $request->input('container_id');
-        return response()->json(ContainerAddress::getFreeRows($zone, $container_id));
+        return response()->json(ContainerAddress::getFreeRows($request->all()));
     }
 
     public function getFreePlaces(Request $request)
     {
-        $zone = $request->input('zone');
-        $row = $request->input('row');
-        $container_id = $request->input('container_id');
-        return response()->json(ContainerAddress::getFreePlaces($zone, $row, $container_id));
+        return response()->json(ContainerAddress::getFreePlaces($request->all()));
     }
 
     public function getFreeFloors(Request $request)
     {
-        $zone = $request->input('zone');
-        $row = $request->input('row');
-        $place = $request->input('place');
-        $container_id = $request->input('container_id');
-        return response()->json(ContainerAddress::getFreeFloors($zone, $row, $place, $container_id));
+        return response()->json(ContainerAddress::getFreeFloors($request->all()));
     }
 
     public function receiveContainerChange(Request $request)
@@ -66,25 +57,35 @@ class ContainerController extends Controller
         $name = $data['zone']."-".$data['row']."-".$data['place']."-".$data['floor'];
         $container_address = ContainerAddress::whereName($name)->first();
         if ($container_address) {
-            $container = Container::find($data['container_id']);
+            $container = Container::findOrFail($data['container_id']);
             if ($container) {
-                $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => 1])->first();
-                if ($container_stock) {
-                    $current_address_name = $container_stock->container_address->name;
-                    $container_stock->container_address_id = $container_address->id;
-                    $container_stock->status = 'received';
-                    $container_stock->save();
+                $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
+                if ($container_address_dmu_in) {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id])->first();
+                    if ($container_stock) {
+                        $current_address_name = $container_address_dmu_in->name;
+                        $container_stock->container_address_id = $container_address->id;
+                        $container_stock->status = 'received';
+                        $container_stock->save();
 
-                    // Зафиксируем в лог
-                    ContainerLog::create([
-                        'user_id' => Auth::id(), 'container_id' => $container->id, 'container_number' => $container->number,
-                        'operation_type' => 'received', 'technique_id' => $data['technique_id'], 'address_from' => $current_address_name,
-                        'address_to' => $container_address->name, 'state' => $container_stock->state
-                    ]);
+                        $cs = $container_stock->attributesToArray();
+                        $cs['user_id'] = Auth::id();
+                        $cs['container_number'] = $container->number;
+                        $cs['operation_type'] = 'received';
+                        $cs['technique_id'] = $data['technique_id'];
+                        $cs['address_from'] = $current_address_name;
+                        $cs['address_to'] = $container_address->name;
+                        $cs['action_type'] = 'put';
 
-                    return response(['data' => '<span style="font-size: 30px;line-height: 30px;">Контейнер успешно размещен!!!</span>'], 200);
+                        // Зафиксируем в лог
+                        ContainerLog::create($cs);
+
+                        return response(['data' => '<span style="font-size: 30px;line-height: 30px;">Контейнер успешно размещен!!!</span>'], 200);
+                    } else {
+                        return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
+                    }
                 } else {
-                    return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
+                    return response(['data' => 'Не найден адрес damu_in'], 404);
                 }
             } else {
                 return response(['data' => 'Не найден контейнер'], 404);
@@ -104,22 +105,27 @@ class ContainerController extends Controller
             if ($container) {
                 $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                 $current_address_name = $container_stock->container_address->name;
-                if ($container_stock) {
+                //if ($container_stock) {
                     $container_stock->container_address_id = $container_address->id;
                     $container_stock->status = 'received';
                     $container_stock->save();
 
+                    $cs = $container_stock->attributesToArray();
+                    $cs['user_id'] = Auth::id();
+                    $cs['container_number'] = $container->number;
+                    $cs['operation_type'] = 'received';
+                    $cs['technique_id'] = $data['technique_id'];
+                    $cs['address_from'] = $current_address_name;
+                    $cs['address_to'] = $container_address->name;
+                    $cs['action_type'] = 'move';
+
                     // Зафиксируем в лог
-                    ContainerLog::create([
-                        'user_id' => Auth::id(), 'container_id' => $container->id, 'container_number' => $container->number,
-                        'operation_type' => 'received', 'technique_id' => $data['technique_id'], 'address_from' => $current_address_name,
-                        'address_to' => $container_address->name, 'state' => $container_stock->state
-                    ]);
+                    ContainerLog::create($cs);
 
                     return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно перемещен!!!</span>'], 200);
-                } else {
+                /*} else {
                     return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
-                }
+                }*/
             } else {
                 return response(['data' => 'Не найден контейнер'], 404);
             }
@@ -207,8 +213,7 @@ class ContainerController extends Controller
                 if ($data['task_type'] == 'receive') {
                     // Размещение
                     if (!$container) {
-                        $container_type = (empty($arr['C'])) ? '40' : $arr['C'];
-                        $container_type = (string) $container_type;
+                        $container_type = (empty($arr['C'])) ? '40' : (string) $arr['C'];
                         $container = Container::create(['number' => $number, 'company' => $arr['B'], 'container_type' => $container_type]);
                     }
                 } else {
@@ -251,16 +256,19 @@ class ContainerController extends Controller
             if ($container_task->isSuccessImport()) {
                 if ($data['task_type'] == 'receive') {
                     // добавляем в остатки
+                    $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
                     foreach ($container_ids as $container_id => $container_number) {
-                        $container_stock = ContainerStock::create(['container_id' => $container_id, 'container_address_id' => 1, 'state' => $container_states[$container_id]]);
+                        $container_stock = ContainerStock::create(['container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $container_states[$container_id]]);
                         if ($container_stock) {
-                            $container_address = ContainerAddress::findOrFail(1);
+                            $cs = $container_stock->attributesToArray();
+                            $cs['user_id'] = Auth::id();
+                            $cs['container_number'] = $container_number;
+                            $cs['operation_type'] = 'incoming';
+                            $cs['address_from'] = '';
+                            $cs['address_to'] = $container_address_dmu_in->name;
+                            $cs['action_type'] = 'put';
                             // Зафиксируем в лог
-                            ContainerLog::create([
-                                'user_id' => Auth::id(), 'container_id' => $container_id, 'container_number' => $container_number,
-                                'operation_type' => 'incoming', 'address_from' => $container_task->trans_type,
-                                'address_to' => $container_address->name, 'state' => $container_stock->state
-                            ]);
+                            ContainerLog::create($cs);
                         }
                     }
                 } else {
@@ -271,12 +279,15 @@ class ContainerController extends Controller
                             $container_stock->save();
 
                             $address = $container_stock->container_address->name;
+                            $cs = $container_stock->attributesToArray();
+                            $cs['user_id'] = Auth::id();
+                            $cs['container_number'] = $container_number;
+                            $cs['operation_type'] = 'in_order';
+                            $cs['address_from'] = $address;
+                            $cs['address_to'] = $address;
+                            $cs['action_type'] = 'pick';
                             // Зафиксируем в лог
-                            ContainerLog::create([
-                                'user_id' => Auth::id(), 'container_id' => $container_id, 'container_number' => $container_number,
-                                'operation_type' => 'in_order', 'address_from' => $address,
-                                'address_to' => $address, 'state' => $container_stock->state
-                            ]);
+                            ContainerLog::create($cs);
                         }
                     }
                 }
@@ -316,7 +327,7 @@ class ContainerController extends Controller
                     ], 200);
                 }
                 if($container_stock->container_address_id == 2 && $container_stock->status == 'shipped') {
-                    return response("Контейнер №".$container->number." найдено. Контейнер находится в зоне отбора", 403);
+                    return response("Контейнер №".$container->number." найдено. Контейнер находится в зоне выдачи", 403);
                 }
                 if($container_stock->container_address_id > 2 && $container_stock->status == 'received') {
                     return response([
@@ -356,7 +367,8 @@ class ContainerController extends Controller
         $name = $container_address->name;
         $arr = explode("-", $name);
         $floor = $container_address->floor;
-
+        return response('Можно перемещать контейнера', 200);
+        /*
         if ($floor == 4) {
             return response('Можно перемещать контейнера', 200);
         } else {
@@ -386,22 +398,7 @@ class ContainerController extends Controller
                     ]
                 ], 403);
             }
-
-            /*
-            $arr[3] = $floor + 1;
-            $n = implode("-", $arr);
-            $ca = ContainerAddress::whereName($n)->first();
-            if (ContainerStock::checking_container_by_address($ca->id)) {
-                return response([
-                    'data' => [
-                        'text' => "<span style='color: red;'>Сначала необходимо переместить контейнера: $floor</span>"
-                    ]
-                ], 403);
-            } else {
-                return response('Можно перемещать контейнера', 200);
-            }*/
-
-        }
+        }*/
     }
 
     public function updateContainerTask(Request $request, $container_task_id)
@@ -518,7 +515,10 @@ class ContainerController extends Controller
                             ImportLog::create($data_import);
                         }
                     } else {
-                        if (ContainerStock::is_shipping($container->id)) {
+                        $data_import['status'] = 'ok';
+                        $data_import['comments'] = 'Контейнер в порядке';
+                        ImportLog::create($data_import);
+                        /*if (ContainerStock::is_shipping($container->id)) {
                             $data_import['status'] = 'ok';
                             $data_import['comments'] = 'Контейнер в порядке';
                             ImportLog::create($data_import);
@@ -526,7 +526,7 @@ class ContainerController extends Controller
                             $data_import['status'] = 'not';
                             $data_import['comments'] = 'Контейнер не в порядке';
                             ImportLog::create($data_import);
-                        }
+                        }*/
                     }
                 }
             }
@@ -534,18 +534,21 @@ class ContainerController extends Controller
             if ($container_task->isSuccessImport()) {
                 if ($data['task_type'] == 'receive') {
                     // добавляем в остатки
+                    $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
                     foreach ($container_ids as $container_id => $container_number) {
-                        $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => 1])->first();
+                        $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id])->first();
                         if (!$container_stock) {
-                            $container_stock = ContainerStock::create(['container_id' => $container_id, 'container_address_id' => 1, 'state' => $container_states[$container_id]]);
-                            $container_address = ContainerAddress::findOrFail(1);
-                            // Зафиксируем в лог
+                            $container_stock = ContainerStock::create(['container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $container_states[$container_id]]);
+                            $cs = $container_stock->attributesToArray();
+                            $cs['user_id'] = Auth::id();
+                            $cs['container_number'] = $container_number;
+                            $cs['operation_type'] = 'incoming';
+                            $cs['address_from'] = $container_task->trans_type;
+                            $cs['address_to'] = $container_address_dmu_in->name;
+                            $cs['action_type'] = 'put';
 
-                            ContainerLog::create([
-                                'user_id' => Auth::id(), 'container_id' => $container_id, 'container_number' => $container_number,
-                                'operation_type' => 'incoming', 'address_from' => $container_task->trans_type,
-                                'address_to' => $container_address->name, 'state' => $container_stock->state
-                            ]);
+                            // Зафиксируем в лог
+                            ContainerLog::create($cs);
                         }
                     }
                 } else {
@@ -556,12 +559,16 @@ class ContainerController extends Controller
                             $container_stock->save();
 
                             $address = $container_stock->container_address->name;
+                            $cs = $container_stock->attributesToArray();
+                            $cs['user_id'] = Auth::id();
+                            $cs['container_number'] = $container_number;
+                            $cs['operation_type'] = 'in_order';
+                            $cs['address_from'] = $address;
+                            $cs['address_to'] = $address;
+                            $cs['action_type'] = 'pick';
+
                             // Зафиксируем в лог
-                            ContainerLog::create([
-                                'user_id' => Auth::id(), 'container_id' => $container_id, 'container_number' => $container_number,
-                                'operation_type' => 'in_order', 'address_from' => $address,
-                                'address_to' => $address, 'state' => $container_stock->state
-                            ]);
+                            ContainerLog::create($cs);
                         }
                     }
                 }
@@ -585,7 +592,9 @@ class ContainerController extends Controller
     public function checkingTheContainerForDispensing(Request $request)
     {
         $container_id = $request->input('container_id');
-        $container_stock = ContainerStock::where(['container_id' => $container_id, 'status' => 'in_order'])->first();
+        $container_stock = ContainerStock::where(['container_id' => $container_id])->first();
+        return response('Контейнер готов к отбору', 200);
+        /*
         if ($container_stock) {
             $container_address = $container_stock->container_address;
             $name = $container_address->name;
@@ -621,19 +630,6 @@ class ContainerController extends Controller
                         ]
                     ], 403);
                 }
-                //**********************************
-                /*$arr[3] = $floor + 1;
-                $n = implode("-", $arr);
-                $ca = ContainerAddress::whereName($n)->first();
-                if (ContainerStock::checking_container_by_address($ca->id)) {
-                    return response([
-                        'data' => [
-                            'text' => 'Для отбора данного контейнера нужно перемещать других контейнеров по выше'
-                        ]
-                    ], 403);
-                } else {
-                    return response('Контейнер готов к отбору', 200);
-                }*/
             }
         } else {
             return response([
@@ -641,7 +637,7 @@ class ContainerController extends Controller
                     'text' => '<span style="color: red; font-size: 30px;">Отсутствует заявка на выдачу</span>'
                 ]
             ], 403);
-        }
+        }*/
     }
 
     public function shippingContainerChange(Request $request)
@@ -650,27 +646,173 @@ class ContainerController extends Controller
         $technique_id = $request->input('technique_id');
         $container = Container::findOrFail($container_id);
         if ($container) {
-            $container_stock = ContainerStock::where(['container_id' => $container->id, 'status' => 'in_order'])->first();
+            $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
             $current_address_name = $container_stock->container_address->name;
-            $to_address_name = ContainerAddress::findOrFail(2);
-            if ($container_stock) {
-                $container_stock->container_address_id = $to_address_name->id;
+            $container_address_dam_out = ContainerAddress::whereName('damu_out')->first();
+            //if ($container_stock) {
+                $container_stock->container_address_id = $container_address_dam_out->id;
                 $container_stock->status = 'shipped';
                 $container_stock->save();
 
+                $cs = $container_stock->attributesToArray();
+                $cs['user_id'] = Auth::id();
+                $cs['container_number'] = $container->number;
+                $cs['operation_type'] = 'shipped';
+                $cs['technique_id'] = $technique_id;
+                $cs['address_from'] = $current_address_name;
+                $cs['address_to'] = $container_address_dam_out->name;
+                $cs['action_type'] = 'pick';
+
                 // Зафиксируем в лог
-                ContainerLog::create([
-                    'user_id' => Auth::id(), 'container_id' => $container->id, 'container_number' => $container->number,
-                    'operation_type' => 'shipped', 'technique_id' => $technique_id, 'address_from' => $current_address_name,
-                    'address_to' => $to_address_name->name, 'state' => $container_stock->state
-                ]);
+                ContainerLog::create($cs);
 
                 return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно выдан!!!</span>'], 200);
-            } else {
+            /*} else {
                 return response(['data' => 'В таблице остатки не найдено запись на отбор'], 404);
-            }
+            }*/
         } else {
             return response(['data' => 'Не найден контейнер'], 404);
+        }
+    }
+
+    public function receiveContainerByKeyboard(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $data['custom'] = ($data['custom'] == 'Да') ? 'yes' : 'not';
+            $data['user_id'] = $user_id = Auth::id();
+            $data['contractor'] = (isset($data['contractor'])) ? $data['contractor'] : null;
+            $data['note'] = (isset($data['note'])) ? $data['note'] : null;
+            $data['seal_number_document'] = (isset($data['seal_number_document'])) ? $data['seal_number_document'] : null;
+            $data['seal_number_fact'] = (isset($data['seal_number_fact'])) ? $data['seal_number_fact'] : null;
+            $container_task = ContainerTask::create($data);
+            $number = trim(strtoupper($data['container_number']));
+            $data_import = [
+                'container_task_id' => $container_task->id, 'container_number' => $number,
+                'user_id' => $user_id, 'ip' => $_SERVER['REMOTE_ADDR']
+            ];
+
+            if(strlen($number) < 11) {
+                $data_import['status'] = 'not';
+                $data_import['comments'] = 'Номер контейнера не правильно.';
+                ImportLog::create($data_import);
+            }
+
+            if(strlen($number) > 11) {
+                $data_import['status'] = 'not';
+                $data_import['comments'] = 'Номер контейнера не правильно.';
+                ImportLog::create($data_import);
+            }
+
+            $str = substr($number,0,4);
+            if (!preg_match('/^[A-Z]{4}$/', $str)) {
+                $data_import['status'] = 'not';
+                $data_import['comments'] = 'Номер контейнера должно начаться с 4-х букв латинского алфавита';
+                ImportLog::create($data_import);
+            }
+
+            $str = substr($number,4,7);
+            if (!preg_match('/^[0-9]{7}$/', $str)) {
+                $data_import['status'] = 'not';
+                $data_import['comments'] = 'В номере контейнера должно быть 7 цифр';
+                ImportLog::create($data_import);
+            }
+
+            $container = Container::whereNumber($number)->first();
+            if ($data['task_type'] == 'receive') {
+                // Размещение
+                if (!$container) {
+                    $container_type = (string) $data['container_type'];
+                    $container = Container::create(['number' => $number, 'company' => $data['company'], 'container_type' => $container_type]);
+                }
+            } else {
+                // На отбор
+                if (!$container) {
+                    $data_import['status'] = 'not';
+                    $data_import['comments'] = 'Контейнер не найдено в справочнике';
+                    ImportLog::create($data_import);
+                }
+            }
+
+            // Записываем истории об импорте
+            if ($data['task_type'] == 'receive') {
+                if (ContainerStock::exists($container->id)) {
+                    $data_import['status'] = 'not';
+                    $data_import['comments'] = 'Контейнер уже имеется в остатки';
+                    ImportLog::create($data_import);
+                } else {
+                    $data_import['status'] = 'ok';
+                    $data_import['comments'] = 'Контейнер в порядке';
+                    ImportLog::create($data_import);
+                }
+            } else {
+                if (ContainerStock::is_shipping($container->id)) {
+                    $data_import['status'] = 'ok';
+                    $data_import['comments'] = 'Контейнер в порядке';
+                    ImportLog::create($data_import);
+                } else {
+                    $data_import['status'] = 'not';
+                    $data_import['comments'] = 'Контейнер не в порядке';
+                    ImportLog::create($data_import);
+                }
+            }
+
+            if ($container_task->isSuccessImport()) {
+                if ($data['task_type'] == 'receive') {
+                    // добавляем в остатки
+                    $container_stock = ContainerStock::create([
+                        'container_id' => $container->id, 'container_address_id' => 1, 'state' => $data['state'], 'company' => $data['company'],
+                        'customs' => $data['custom'], 'car_number_carriage' => $data['car_number_carriage'], 'seal_number_document' => $data['seal_number_document'],
+                        'seal_number_fact' => $data['seal_number_fact'], 'datetime_submission' => $data['datetime_submission'], 'datetime_arrival' => $data['datetime_arrival'],
+                        'contractor' => $data['contractor'], 'note' => $data['note']
+                    ]);
+                    if ($container_stock) {
+                        $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
+
+                        $cs = $container_stock->attributesToArray();
+                        $cs['user_id'] = Auth::id();
+                        $cs['container_number'] = $container->number;
+                        $cs['operation_type'] = 'incoming';
+                        $cs['address_from'] = $container_task->trans_type;
+                        $cs['address_to'] = $container_address_dmu_in->name;
+                        $cs['action_type'] = 'put';
+                        // Зафиксируем в лог
+                        ContainerLog::create($cs);
+                    }
+                } else {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+                    if ($container_stock) {
+                        $container_stock->status = 'in_order';
+                        $container_stock->save();
+
+                        $address = $container_stock->container_address->name;
+
+                        $cs = $container_stock->attributesToArray();
+                        $cs['user_id'] = Auth::id();
+                        $cs['container_number'] = $container->number;
+                        $cs['operation_type'] = 'in_order';
+                        $cs['address_from'] = $address;
+                        $cs['address_to'] = $address;
+                        $cs['action_type'] = 'pick';
+
+                        // Зафиксируем в лог
+                        ContainerLog::create($cs);
+                    }
+                }
+            } else {
+                $container_task->status = 'failed';
+                $container_task->save();
+            }
+
+            $container_task->container_ids = json_encode([$container->id => $container->number]);
+            $container_task->save();
+            DB::commit();
+
+            return response('Заявка успешно оформлен', 200);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response("Ошибка с сервером: $exception", 500);
         }
     }
 }

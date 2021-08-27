@@ -2,21 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BT;
+use App\Models\Company;
+use App\Models\Direction;
+use App\Models\LiftCapacity;
 use App\Models\Passage;
+use App\Models\Permit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Auth;
 
-class PersonalController extends Controller
+class PersonalController extends BaseController
 {
     public function index()
     {
-        return view('kpp-personal');
+        $permits = Permit::orderBy('id', 'DESC')->take(20)->get();
+        $lift_capacity = LiftCapacity::all();
+        $body_type = BT::all();
+        $companies = Company::where(['type_company' => 'resident'])->orderBy('short_en_name')->get();
+        return view('kpp-personal', compact('permits', 'lift_capacity', 'body_type', 'companies'));
     }
 
     public function scanningPersonalWithBarcode(Request $request)
     {
         $barcode = trim($request->input('barcode'));
+        if($this->isKazakh($barcode)) {
+            $html = "<div class='div_block warning_div' style='padding-top: 18px;font-size: 25px;'>
+            ПОЖАЛУЙСТА ПОМЕНЯЙТЕ РАСКЛАДКУ НА АНГЛИЙСКУЮ ИЛИ НА РУССКУЮ
+            </div>";
+            return response([
+                'data' => [
+                    'html' => $html
+                ]
+            ], 404);
+        }
+
+        if($this->isRussian($barcode)) {
+            $barcode = $this->switch_en($barcode);
+        }
+
+
         $user = User::whereUuid($barcode)
             ->with('position', 'company')
             ->first();
@@ -26,13 +51,17 @@ class PersonalController extends Controller
             $data['user_id'] = $user->id;
             $data['operation_type'] = 0;
             $data['kpp_name'] = (!empty(Auth::user()->kpp_name)) ? Auth::user()->kpp_name : null;
+            $company = ($user->company->short_ru_name) ? $user->company->short_ru_name : '';
+            $department = (isset($user->department->title)) ? $user->department->title : '';
+            $position = ($user->position->title) ? $user->position->title : '';
+            $image = (file_exists(public_path($user->image))) ? $user->image : '/img/default-user-image.png';
             $result = [
                 'last_name' => $user->full_name,
-                'company' => $user->company->short_ru_name,
-                'department' => $user->department->title,
-                'position' => $user->position->title,
+                'company' => $company,
+                'department' => $department,
+                'position' => $position,
                 'phone' => $user->phone,
-                'avatar' => $user->image,
+                'avatar' => $image,
                 'user' => $user,
                 'working_status' => $user->getWorkingStatus()
             ];
@@ -105,5 +134,36 @@ class PersonalController extends Controller
             .$operation_name.'</span><br>Дата: <span>'
             .$date_time.'</span></div>';
         return response(['data' => $result], 200);*/
+    }
+
+    public function switch_en($str)
+    {
+        $converter = array(
+            'а' => 'f',	'б' => ',',	'в' => 'd',	'г' => 'u',	'д' => 'l',	'е' => 't',	'ё' => '`',
+            'ж' => ';',	'з' => 'p',	'и' => 'b',	'й' => 'q',	'к' => 'r',	'л' => 'k',	'м' => 'v',
+            'н' => 'y',	'о' => 'j',	'п' => 'g',	'р' => 'h',	'с' => 'c',	'т' => 'n',	'у' => 'e',
+            'ф' => 'a',	'х' => '[',	'ц' => 'w',	'ч' => 'x',	'ш' => 'i',	'щ' => 'o',	'ь' => 'm',
+            'ы' => 's',	'ъ' => ']',	'э' => "'",	'ю' => '.',	'я' => 'z',
+
+            'А' => 'F',	'Б' => '<',	'В' => 'D',	'Г' => 'U',	'Д' => 'L',	'Е' => 'T',	'Ё' => '~',
+            'Ж' => ':',	'З' => 'P',	'И' => 'B',	'Й' => 'Q',	'К' => 'R',	'Л' => 'K',	'М' => 'V',
+            'Н' => 'Y',	'О' => 'J',	'П' => 'G',	'Р' => 'H',	'С' => 'C',	'Т' => 'N',	'У' => 'E',
+            'Ф' => 'A',	'Х' => '{',	'Ц' => 'W',	'Ч' => 'X',	'Ш' => 'I',	'Щ' => 'O',	'Ь' => 'M',
+            'Ы' => 'S',	'Ъ' => '}',	'Э' => '"',	'Ю' => '>',	'Я' => 'Z',
+
+            '"' => '@',	'№' => '#',	';' => '$',	':' => '^',	'?' => '&',	'.' => '/',	',' => '?',
+        );
+
+        return strtr($str, $converter);
+    }
+
+    public function isRussian($str)
+    {
+        return preg_match('/[А-Яа-яЁё]/u', $str);
+    }
+
+    public function isKazakh($str)
+    {
+        return preg_match('/[ҚқҰұҮүҒғҢңІіӘәӨөҺһ]/u', $str);
     }
 }

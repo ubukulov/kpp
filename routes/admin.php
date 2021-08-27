@@ -47,5 +47,11 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 
         # Container
         Route::resource('/containers', 'ContainerController', ['as' => 'admin']);
+
+        # Permits
+        Route::resource('/permits', 'PermitController', ['as' => 'admin']);
+
+        # Technique
+        Route::resource('/technique', 'TechniqueController', ['as' => 'admin']);
     });
 });

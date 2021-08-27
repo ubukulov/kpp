@@ -40,7 +40,7 @@
                         <v-card-actions>
                             <v-spacer></v-spacer>
                             <v-btn
-                                v-if="zone_id !==0, technique_id !== 0"
+                                v-if="zone_id !== 0, technique_id !== 0"
                                 color="primary"
                                 depressed
                                 @click="step++"
@@ -93,6 +93,9 @@
                                 <v-col>
                                     <button @click="isMoving()" type="button" :disabled="is_moving" class="btn" :class="[is_moving == true ? 'btn-light' : 'is_moving']">Перемещение</button>
                                 </v-col>
+                                <!--<v-col>
+                                    <button @click="isMoving()" type="button" :disabled="is_moving" class="btn" :class="[is_moving == true ? 'btn-light' : 'is_moving']">Перемещение в другую зону</button>
+                                </v-col>-->
                             </v-row>
                         </v-card-actions>
 
@@ -572,7 +575,10 @@
                     this.container_id = res.data.data.container_id;
                     this.container_number = res.data.data.container_number;
                     this.current_container_address = res.data.data.current_container_address;
-                    if (res.data.data.event == 1) {
+                    this.is_receive = false;
+                    this.is_shipping = false;
+                    this.is_moving = false;
+                    /*if (res.data.data.event == 1) {
                         this.is_receive = false;
                         this.is_shipping = true;
                         this.is_moving = true;
@@ -586,7 +592,7 @@
                         this.is_receive = true;
                         this.is_shipping = true;
                         this.is_moving = false;
-                    }
+                    }*/
                     console.log(res.data)
                 })
                 .catch(err => {

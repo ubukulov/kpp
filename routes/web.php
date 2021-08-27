@@ -18,23 +18,23 @@ Route::get('/logout', 'AuthController@logout')->name('logout');
 
 Route::group(['middleware' => ['auth']], function() {
     Route::get('/', 'IndexController@welcome')->name('home');
-
+    Route::get('/get-user-info/{id}', 'IndexController@getUserInfo');
+    Route::get('/get-car-info/{nm}', 'IndexController@getCarInfo');
+    Route::get('/get-driver-info/{nm}', 'IndexController@getDriverInfo');
+    Route::post('/order-permit-by-kpp', 'IndexController@orderPermitByKpp');
+    Route::post('/fix-date-out-for-current-permit', 'IndexController@fixDateOutForCurrentPermit');
     # КПП Оператор
     Route::group(['middleware' => 'role:kpp-operator'], function(){
         Route::get('/security-kpp', 'IndexController@securityKpp')->name('security.kpp');
-        Route::post('/order-permit-by-kpp', 'IndexController@orderPermitByKpp');
-        Route::get('/get-user-info/{id}', 'IndexController@getUserInfo');
-        Route::get('/get-car-info/{nm}', 'IndexController@getCarInfo');
-        Route::get('/get-driver-info/{nm}', 'IndexController@getDriverInfo');
         Route::get('/command/print/{id}/{company_id?}/{foreign_car?}', 'IndexController@start_print');
         Route::post('/search/permit', 'IndexController@searchPermit')->name('search.permit');
         Route::get('/get-permits-list', 'IndexController@getPermits');
         Route::get('/get-prev-permits-for-today', 'IndexController@getPrevPermitsForToday');
-        Route::post('/fix-date-out-for-current-permit', 'IndexController@fixDateOutForCurrentPermit');
         Route::post('/scan-go-checking', 'ScangoController@scanGoChecking');
         Route::get('/get-last-5-logs-from-sql-server', 'ScangoController@getLast5Logs');
         Route::get('/get-permit-by-id/{id}', 'IndexController@getPermitById');
         Route::get('/get-not-completed-permits-for-week', 'IndexController@getNotCompletedPermitsForWeek');
+        Route::post('/permit/{id}/put-to-archive', 'IndexController@putToArchive');
     });
 
     # Контроль персонала
@@ -54,6 +54,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/task/{id}/edit', 'KTController@editTask')->name('edit.task');
         Route::post('/container/{id}/update-container-task', 'ContainerController@updateContainerTask')->name('update.container-task');
         Route::get('/task/{id}/completed', 'KTController@completeTask')->name('completed.task');
+        Route::post('/container/receive-container-by-keyboard', 'ContainerController@receiveContainerByKeyboard');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)

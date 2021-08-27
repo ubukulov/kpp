@@ -11,7 +11,7 @@ class Car extends Model
     protected $fillable = [
         'tex_number', 'mark_car', 'gov_number', 'body_type_id', 'cat_tc_id',
         'pr_number', 'lc_id', 'bt_id', 'from_company', 'created_at', 'updated_at',
-        'foreign_car'
+        'foreign_car', 'ours'
     ];
 
     public static function exists($tex_number)
