@@ -34,6 +34,9 @@ Vue.component('kt', require('./components/KT.vue').default);
 Vue.component('kt-operator-task-create', require('./components/KT_OperatorTaskCreate.vue').default);
 Vue.component('kpp', require('./components/KPP.vue').default);
 Vue.component('kpp-form2', require('./components/KppForm2.vue').default);
+Vue.component('kt-operator-task', require('./components/KT_OperatorTask.vue').default);
+Vue.component('kt-controller', require('./components/KT_Controller.vue').default);
+Vue.component('kt-controller-logs', require('./components/KT_ControllerLogs.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

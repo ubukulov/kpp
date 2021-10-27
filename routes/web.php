@@ -23,17 +23,19 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('/get-driver-info/{nm}', 'IndexController@getDriverInfo');
     Route::post('/order-permit-by-kpp', 'IndexController@orderPermitByKpp');
     Route::post('/fix-date-out-for-current-permit', 'IndexController@fixDateOutForCurrentPermit');
+    Route::get('/get-permits-list', 'IndexController@getPermits');
+    Route::get('/command/print/{id}/{company_id?}/{foreign_car?}', 'IndexController@start_print');
+    Route::get('/get-not-completed-permits-for-week', 'IndexController@getNotCompletedPermitsForWeek');
+
     # КПП Оператор
     Route::group(['middleware' => 'role:kpp-operator'], function(){
         Route::get('/security-kpp', 'IndexController@securityKpp')->name('security.kpp');
-        Route::get('/command/print/{id}/{company_id?}/{foreign_car?}', 'IndexController@start_print');
         Route::post('/search/permit', 'IndexController@searchPermit')->name('search.permit');
-        Route::get('/get-permits-list', 'IndexController@getPermits');
         Route::get('/get-prev-permits-for-today', 'IndexController@getPrevPermitsForToday');
         Route::post('/scan-go-checking', 'ScangoController@scanGoChecking');
         Route::get('/get-last-5-logs-from-sql-server', 'ScangoController@getLast5Logs');
         Route::get('/get-permit-by-id/{id}', 'IndexController@getPermitById');
-        Route::get('/get-not-completed-permits-for-week', 'IndexController@getNotCompletedPermitsForWeek');
+
         Route::post('/permit/{id}/put-to-archive', 'IndexController@putToArchive');
     });
 
@@ -55,6 +57,8 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/container/{id}/update-container-task', 'ContainerController@updateContainerTask')->name('update.container-task');
         Route::get('/task/{id}/completed', 'KTController@completeTask')->name('completed.task');
         Route::post('/container/receive-container-by-keyboard', 'ContainerController@receiveContainerByKeyboard');
+        Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
+        Route::get('/task/{id}/print', 'KTController@printTask');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -73,9 +77,21 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/checking-the-container-for-movement', 'ContainerController@checkingTheContainerForMovement');
         Route::post('/checking-the-container-for-dispensing', 'ContainerController@checkingTheContainerForDispensing');
         Route::post('/container/shipping-container-change', 'ContainerController@shippingContainerChange');
+        Route::get('/get-container-ships', 'ContainerController@getContainerShips');
+        Route::post('/container/moving-container-to-another-zone', 'ContainerController@movingContainerToAnotherZone');
+    });
+
+    # Контейнерный терминал - контролировщики
+    Route::group(['prefix' => 'container-controller', 'middleware' => 'role:kt-controller'], function(){
+        Route::get('/', 'KTController@controller')->name('kt.controller');
+        Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
+        Route::get('/task/{id}/container-logs', 'KTController@showTaskContainerLogs2')->name('show.task-container-logs');
+        Route::get('/task/{id}/import-logs', 'KTController@getContainerTaskLogs');
     });
 });
 
+
+# Маршруты для тех водителей которые оформляет себе предварительную пропуск
 Route::get('/driver', 'DriverController@index');
 Route::post('/check-driver', 'DriverController@check_driver');
 Route::post('/order-permit-by-driver', 'DriverController@orderPermitByDriver');
@@ -85,3 +101,6 @@ Route::get('/view-detail-info-permit', 'ViewController@index');
 Route::get('/view-detail-info-permit/get-car-info/{nm}', 'ViewController@getCarInfo');
 Route::get('/view-detail-info-permit/get-driver-info/{nm}', 'ViewController@getDriverInfo');
 Route::post('/view-detail-info-permit/download-permits-for-selected-time', 'ViewController@getPermitsForSelectedTime')->name('download.permits');
+
+# Список белых машинов которые без пропусков заежает и выезжает
+Route::get('/white-car-lists', 'ViewController@whiteCarLists')->name('white.car.lists');

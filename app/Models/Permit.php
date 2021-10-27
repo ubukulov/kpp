@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Permit extends Model
@@ -32,5 +33,10 @@ class Permit extends Model
     public function get_statuses()
     {
         return $this->hasMany(PermitStatus::class);
+    }
+
+    public static function getCountPermitsForToday()
+    {
+        return Permit::where(['status' => 'printed'])->whereDate('date_in', '=', Carbon::today()->toDateString())->get()->count();
     }
 }

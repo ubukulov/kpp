@@ -1,14 +1,4 @@
 @extends('layouts.app')
-@push('styles')
-    <style>
-        .kt{
-            width: 900px;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-    </style>
-@endpush
 @section('content')
     <div class="row">
         <div class="col-md-12">

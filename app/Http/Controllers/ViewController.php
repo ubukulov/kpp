@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\Company;
 use App\Models\Driver;
 use App\Models\Permit;
+use App\Models\WhiteCarList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -319,5 +320,11 @@ class ViewController extends BaseController
         $writer->save(public_path() . $path_to_file);
 
         return $path_to_file;
+    }
+
+    public function whiteCarLists()
+    {
+        $lists = WhiteCarList::active()->get();
+        return view('white_car_lists', compact('lists'));
     }
 }

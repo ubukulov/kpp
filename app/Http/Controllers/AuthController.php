@@ -42,6 +42,8 @@ class AuthController extends BaseController
                     return response(route('kt.kt_operator'));
                 } elseif(Auth::user()->hasRole('kt-crane')) {
                     return response(route('kt.kt_crane'));
+                } elseif(Auth::user()->hasRole('kt-controller')) {
+                    return response(route('kt.controller'));
                 } else {
                     return response(route('cabinet.report.index'));
                 }

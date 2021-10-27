@@ -115,5 +115,11 @@
 <script src="/dist/js/demo.js"></script>
 
 @stack('admin_scripts')
+<script type="text/javascript">
+    function no_cirilic(input){
+        let re = /[а-яё\. ]/gi;
+        input.value = input.value.replace(re, '')
+    }
+</script>
 </body>
 </html>

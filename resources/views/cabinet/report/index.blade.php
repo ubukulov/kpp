@@ -78,7 +78,18 @@
                                                 </v-menu>
                                             </v-col>
 
-                                            <v-col md="6">
+                                            <v-col md="3">
+                                                <v-autocomplete
+                                                    :items="companies"
+                                                    :hint="`${companies.id}, ${companies.short_en_name}`"
+                                                    item-value="id"
+                                                    v-model="company_id"
+                                                    item-text="short_en_name"
+                                                    autocomplete
+                                                ></v-autocomplete>
+                                            </v-col>
+
+                                            <v-col md="3">
                                                 <v-btn type="button" @click="getPermits()" class="primary">Показать</v-btn>
                                                 <v-btn style="margin-left: 10px;" type="button" @click="downloadReport()" class="success">Скачать отчёт</v-btn>
                                             </v-col>
@@ -183,6 +194,7 @@
             data(){
                 return {
                     company_id: <?php echo Auth::user()->company_id ?>,
+                    companies: <?php echo json_encode($companies) ?>,
                     search: '',
                     download_btn: false,
                     searchInput: '',

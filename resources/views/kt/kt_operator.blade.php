@@ -1,13 +1,8 @@
 @extends('layouts.app')
 @push('styles')
-    <style>
-        .kt{
-            width: 900px;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-    </style>
+    <!-- DataTables -->
+    <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
 @endpush
 @section('content')
     <div class="row">
@@ -29,61 +24,30 @@
                     </div>
                 </div>
                 <br><br>
-                <table class="table table-bordered">
-                    <thead>
-                        <th>Заявка</th>
-                        <th>Тип</th>
-                        <th>Тип авто</th>
-                        <th>Статус</th>
-                        <th>Файл</th>
-                        <th>История</th>
-                        <th>Ред.</th>
-                        <th>Дата</th>
-                    </thead>
-                    @foreach($container_tasks as $task)
-                    <tr>
-                        <td>{{ $task->title }}</td>
-                        <td>
-                            @if($task->task_type == 'receive')
-                                Прием
-                            @else
-                                Выдача
-                            @endif
-                        </td>
-                        <td>
-                            @if($task->trans_type == 'train')
-                                ЖД
-                            @else
-                                Авто
-                            @endif
-                        </td>
-                        <td>
-                            @if($task->status == 'open')
-                                В работе <a href="{{ route('show.task-container-logs', ['id' => $task->id]) }}"><i style="font-size: 20px;" class="fa fa-history"></i></a>
-                            @elseif($task->status == 'failed')
-                                Ошибка при импорте
-                            @else
-                                Выполнен
-                            @endif
-                        </td>
-                        <td>
-                            <a href="{{ $task->upload_file }}" target="_blank"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&nbsp;Скачать</a>
-                        </td>
-                        <td>
-                            <a href="{{ route('show.task-import-logs', ['id' => $task->id]) }}"><i style="font-size: 20px;" class="fa fa-history"></i></a>
-                        </td>
-                        <td>
-                            @if($task->status == 'failed')
-                            <a href="{{ route('edit.task', ['id' => $task->id]) }}"><i style="font-size: 20px;" class="fa fa-edit"></i></a>
-                            @endif
-                        </td>
-                        <td>
-                            {{ $task->created_at }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </table>
+
+                <kt-operator-task></kt-operator-task>
             </div>
         </div>
     </div>
 @stop
+@push('scripts')
+    <!-- DataTables -->
+    <script src="/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+
+    <script>
+        $(function () {
+            $("#example1").DataTable({
+                "responsive": true,
+                "autoWidth": false,
+                "bPaginate": false,
+                "info": false,
+                "language": {
+                    "url": "/dist/Russian.json"
+                },
+            });
+        });
+    </script>
+@endpush

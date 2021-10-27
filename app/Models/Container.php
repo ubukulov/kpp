@@ -13,4 +13,9 @@ class Container extends Model
     protected $dates = [
         'created_at', 'updated_at'
     ];
+
+    public function container_stock()
+    {
+        return $this->hasOne(ContainerStock::class);
+    }
 }

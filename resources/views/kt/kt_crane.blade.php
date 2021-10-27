@@ -1,14 +1,4 @@
 @extends('layouts.app')
-@push('styles')
-    <style>
-        .kt{
-            width: 900px;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-    </style>
-@endpush
 @section('content')
     <div class="row">
         <div class="col-md-12">
@@ -28,7 +18,7 @@
                 <v-app>
                     <v-container>
                         <div style="padding: 10px; text-align: center;">
-                            <kt></kt>
+                            <kt name="{{ Auth::user()->full_name }}"></kt>
                         </div>
                     </v-container>
                 </v-app>

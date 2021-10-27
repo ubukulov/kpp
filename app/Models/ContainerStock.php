@@ -19,6 +19,11 @@ class ContainerStock extends Model
         return $this->belongsTo(ContainerAddress::class);
     }
 
+    public function container_task()
+    {
+        return $this->belongsTo(ContainerTask::class);
+    }
+
     public function container()
     {
         return $this->belongsTo(Container::class);

@@ -42,7 +42,7 @@ class ImportContainer extends Command
      */
     public function handle()
     {
-        $path_to_file = 'files/9224693.xlsx';
+        $path_to_file = 'files/031021-9.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -52,13 +52,14 @@ class ImportContainer extends Command
         foreach ($sheetData as $key=>$arr) {
             if ($key == 1) continue;
             $zone = $arr['A'];
-            if ($zone == 'Спредер') {
-                $kind = 'r';
-            }elseif ($zone == 'Спредер-консоль') {
-                $kind = 'k';
-            } else {
-                $kind = 'r';
-            }
+            /*if (trim($zone) == '5 скл') {
+                $slag = '5-R';
+            }elseif (trim($zone) == 'Ангар') {
+                $slag = 'ANR';
+            } elseif (trim($zone) == 'ТС') {
+                $slag = 'TSR';
+            }*/
+            $slag = '30R';
 
             if ($zone == 'Виртуальная') {
                 $row = 1;
@@ -70,9 +71,10 @@ class ImportContainer extends Command
                 $floor = $arr['D'];
             }
 
-            $name = strtoupper(substr(Str::slug($zone), 0,2).$kind."-".$row."-".$place."-".$floor);
-            $number = strtoupper($arr['E']);
-            $container_type = ($arr['F'] == 45) ? '40' : $arr['F'];
+            $name = $slag."-".$row."-".$place."-".$floor;
+            $number = trim(strtoupper($arr['E']));
+            $container_type = (empty($arr['F']) ||$arr['F'] == 45) ? '40' : $arr['F'];
+            $state = (empty($arr['G'])) ? null : $arr['G'];
             $container = Container::whereNumber($number)->first();
             if (!$container){
                 $container = Container::create([
@@ -87,17 +89,18 @@ class ImportContainer extends Command
             }
 
             if ($container_address) {
-                $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => $container_address->id])->first();
+                $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                 if ($container_stock) {
-                    $this->info("The container: $number is not added. It is already in the stock with the same address $name.");
+                    $curr_add_name = $container_stock->container_address->name;
+                    $this->info("The container: $number is already exists by address name - $curr_add_name");
                     $cnt++;
                 } else {
                     ContainerStock::create([
-                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received'
+                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received', 'state' => $state
                     ]);
                     ContainerLog::create([
                         'user_id' => 140, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
-                        'address_from' => 'из файла', 'address_to' => $container_address->name
+                        'address_from' => 'из файла', 'address_to' => $container_address->name, 'state' => $state
                     ]);
                     $this->info("The container: $number successfully added.");
                     $count++;

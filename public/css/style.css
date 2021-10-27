@@ -152,11 +152,37 @@ input,select, button{
     height: 200px;
     margin-bottom: 10px;
 }
+.kt{
+    width: 1200px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+}
+.allow {
+    font-size: 20px; color: red; box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+    transform: scale(1); animation: pulse 2s infinite; border-radius: 50%;
+}
 @media (max-width: 600px) {
     .kt_header {
         height: 150px !important;
     }
     .v-application--wrap {
         min-height: auto !important;
+    }
+}
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 1, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(0, 0, 1, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 1, 0);
     }
 }

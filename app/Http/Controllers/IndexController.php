@@ -162,7 +162,7 @@ class IndexController extends BaseController
 
     public function getNotCompletedPermitsForWeek()
     {
-        $permits = Permit::whereNull('date_out')->whereNotNull('date_in')->where('created_at', '>=', Carbon::now()->subDays(7))->orderBy('id', 'DESC')->get();
+        $permits = Permit::whereNotNull('date_in')->where('status', 'printed')->where('created_at', '>=', Carbon::now()->subDays(7))->orderBy('id', 'DESC')->get();
         return response()->json($permits);
     }
 
@@ -286,7 +286,12 @@ class IndexController extends BaseController
         $phone = $permit->phone;
         $ud_number = $permit->ud_number;
         $tex_number = $permit->tex_number;
-        $incoming_container_number = $permit->incoming_container_number;
+        if (strpos($permit->incoming_container_number, ',') !== false) {
+            $arr = explode(',', $permit->incoming_container_number);
+            $incoming_container_number = $arr[0];
+        } else {
+            $incoming_container_number = $permit->incoming_container_number;
+        }
         $pr_number = (!empty($permit->pr_number)) ? $permit->pr_number : '';
         if($permit->operation_type == 1) {
             $type = 'Погрузка';
@@ -304,8 +309,8 @@ class IndexController extends BaseController
 ^PW812
 ^LL0812
 ^LS0
-^FT66,62^AZN,42,42,TT0003M_^FH\^CI17^F8^FDПРОПУСК №$id^FS^CI0
-^BY3,3,58^FT499,80^BCN,,N,N
+^FT66,82^AZN,42,42,TT0003M_^FH\^CI17^F8^FDПРОПУСК №$id^FS^CI0
+^BY3,3,58^FT499,102^BCN,,N,N
 ^FD$id^FS
 ^FT268,115^A0N,27,27,TT0003M_^FH\^CI17^F8^FD$company / $type^FS^CI0
 ^FT66,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВъезд: $date_in^FS^CI0
@@ -320,6 +325,7 @@ class IndexController extends BaseController
 ^FT440,331^AZN,28,29,TT0003M_^FH\^CI17^F8^FDПрицеп: $pr_number^FS^CI0
 ^FT66,373^A@N,28,29,TT0003M_^FH\^CI17^F8^FDВх.конт: $incoming_container_number^FS^CI0
 ^FT440,373^A@N,28,29,TT0003M_^FH\^CI17^F8^FDИсх.конт:____________^FS^CI0
+
 ^PQ1,0,1,Y^XZ
 HERE;
 

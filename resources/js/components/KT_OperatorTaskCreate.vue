@@ -3,13 +3,6 @@
         <v-main>
             <v-container>
                 <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label>Номер документа</label>
-                            <input type="text" v-model="title" class="form-control">
-                        </div>
-                    </div>
-
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Тип документа</label>
@@ -75,8 +68,11 @@
                                             </div>
 
                                             <div class="col-md-4">
-                                                <a href="/files/kt_template.xlsx">
-                                                    <v-icon>mdi-download</v-icon>&nbsp; Скачать шаблон
+                                                <a class="btn btn-dark" style="color: #fff;" v-if="task_type==='receive'" href="/files/kt_template.xlsx">
+                                                    <v-icon style="color: #fff;">mdi-download</v-icon>&nbsp; Скачать шаблон (прием)
+                                                </a>
+                                                <a class="btn btn-dark" style="color: #fff;" v-if="task_type === 'ship'" href="/files/kt_template_ship.xlsx">
+                                                    <v-icon style="color: #fff;">mdi-download</v-icon>&nbsp; Скачать шаблон (выдачи)
                                                 </a>
                                             </div>
                                         </div>
@@ -266,14 +262,13 @@
                 overlay: false,
                 errors: [],
                 tab: null,
-                title: '',
                 task_type: 'receive',
                 trans_type: 'train',
                 document_base: '',
                 upload_file: '',
                 disabled: false,
                 types: [40, 45, 20],
-                states: ['Груженный', 'Порожний'],
+                states: ['Груженый', 'Порожний'],
                 customs: ['Да', 'Нет'],
                 container_number: '',
                 company: '',
@@ -292,9 +287,6 @@
         methods: {
             createContainerTask(){
                 this.errors = [];
-                if (!this.title) {
-                    this.errors.push('Укажите номер заявки');
-                }
 
                 if (this.tab === 'tab-2') {
                     this.upload_file = '';
@@ -328,7 +320,6 @@
                         this.disabled = true;
 
                         let formData = new FormData();
-                        formData.append('title', this.title);
                         formData.append('task_type', this.task_type);
                         formData.append('trans_type', this.trans_type);
                         formData.append('container_number', this.container_number);
@@ -348,7 +339,6 @@
                             .then(res => {
                                 console.log(res);
                                 window.location.href = '/container-terminals';
-                                this.overlay = false;
                             })
                             .catch(err => {
                                 console.log(err);
@@ -370,7 +360,6 @@
                         };
 
                         let formData = new FormData();
-                        formData.append('title', this.title);
                         formData.append('task_type', this.task_type);
                         formData.append('trans_type', this.trans_type);
                         formData.append('document_base', this.$refs.document_base.files[0]);
@@ -380,7 +369,6 @@
                             .then(res => {
                                 console.log(res);
                                 window.location.href = '/container-terminals';
-                                this.overlay = false;
                             })
                             .catch(err => {
                                 console.log(err);
@@ -397,6 +385,9 @@
                     this.document_base = this.$refs.document_base.files[0];
                 }
             }
+        },
+        created() {
+            this.file_path = this.file_receive;
         }
     }
 </script>

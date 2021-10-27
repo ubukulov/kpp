@@ -53,5 +53,18 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 
         # Technique
         Route::resource('/technique', 'TechniqueController', ['as' => 'admin']);
+
+        # White Cars list
+        Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'admin']);
+
+        # Dashboard statistics
+        Route::get('/get-operations-crane-operator-for-today', 'StatController@getOperationCraneOperatorForToday');
+
+        # WEBCONT
+        Route::group(['prefix' => 'webcont'], function(){
+            Route::get('/stocks', 'WebcontController@stocks')->name('admin.webcont.stocks');
+            Route::get('/logs', 'WebcontController@logs')->name('admin.webcont.logs');
+        });
+
     });
 });

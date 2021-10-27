@@ -1,14 +1,4 @@
 @extends('layouts.app')
-@push('styles')
-    <style>
-        .kt{
-            width: 900px;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-    </style>
-@endpush
 @section('content')
     <div class="row">
         <div class="col-md-12">
@@ -21,7 +11,9 @@
                     </div>
 
                     <div class="col-md-6 text-right">
-                        <button @if(!$container_task->allowCloseThisTask($container_stocks)) disabled="disabled" title="Не все позиции выполнены"  @endif style="font-size: 14px !important;" class="btn btn-success" onclick="window.location.href = '{{ route('completed.task', ['id' => $container_task->id]) }}'">Закрыть заявку</button>
+                        @if($container_task->status == 'open')
+                        <button @if(!$container_task->allowCloseThisTask()) disabled="disabled" title="Не все позиции выполнены"  @endif style="font-size: 14px !important;" class="btn btn-success" onclick="window.location.href = '{{ route('completed.task', ['id' => $container_task->id]) }}'">Закрыть заявку</button>
+                        @endif
                     </div>
                 </div>
 
@@ -31,31 +23,37 @@
                     <th>#</th>
                     <th>Контейнер</th>
                     <th>Статус</th>
+                    <th>Адрес</th>
                     <th>Дата</th>
                     </thead>
-                    @foreach($container_stocks as $container_stock)
+                    @foreach($import_logs as $im)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $container_stock->container->number }}</td>
+                            <td>{{ $im->container_number }}</td>
                             <td>
                                 @if($container_task->task_type == 'receive')
-                                    @if($container_stock->status == 'received')
-                                        <i style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i>&nbsp; Размещен
+                                    @if($im->state == 'posted')
+                                        <i style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i>&nbsp; {{ __('words.posted') }}
                                     @else
-                                        <i style="font-size: 20px; color: red;" class="fa fa-exclamation-circle" aria-hidden="true"></i>&nbsp; Не размещен
+                                        <i style="font-size: 20px; color: red;" class="fa fa-exclamation-circle" aria-hidden="true"></i>&nbsp; {{ __('words.not_posted') }}
                                     @endif
                                 @endif
 
                                 @if($container_task->task_type == 'ship')
-                                    @if($container_stock->status == 'shipped')
-                                        <i style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i>&nbsp; Отобран
+                                    @if($im->state == 'selected')
+                                        <i style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i>&nbsp; {{ __('words.selected') }}
+                                    @elseif($im->state == 'issued')
+                                        <i style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i>&nbsp; {{ __('words.issued') }}
                                     @else
-                                        <i style="font-size: 20px; color: red;" class="fa fa-exclamation-circle" aria-hidden="true"></i>&nbsp; Не отобран
+                                        <i style="font-size: 20px; color: red;" class="fa fa-exclamation-circle" aria-hidden="true"></i>&nbsp; {{ __('words.not_selected') }}
                                     @endif
                                 @endif
                             </td>
                             <td>
-                                {{ $container_stock->updated_at }}
+                                {{ $im->getContainerAddress() }}
+                            </td>
+                            <td>
+                                {{ $im->updated_at->format('d.m.Y H:i:s') }}
                             </td>
                         </tr>
                     @endforeach

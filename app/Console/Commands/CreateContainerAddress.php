@@ -20,7 +20,8 @@ class CreateContainerAddress extends Command
      *
      * @var string
      */
-    protected $description = 'Зона спредер: с 1 по 12 ряду 10место. с 13 по 25 ряду 8 место';
+    protected $description = 'Таможенный зона занимает 1 ряд. И Максимально может вместиться до 10 контейнеров.
+                              Зона спредер: с 2 по 12 ряду 10место. с 13 по 25 ряду 8 место';
 
     /**
      * Create a new command instance.
@@ -39,7 +40,7 @@ class CreateContainerAddress extends Command
      */
     public function handle()
     {
-        $title = "СПРЕДЕР";
+        $title = "ПОЛЕ";
         $kind = $this->ask('Enter kind: ');
         $zone = strtoupper(substr(Str::slug($title),0,2).$kind);
 
@@ -62,33 +63,77 @@ class CreateContainerAddress extends Command
             ]);
         }
 
-        $container_address = ContainerAddress::whereName('pole')->first();
+        $container_address = ContainerAddress::whereName('buffer')->first();
         if (!$container_address) {
             ContainerAddress::create([
-                'title' => 'ПОЛЕ', 'zone' => 'POLE', 'kind' => 'pole', 'row' => 1, 'place' => 1, 'floor' => 1, 'name' => 'pole'
+                'title' => 'Буфер', 'zone' => 'BUFFER', 'kind' => 'buffer', 'row' => 1, 'place' => 1, 'floor' => 1, 'name' => 'buffer'
             ]);
         }
 
         $container_address = ContainerAddress::whereName('spreder')->first();
         if(!$container_address) {
             ContainerAddress::create([
-                'title' => 'СПРЕДЕР', 'zone' => 'SPREADER', 'kind' => 'spreder', 'row' => 1, 'place' => 1, 'floor' => 1, 'name' => 'spreder'
+                'title' => 'СПРЕДЕР', 'zone' => 'SPREDER', 'kind' => 'spreder', 'row' => 1, 'place' => 1, 'floor' => 1, 'name' => 'spreder'
             ]);
         }
 
-        for ($i=$iteration; $i<=$row; $i++) {
-            for($j=1; $j<=$place; $j++) {
-                for($k=1; $k<=$floor; $k++) {
-                    $data = [
-                        'title' => $title,
-                        'zone' => $zone,
-                        'kind' => $kind,
-                        'row'  => $i,
-                        'place' => $j,
-                        'floor' => $k,
-                        'name' => $zone."-".$i."-".$j."-".$k
-                    ];
-                    ContainerAddress::create($data);
+        if ($kind == 'k') {
+            for ($i=1; $i<=$row; $i++) {
+                $s1 = $zone."-".$i."-1-1";
+                $s2 = $zone."-".$i."-1-2";
+                $s3 = $zone."-".$i."-2-1";
+                $s4 = $zone."-".$i."-2-2";
+                $s5 = $zone."-".$i."-2-3";
+                $data = [
+                    'title' => $title,
+                    'zone' => $zone,
+                    'kind' => 'k',
+                    'row'  => $i,
+                ];
+                $data['place'] = 1;
+                $data['floor'] = 1;
+                $data['name'] = $s1;
+                ContainerAddress::create($data);
+
+                $data['place'] = 1;
+                $data['floor'] = 2;
+                $data['name'] = $s2;
+                ContainerAddress::create($data);
+
+                $data['place'] = 2;
+                $data['floor'] = 1;
+                $data['name'] = $s3;
+                ContainerAddress::create($data);
+
+                $data['place'] = 2;
+                $data['floor'] = 2;
+                $data['name'] = $s4;
+                ContainerAddress::create($data);
+
+                $data['place'] = 2;
+                $data['floor'] = 3;
+                $data['name'] = $s5;
+                ContainerAddress::create($data);
+            }
+        } else {
+            for ($i=$iteration; $i<=$row; $i++) {
+                for($j=1; $j<=$place; $j++) {
+                    for($k=1; $k<=$floor; $k++) {
+                        $name = $zone."-".$i."-".$j."-".$k;
+                        $c_address = ContainerAddress::whereName($name)->first();
+                        if (!$c_address) {
+                            $data = [
+                                'title' => $title,
+                                'zone' => $zone,
+                                'kind' => $kind,
+                                'row'  => $i,
+                                'place' => $j,
+                                'floor' => $k,
+                                'name' => $name
+                            ];
+                            ContainerAddress::create($data);
+                        }
+                    }
                 }
             }
         }

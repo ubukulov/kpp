@@ -21,4 +21,12 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('/kpp/samsung', 'CabinetController@kpp_samsung')->name('cabinet.kpp.samsung');
     Route::get('/kpp/samsung/get100logs', 'CabinetController@get100Logs');
     Route::post('/kpp/samsung/get-document-by-code', 'CabinetController@getDocumentByCode');
+
+    # Штрих-код для Самсунга
+    Route::get('/samsung/barcode', 'CabinetController@barcode')->name('cabinet.barcode.samsung');
+    Route::get('/samsung/barcode/get-orders', 'CabinetController@getOrders');
+    Route::post('/samsung/barcode/command-print', 'CabinetController@printOrders');
+
+    # White Cars list
+    Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'cabinet'])->middleware('role:kpp-direktor');
 });

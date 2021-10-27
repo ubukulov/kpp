@@ -36,7 +36,16 @@
                     </a>
                 </li>
                 @endrole
-
+                @role('kpp-direktor')
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.white-car-list.index') }}" class="nav-link @if(request()->is('cabinet/white-car-list*')) active @endif">
+                        <i class="nav-icon fas fa-car"></i>
+                        <p>
+                            Машины (белые)
+                        </p>
+                    </a>
+                </li>
+                @endrole
                 <li class="nav-item">
                     <a href="{{ route('cabinet.report.index') }}" class="nav-link @if(request()->is('cabinet/reports*')) active @endif">
                         <i class="nav-icon fas fa-chart-pie"></i>
@@ -47,14 +56,22 @@
                 </li>
 
                 @if(Auth::user()->company->id == 2)
-                <li class="nav-item">
-                    <a href="{{ route('cabinet.kpp.samsung') }}" class="nav-link @if(request()->is('cabinet/kpp*')) active @endif">
-                        <i class="nav-icon fas fa-chart-pie"></i>
-                        <p>
-                            КПП
-                        </p>
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.kpp.samsung') }}" class="nav-link @if(request()->is('cabinet/kpp*')) active @endif">
+                            <i class="nav-icon fas fa-car"></i>
+                            <p>
+                                КПП
+                            </p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.barcode.samsung') }}" class="nav-link @if(request()->is('cabinet/samsung/barcode*')) active @endif">
+                            <i class="nav-icon fa fa-barcode"></i>
+                            <p>
+                                Штрих-код
+                            </p>
+                        </a>
+                    </li>
                 @endif
 
                 @if(\Gate::allows('create-permit'))

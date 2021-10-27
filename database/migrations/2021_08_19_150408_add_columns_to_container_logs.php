@@ -14,8 +14,9 @@ class AddColumnsToContainerLogs extends Migration
     public function up()
     {
         Schema::table('container_logs', function (Blueprint $table) {
+            $table->timestamp('start_date')->after('state')->nullable();
             $table->enum('action_type', [
-                'put', 'pick', 'move', 'move_another_zone'
+                'reception', 'ship', 'put', 'pick', 'move', 'move_another_zone'
             ])->after('transaction_date');
             $table->string('company')->after('action_type')->nullable();
             $table->enum('customs', ['yes', 'not'])->after('company');

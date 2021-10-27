@@ -38,11 +38,6 @@
                     <label>Ярус</label>
                     <input type="number" value="{{ $container_address->floor }}" min="1" max="4" class="form-control" name="floor" required>
                 </div>
-
-                <div class="form-group">
-                    <label>Площадка</label>
-                    <input type="text" value="{{ $container_address->space }}" class="form-control" name="space" required>
-                </div>
             </div>
             <!-- /.card-body -->
 

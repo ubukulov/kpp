@@ -68,7 +68,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label style="color: red;">Номер контейнера (новые)</label>
-                                <input placeholder="ABCD1234567" onkeyup="return no_cirilic(this);" min="11" max="11" maxlength="11" style="text-transform: uppercase;font-size: 16px !important;" v-model="incoming_container_number" type="text" class="form-control">
+                                <input placeholder="ABCD1234567, ASCF7654321" onkeyup="return no_cirilic(this);" min="11" max="23" maxlength="23" style="text-transform: uppercase;font-size: 16px !important;" v-model="incoming_container_number" type="text" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -203,7 +203,7 @@
 
                 <div class="col-md-12">
                     <div class="form-group">
-                        <button @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
+                        <button @click="createPermitByKpp()" :disabled="active_btn" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
                     </div>
                 </div>
             </div>
@@ -294,6 +294,7 @@
                 employer_name: '',
                 incoming_container_number: '',
                 foreign_car: 0,
+                active_btn: false
             }
         },
         props: [
@@ -404,6 +405,8 @@
                         headers: { 'content-type': 'multipart/form-data' }
                     };
 
+                    this.active_btn = true;
+
                     let formData = new FormData();
                     formData.append('gov_number', this.gov_number);
                     formData.append('tex_number', this.tex_number);
@@ -433,6 +436,7 @@
 
                     axios.post('/order-permit-by-kpp', formData, config)
                     .then(res => {
+                        this.active_btn = false;
                         this.gov_number = '';
                         this.tex_number = '';
                         this.mark_car = '';

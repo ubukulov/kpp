@@ -1,10 +1,11 @@
+@include('admin.nav')
+
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="index3.html" class="brand-link">
-        <img src="/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-             style="opacity: .8">
-        <span class="brand-text font-weight-light">AdminLTE 3</span>
+        <img src="/img/logow.png" alt="Damu Logistics"
+             style="opacity: .8; width: 100%">
     </a>
 
     <!-- Sidebar -->
@@ -123,6 +124,44 @@
                             Пропуски
                         </p>
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.white-car-list.index') }}" class="nav-link @if(request()->is('admin/white-car-list*')) active @endif">
+                        <i class="nav-icon fas fa-car"></i>
+                        <p>
+                            Машины (белые)
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item has-treeview @if(request()->is('admin/webcont/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p>
+                            WEBCONT
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">1</span>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/webcont/*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.webcont.stocks') }}" class="nav-link @if(request()->is('admin/webcont/stocks*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>STOCKS</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.webcont.logs') }}" class="nav-link @if(request()->is('admin/webcont/logs*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Logs</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.webcont.logs') }}" class="nav-link @if(request()->is('admin/webcont/logs*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Logs</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 {{--<li class="nav-item">
                     <a href="{{ route('admin.whatsapp.index') }}" class="nav-link @if(request()->is('admin/sending*')) active @endif">

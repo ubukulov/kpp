@@ -6,7 +6,7 @@
     <title>Авторизоваться</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <!-- Font Awesome -->
     <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
     <!-- Ionicons -->
@@ -130,6 +130,7 @@
                     this.overlay = true;
                     this.disabled = true;
                     let formData = new FormData();
+                    formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
                     formData.append('email', this.email);
                     formData.append('password', this.password);
                     formData.append('remember', this.remember);
@@ -137,13 +138,12 @@
                     .then(res => {
                         console.log(res.data);
                         window.location.href = res.data;
-                        this.overlay = false;
                     })
                     .catch(err => {
                         console.log(err);
                         this.overlay = false;
                         this.disabled = false;
-                        if (err.response.status == 404 || err.response.status == 400) {
+                        if (err.response.status === 404 || err.response.status === 400) {
                             this.error = true;
                             this.errors.push(err.response.data);
                         }

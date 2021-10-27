@@ -23,6 +23,7 @@ class CreateTableContainerTasks extends Migration
             $table->string('document_base')->nullable();
             $table->string('upload_file')->nullable();
             $table->json('container_ids')->nullable();
+            $table->integer('print_count')->default(0);
             $table->timestamps();
         });
     }

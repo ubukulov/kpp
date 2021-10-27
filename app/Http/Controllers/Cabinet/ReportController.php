@@ -22,7 +22,8 @@ class ReportController extends Controller
             $companies = Company::orderBy('short_en_name')->get();
             return view('cabinet.report.bux', compact('companies'));
         } else{
-            return view('cabinet.report.index');
+            $companies = Company::orderBy('short_en_name')->get();
+            return view('cabinet.report.index', compact('companies'));
         }
     }
 

@@ -1,14 +1,4 @@
 @extends('layouts.app')
-@push('styles')
-    <style>
-        .kt{
-            width: 900px;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-        }
-    </style>
-@endpush
 @section('content')
     <div class="row">
         <div class="col-md-12">
@@ -18,10 +8,6 @@
 
                 <form action="{{ route('update.container-task', ['id' => $container_task->id]) }}" method="post" enctype="multipart/form-data">
                     @csrf
-                    <div class="form-group">
-                        <label>Номер документа</label>
-                        <input type="text" required name="title" value="{{ $container_task->title }}" class="form-control">
-                    </div>
 
                     <div class="form-group">
                         <label>Тип документа</label>
