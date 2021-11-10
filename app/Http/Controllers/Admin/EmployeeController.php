@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Company;
 use App\Models\Department;
+use App\Models\Kpp;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
@@ -38,7 +39,8 @@ class EmployeeController extends Controller
         $roles = Role::all();
         $permissions = Permission::all();
         $departments = Department::all();
-        return view('admin.employee.create', compact('companies', 'positions', 'roles', 'permissions', 'departments'));
+        $kpp = Kpp::all();
+        return view('admin.employee.create', compact('companies', 'positions', 'roles', 'permissions', 'departments', 'kpp'));
     }
 
     /**
@@ -111,7 +113,8 @@ class EmployeeController extends Controller
         $companies = Company::all();
         $positions = Position::all();
         $departments = Department::all();
-        return view('admin.employee.edit', compact('employee', 'roles', 'permissions', 'companies', 'positions', 'departments'));
+        $kpp = Kpp::all();
+        return view('admin.employee.edit', compact('employee', 'roles', 'permissions', 'companies', 'positions', 'departments', 'kpp'));
     }
 
     /**

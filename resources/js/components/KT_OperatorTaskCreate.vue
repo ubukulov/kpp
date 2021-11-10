@@ -83,13 +83,6 @@
                                     :value="'tab-2'"
                                 >
                                     <v-container style="margin: 40px 0;">
-                                        <!--<v-row>
-                                            <v-col cols="12" class="text-right">
-                                                <v-btn class="primary" style="font-size: 10px !important;">
-                                                    <v-icon>mdi-folder-multiple-plus</v-icon>&nbsp; Добавить позиции
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>-->
 
                                         <v-row>
                                             <v-col cols="4">
@@ -219,6 +212,13 @@
                         </v-card>
                     </div>
 
+                    <div v-if="task_type === 'ship' && trans_type === 'auto'" class="col-md-12">
+                        <v-checkbox
+                            v-model="orderAuto"
+                            label="Заявка на прием обратно (Автоматический)"
+                        ></v-checkbox>
+                    </div>
+
                     <div class="col-md-12">
                         <div class="form-group">
                             <button style="float: left;" onclick="window.location.href = '/container-terminals'" type="button" class="btn btn-primary">Назад</button>
@@ -282,6 +282,7 @@
                 state: '',
                 custom: '',
                 container_type: '',
+                orderAuto: false,
             }
         },
         methods: {
@@ -364,6 +365,7 @@
                         formData.append('trans_type', this.trans_type);
                         formData.append('document_base', this.$refs.document_base.files[0]);
                         formData.append('upload_file', this.$refs.upload_file.files[0]);
+                        formData.append('order_auto', this.orderAuto);
 
                         axios.post('/container-terminals/container/receive-container-by-operator', formData, config)
                             .then(res => {

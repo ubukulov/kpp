@@ -26,6 +26,7 @@
                         <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Полное наименование</th>
                             <th>Наименование(на русском)</th>
                             <th>Тип</th>
                             <th>Действие</th>
@@ -35,6 +36,7 @@
                         @foreach($companies as $company)
                         <tr>
                             <td>{{ $company->id }}</td>
+                            <td>{{ $company->full_company_name }}</td>
                             <td>{{ $company->short_ru_name }}</td>
                             <td>
                                 {{ $company->getTypeCompany() }}

@@ -64,6 +64,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
         Route::group(['prefix' => 'webcont'], function(){
             Route::get('/stocks', 'WebcontController@stocks')->name('admin.webcont.stocks');
             Route::get('/logs', 'WebcontController@logs')->name('admin.webcont.logs');
+            Route::get('/get/logs', 'WebcontController@getLogsForAdmin');
+            Route::post('/search', 'WebcontController@search');
         });
 
     });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Auth;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +12,8 @@ class ContainerTask extends Model
     protected $table = 'container_tasks';
 
     protected $fillable = [
-        'user_id', 'title', 'task_type', 'trans_type', 'status', 'document_base', 'upload_file', 'container_ids', 'print_count'
+        'user_id', 'title', 'task_type', 'trans_type', 'status', 'document_base', 'upload_file', 'container_ids', 'print_count',
+        'kind', 'child_id'
     ];
 
     protected $dates = [
@@ -71,8 +73,9 @@ class ContainerTask extends Model
     public function getCountCompletedItems()
     {
         $count = 0;
-        if ($this->status == 'open') {
-            foreach ($this->container_stocks() as $container_stock) {
+        if ($this->status == 'open' && $this->trans_type == 'train') {
+            $container_stocks = $this->container_stocks();
+            foreach ($container_stocks as $container_stock) {
                 if ($this->task_type == 'receive') {
                     if ($container_stock->status == 'received') {
                         $count++;
@@ -87,7 +90,7 @@ class ContainerTask extends Model
             }
         }
 
-        if ($this->status == 'closed') {
+        if ($this->trans_type == 'auto') {
             foreach ($this->import_logs as $import_log) {
                 if ($this->task_type == 'receive') {
                     if ($import_log->state == 'posted') {
@@ -113,7 +116,7 @@ class ContainerTask extends Model
         foreach(json_decode($this->container_ids) as $container_id=>$container_number) {
             $container_ids[] = $container_id;
         }
-        return ContainerStock::whereIn('container_id', $container_ids)->orderBy('container_address_id')->get();
+        return ContainerStock::where(['container_task_id' => $this->id])->whereIn('container_id', $container_ids)->orderBy('container_address_id')->get();
     }
 
     public function getCountItems()
@@ -141,6 +144,11 @@ class ContainerTask extends Model
     public function getType()
     {
         return ($this->task_type == 'receive') ? __('words.receive') : __('words.ship');
+    }
+
+    public function isOpen()
+    {
+        return ($this->status == 'open') ? true : false;
     }
 
     // Метод закрывает заявку
@@ -198,7 +206,7 @@ class ContainerTask extends Model
         $container_task = ContainerTask::findOrFail($container_task_id);
         if ($container_task->task_type == 'ship' && $container_task->trans_type == 'auto') {
             $container = Container::findOrFail($container_id);
-            $container_stock = ContainerStock::where(['container_id' => $container_id])->first();
+            $container_stock = ContainerStock::where(['container_task_id' => $container_task_id, 'container_id' => $container_id])->first();
             if ($container_stock) {
                 DB::beginTransaction();
                 try {
@@ -222,6 +230,30 @@ class ContainerTask extends Model
 
                     // Удаляем из стока
                     $container_stock->delete();
+
+                    if ($container_task->child_id != 0) {
+                        $container_task_auto = ContainerTask::findOrFail($container_task->child_id);
+                        $container_task_auto->status = 'open';
+                        $container_task_auto->save();
+
+                        $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
+                        // добавляем в остатки
+                        $container_stock = ContainerStock::create([
+                            'container_task_id' => $container_task_auto->id, 'container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id,
+                            'status' => 'incoming',
+                        ]);
+
+                        $cs = $container_stock->attributesToArray();
+                        $cs['user_id'] = Auth::id();
+                        $cs['container_number'] = $container->number;
+                        $cs['operation_type'] = 'incoming';
+                        $cs['address_from'] = 'automatic';
+                        $cs['address_to'] = $container_address_dmu_in->name;
+                        $cs['action_type'] = 'reception';
+                        // Зафиксируем в лог
+                        ContainerLog::create($cs);
+                    }
+
                     DB::commit();
                 } catch (\Exception $exception) {
                     abort(500, "Ошибка с сервером: $exception");

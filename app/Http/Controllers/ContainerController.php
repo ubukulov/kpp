@@ -279,7 +279,7 @@ class ContainerController extends BaseController
                     // На отбор
                     if (!$container) {
                         $data_import['status'] = 'not';
-                        $data_import['comments'] = 'Контейнер не найдено в справочнике';
+                        $data_import['comments'] = 'Контейнер отсутствует в остатке';
                         ImportLog::create($data_import);
                         continue;
                     }
@@ -301,17 +301,17 @@ class ContainerController extends BaseController
                         ImportLog::create($data_import);
                     } else {
                         $data_import['status'] = 'ok';
-                        $data_import['comments'] = 'Контейнер в порядке';
+                        $data_import['comments'] = 'Успешно';
                         ImportLog::create($data_import);
                     }
                 } else {
                     if (ContainerStock::is_shipping($container->id)) {
                         $data_import['status'] = 'ok';
-                        $data_import['comments'] = 'Контейнер в порядке';
+                        $data_import['comments'] = 'Успешно';
                         ImportLog::create($data_import);
                     } else {
                         $data_import['status'] = 'not';
-                        $data_import['comments'] = 'Контейнер не в порядке';
+                        $data_import['comments'] = 'Контейнер отсутствует в остатке';
                         ImportLog::create($data_import);
                     }
                 }
@@ -341,7 +341,6 @@ class ContainerController extends BaseController
                     foreach ($container_ids as $container_id => $container_number) {
                         $container_stock = ContainerStock::where(['container_id' => $container_id])->first();
                         if ($container_stock) {
-
                             $container_stock->container_task_id = $container_task->id;
                             $container_stock->status = 'in_order';
                             $container_stock->save();
@@ -366,6 +365,8 @@ class ContainerController extends BaseController
                         }
                     }
                 }
+                $container_task->status = 'open';
+                $container_task->save();
             } else {
                 $container_task->status = 'failed';
                 $container_task->save();
@@ -373,6 +374,29 @@ class ContainerController extends BaseController
 
             $container_task->container_ids = json_encode($container_ids);
             $container_task->save();
+
+            // Автоматическое создание заявки на прием
+            if ($container_task->status == 'open' && $container_task->task_type == 'ship' && $container_task->trans_type == 'auto' && $data['order_auto'] == 'true') {
+                $data['task_type'] = 'receive';
+                $data['trans_type'] = 'auto';
+                $data['status'] = 'waiting';
+                $data['kind'] = 'automatic';
+                $container_task_auto = ContainerTask::create($data);
+                $container_task_auto->container_ids = json_encode($container_ids);
+                $container_task_auto->save();
+
+                $container_task->child_id = $container_task_auto->id;
+                $container_task->save();
+
+                foreach ($container_ids as $container_id => $container_number) {
+                    ImportLog::create([
+                        'container_task_id' => $container_task_auto->id, 'container_number' => $container_number,
+                        'user_id' => $user_id, 'ip' => $_SERVER['REMOTE_ADDR'], 'state' => 'not_posted', 'status' => 'ok',
+                        'comments' => 'Успешно'
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return response('Заявка успешно оформлен', 200);
@@ -431,7 +455,7 @@ class ContainerController extends BaseController
                     ], 200);
                 }
             } else {
-                return response("Контейнер №".$container->number." не найдено в стоке", 404);
+                return response("Контейнер №".$container_number." отсутствует в остатке", 404);
             }
         } else {
             return response("Контейнер №".$container_number." не найден", 404);
@@ -609,7 +633,7 @@ class ContainerController extends BaseController
                         // На отбор
                         if (!$container) {
                             $data_import['status'] = 'not';
-                            $data_import['comments'] = 'Контейнер не найдено в справочнике';
+                            $data_import['comments'] = 'Контейнер отсутствует в остатке';
                             ImportLog::create($data_import);
                             continue;
                         }
@@ -630,17 +654,17 @@ class ContainerController extends BaseController
                             ImportLog::create($data_import);
                         } else {
                             $data_import['status'] = 'ok';
-                            $data_import['comments'] = 'Контейнер в порядке';
+                            $data_import['comments'] = 'Успешно';
                             ImportLog::create($data_import);
                         }
                     } else {
                         if (ContainerStock::is_shipping($container->id)) {
                             $data_import['status'] = 'ok';
-                            $data_import['comments'] = 'Контейнер в порядке';
+                            $data_import['comments'] = 'Успешно';
                             ImportLog::create($data_import);
                         } else {
                             $data_import['status'] = 'not';
-                            $data_import['comments'] = 'Контейнер не в порядке';
+                            $data_import['comments'] = 'Контейнер отсутствует в остатке';
                             ImportLog::create($data_import);
                         }
                     }
@@ -708,8 +732,30 @@ class ContainerController extends BaseController
 
             $container_task->container_ids = json_encode($container_ids);
             $container_task->save();
-            DB::commit();
 
+            // Автоматическое создание заявки на прием
+            if ($container_task->status == 'open' && $container_task->task_type == 'ship' && $container_task->trans_type == 'auto' && $data['order_auto'] == 'true') {
+                $data['task_type'] = 'receive';
+                $data['trans_type'] = 'auto';
+                $data['status'] = 'waiting';
+                $data['kind'] = 'automatic';
+                $container_task_auto = ContainerTask::create($data);
+                $container_task_auto->container_ids = json_encode($container_ids);
+                $container_task_auto->save();
+
+                $container_task->child_id = $container_task_auto->id;
+                $container_task->save();
+
+                foreach ($container_ids as $container_id => $container_number) {
+                    ImportLog::create([
+                        'container_task_id' => $container_task_auto->id, 'container_number' => $container_number,
+                        'user_id' => Auth::id(), 'ip' => $_SERVER['REMOTE_ADDR'], 'state' => 'not_posted', 'status' => 'ok',
+                        'comments' => 'Успешно'
+                    ]);
+                }
+            }
+
+            DB::commit();
             return redirect()->route('kt.kt_operator');
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -873,7 +919,7 @@ class ContainerController extends BaseController
                 // На отбор
                 if (!$container) {
                     $data_import['status'] = 'not';
-                    $data_import['comments'] = 'Контейнер не найдено в справочнике';
+                    $data_import['comments'] = 'Контейнер отсутствует в остатке';
                     ImportLog::create($data_import);
                 }
             }
@@ -886,17 +932,17 @@ class ContainerController extends BaseController
                     ImportLog::create($data_import);
                 } else {
                     $data_import['status'] = 'ok';
-                    $data_import['comments'] = 'Контейнер в порядке';
+                    $data_import['comments'] = 'Успешно';
                     ImportLog::create($data_import);
                 }
             } else {
                 if (ContainerStock::is_shipping($container->id)) {
                     $data_import['status'] = 'ok';
-                    $data_import['comments'] = 'Контейнер в порядке';
+                    $data_import['comments'] = 'Успешно';
                     ImportLog::create($data_import);
                 } else {
                     $data_import['status'] = 'not';
-                    $data_import['comments'] = 'Контейнер не в порядке';
+                    $data_import['comments'] = 'Контейнер отсутствует в остатке';
                     ImportLog::create($data_import);
                 }
             }
@@ -906,7 +952,7 @@ class ContainerController extends BaseController
                     $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
                     // добавляем в остатки
                     $container_stock = ContainerStock::create([
-                        'container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $data['state'], 'company' => $data['company'],
+                        'container_task_id' => $container_task->id, 'container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $data['state'], 'company' => $data['company'],
                         'customs' => $data['custom'], 'car_number_carriage' => $data['car_number_carriage'], 'seal_number_document' => $data['seal_number_document'],
                         'seal_number_fact' => $data['seal_number_fact'], 'datetime_submission' => $data['datetime_submission'], 'datetime_arrival' => $data['datetime_arrival'],
                         'contractor' => $data['contractor'], 'note' => $data['note']
@@ -926,6 +972,7 @@ class ContainerController extends BaseController
                 } else {
                     $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                     if ($container_stock) {
+                        $container_stock->container_task_id = $container_task->id;
                         $container_stock->status = 'in_order';
                         $container_stock->save();
 
@@ -949,6 +996,8 @@ class ContainerController extends BaseController
                         $import_log->save();
                     }
                 }
+                $container_task->status = 'open';
+                $container_task->save();
             } else {
                 $container_task->status = 'failed';
                 $container_task->save();

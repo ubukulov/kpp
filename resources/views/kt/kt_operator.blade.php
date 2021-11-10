@@ -12,19 +12,19 @@
 
                 <div class="row">
                     <div class="col-md-3">
-                        <a class="btn btn-success" href="{{ route('o.create.task') }}">Создать заявку</a>
+
                     </div>
 
                     <div class="col-md-6">
-                        <p>Пользователь: <strong>{{ Auth::user()->full_name }}</strong></p>
+
                     </div>
 
                     <div class="col-md-3 text-right">
-                        <a class="btn btn-primary" href="{{ route('logout') }}">Выйти из аккаунта</a>
+                        <p style="margin-bottom: 0px;"><strong>{{ Auth::user()->full_name }}</strong></p>
+                        <p style="margin-bottom: 0px;"><a href="{{ route('logout') }}">Выйти</a></p>
                     </div>
                 </div>
-                <br><br>
-
+                <a style="margin-bottom: 10px;" class="btn btn-success" href="{{ route('o.create.task') }}">Создать заявку</a>
                 <kt-operator-task></kt-operator-task>
             </div>
         </div>

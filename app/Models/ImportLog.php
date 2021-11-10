@@ -26,18 +26,27 @@ class ImportLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getContainerAddress()
+    public function getContainerAddress($container_task_id)
     {
-        $container = Container::whereNumber($this->container_number)->first();
-        if ($container) {
-            $container_stock = $container->container_stock;
-            if($container_stock) {
-                return $container_stock->container_address->name;
+        $import_log = ImportLog::where(['container_task_id' => $container_task_id,'container_number' => $this->container_number])->first();
+        if ($import_log) {
+            if ($import_log->state == 'issued') {
+                return '';
             } else {
-                return "Не найден адрес";
+                $container = Container::whereNumber($this->container_number)->first();
+                if ($container) {
+                    $container_stock = ContainerStock::where(['container_task_id' => $container_task_id, 'container_id' => $container->id])->first();
+                    if ($container_stock) {
+                        return $container_stock->container_address->name;
+                    } else {
+                        return '';
+                    }
+                } else {
+                    return '';
+                }
             }
         }
 
-        return 'Не найдено контейнер';
+        return '';
     }
 }

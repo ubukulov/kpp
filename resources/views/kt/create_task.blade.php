@@ -7,12 +7,6 @@
                 <h4 class="text-center">Создать заявку</h4>
 
                 <kt-operator-task-create></kt-operator-task-create>
-
-                {{--<form action="{{ route('receive.container') }}" method="post" enctype="multipart/form-data">
-                    @csrf
-
-
-                </form>--}}
             </div>
         </div>
     </div>

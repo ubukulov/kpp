@@ -43,7 +43,7 @@ class ContainerStock extends Model
 
     public static function is_shipping($container_id)
     {
-        $result = ContainerStock::where(['container_id' => $container_id, 'status' => 'received'])->where('container_address_id', '>', 2)->first();
+        $result = ContainerStock::where(['container_id' => $container_id, 'status' => 'received'])->first();
         return ($result) ? true : false;
     }
 }

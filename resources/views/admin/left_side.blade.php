@@ -155,12 +155,6 @@
                                 <p>Logs</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.webcont.logs') }}" class="nav-link @if(request()->is('admin/webcont/logs*')) active @endif">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Logs</p>
-                            </a>
-                        </li>
                     </ul>
                 </li>
                 {{--<li class="nav-item">

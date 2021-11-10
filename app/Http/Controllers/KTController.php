@@ -74,7 +74,7 @@ class KTController extends Controller
         $container_task = ContainerTask::findOrFail($container_task_id);
         $import_logs = $container_task->import_logs;
         foreach($import_logs as $import_log) {
-            $import_log['address'] = $import_log->getContainerAddress();
+            $import_log['address'] = $import_log->getContainerAddress($container_task_id);
         }
 
         return response()->json($import_logs);
@@ -95,11 +95,19 @@ class KTController extends Controller
     {
         switch ($filter_id) {
             case 0:
-                $container_tasks = ContainerTask::with('user')->where(['user_id' => Auth::id(), 'status' => 'open'])->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->where(['user_id' => Auth::id()])
+                    ->whereRaw("status != 'closed'")
+                    ->orderByRaw("CASE status
+                                                    WHEN 'open' THEN 1
+                                            WHEN 'waiting' THEN 1
+                                            WHEN 'failed' THEN 2
+                                        END")
+                    ->orderBy('id', 'DESC')->get();
                 break;
 
             case 1:
-                $container_tasks = ContainerTask::with('user')->where(['status' => 'open'])->orderBy('id', 'DESC')->paginate(10);
+                $container_tasks = ContainerTask::with('user')->where(['status' => 'open'])->orderBy('id', 'DESC')->get();
                 break;
 
             case 2:
@@ -111,7 +119,7 @@ class KTController extends Controller
                 break;
 
             case 4:
-                $container_tasks = ContainerTask::with('user')->where(['status' => 'closed'])->orderBy('id', 'DESC')->paginate(10);
+                $container_tasks = ContainerTask::with('user')->where(['status' => 'closed'])->orderBy('id', 'DESC')->get();
                 break;
 
             default:
@@ -126,7 +134,7 @@ class KTController extends Controller
             $task['number'] = $task->getNumber();
             $task['type'] = $task->getType();
             $task['trans'] = $task->getTransType();
-            $task['stat'] = "Выполнено: " . $task->getCountCompletedItems() . ' из ' .$task->getCountItems();
+            $task['stat'] = $task->getCountCompletedItems() . ' из ' .$task->getCountItems();
             $tasks[] = $task;
         }
 

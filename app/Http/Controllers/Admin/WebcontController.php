@@ -21,11 +21,30 @@ class WebcontController extends Controller
 
     public function logs()
     {
+        return view('admin.webcont.logs');
+    }
+
+    public function getLogsForAdmin()
+    {
         $logs = ContainerLog::orderBy('id', 'DESC')
-                    ->selectRaw('container_logs.*, users.full_name, techniques.name as technique')
-                    ->join('users', 'users.id', '=', 'container_logs.user_id')
-                    ->join('techniques', 'techniques.id', '=', 'container_logs.technique_id')
-                    ->paginate(50);
-        return view('admin.webcont.logs', compact('logs'));
+            ->selectRaw('container_logs.*, users.full_name, techniques.name as technique')
+            ->join('users', 'users.id', '=', 'container_logs.user_id')
+            ->join('techniques', 'techniques.id', '=', 'container_logs.technique_id')
+            ->paginate(100);
+        return response()->json($logs);
+    }
+
+    public function search(Request $request)
+    {
+        $number = $request->input('number');
+        $date1 = $request->input('date1');
+        $date2 = $request->input('date2');
+        if (is_null($number)) {
+            $container_logs = ContainerLog::whereRaw("(created_at >= ? AND created_at <= ?)", [$date1." 00:00", $date2." 23:59"])->get();
+        } else {
+            $container_logs = ContainerLog::where("container_number", "LIKE", "%".$number)->whereRaw("(created_at >= ? AND created_at <= ?)", [$date1." 00:00", $date2." 23:59"])->get();
+        }
+
+        return response()->json($container_logs);
     }
 }

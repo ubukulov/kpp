@@ -55,7 +55,7 @@
                                     </div>
                                     <div style="width: 50%;">
                                         <span style="float: right; font-size: 14px;">
-                                            {{ item.stat }}
+                                            Выполнено: {{ item.stat }}
                                         </span>
                                     </div>
                                 </v-row>

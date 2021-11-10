@@ -226,7 +226,7 @@
                         this.permits = res.data;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -235,14 +235,14 @@
             },
             print_r(id){
                 this.errors = [];
-                if (this.company_id == 0) {
+                if (this.company_id === 0) {
                     this.errors.push('Укажите компанию');
                 }
-                if (this.foreign_car == 0) {
+                if (this.foreign_car === 0) {
                     this.errors.push('Машина иностранная?');
                 }
 
-                if (this.errors.length == 0) {
+                if (this.errors.length === 0) {
                     axios.get('/command/print/'+id+"/"+this.company_id+"/"+this.foreign_car)
                         .then(res => {
                             console.log(res);
@@ -250,7 +250,7 @@
                             this.dialog = false;
                         })
                         .catch(err => {
-                            if(err.response.status == 401) {
+                            if(err.response.status === 401) {
                                 window.location.href = '/login';
                             } else {
                                 console.log(err)
@@ -271,9 +271,9 @@
                     this.gov_number = res.data.gov_number;
                     this.pr_number = res.data.pr_number;
                     this.last_name = res.data.last_name;
-                    if (res.data.operation_type == 1) {
+                    if (res.data.operation_type === 1) {
                         this.operation_type = 'Погрузка';
-                    } else if(res.data.operation_type == 2){
+                    } else if(res.data.operation_type === 2){
                         this.operation_type = 'Разгрузка';
                     } else {
                         this.operation_type = 'Другие действия';
@@ -283,7 +283,7 @@
                     this.dialog = true;
                 })
                 .catch(err => {
-                    if(err.response.status == 401) {
+                    if(err.response.status === 401) {
                         window.location.href = '/login';
                     } else {
                         console.log(err)

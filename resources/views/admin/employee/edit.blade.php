@@ -178,7 +178,12 @@
 
                             <div class="form-group">
                                 <label>КПП</label>
-                                <input type="text" value="{{ $employee->kpp_name }}" placeholder="kpp2" name="kpp_name" class="form-control">
+                                <select name="kpp_id" class="form-control">
+                                    <option value="0">Не выбрано</option>
+                                    @foreach($kpp as $item)
+                                        <option value="{{$item->id}}">{{$item->title}}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>

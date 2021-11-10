@@ -11,13 +11,23 @@
                     </div>
 
                     <div class="col-md-6 text-right">
-                        @if($container_task->status == 'open')
+                        @if($container_task->status == 'open' && $container_task->trans_type != 'auto')
                         <button @if(!$container_task->allowCloseThisTask()) disabled="disabled" title="Не все позиции выполнены"  @endif style="font-size: 14px !important;" class="btn btn-success" onclick="window.location.href = '{{ route('completed.task', ['id' => $container_task->id]) }}'">Закрыть заявку</button>
                         @endif
                     </div>
                 </div>
 
-                <br><br>
+                <br>
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>
+                            Заявка: <strong>{{ $container_task->getNumber() }}</strong>  | Тип заявки: <strong>{{ $container_task->getType() }}</strong>  |  Тип транспорта: <strong>{{ $container_task->getTransType() }}</strong>
+                            | Создал: <strong>{{ $container_task->user->full_name }}</strong> | Статус: <strong>@lang('words.'.$container_task->status)</strong>
+                        </p>
+                    </div>
+                </div>
+
+
                 <table class="table table-bordered">
                     <thead>
                     <th>#</th>
@@ -50,7 +60,15 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $im->getContainerAddress() }}
+                                @if($container_task->isOpen())
+                                    {{ $im->getContainerAddress($container_task->id) }}
+                                @elseif($container_task->task_type == 'receive' && $container_task->kind == 'common')
+                                    {{ $im->getContainerAddress($container_task->id) }}
+                                @elseif($container_task->task_type == 'receive' && $container_task->kind == 'automatic')
+                                    {{ $im->getContainerAddress($container_task->id) }}
+                                @else
+
+                                @endif
                             </td>
                             <td>
                                 {{ $im->updated_at->format('d.m.Y H:i:s') }}
