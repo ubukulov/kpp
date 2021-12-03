@@ -159,7 +159,7 @@ class ContainerTask extends Model
         foreach(json_decode($container_task->container_ids) as $container_id=>$container_number) {
             $container_ids[] = $container_id;
         }
-        $container_stocks = ContainerStock::whereIn('container_id', $container_ids)->get();
+        $container_stocks = ContainerStock::where(['container_task_id' => $container_task_id])->whereIn('container_id', $container_ids)->get();
         if ($container_task->task_type == 'receive') {
             $errors = 0;
             foreach($container_stocks as $container_stock) {

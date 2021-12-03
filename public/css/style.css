@@ -158,6 +158,9 @@ input,select, button{
     margin: 0 auto;
     padding: 10px;
 }
+.dialog2 {
+    margin: 10% auto !important;
+}
 .allow {
     font-size: 20px; color: red; box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
     transform: scale(1); animation: pulse 2s infinite; border-radius: 50%;

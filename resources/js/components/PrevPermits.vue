@@ -36,12 +36,27 @@
                         {{convertDateToOurFormat(item.created_at)}}
                     </template>
 
+                    <template v-slot:item.planned_arrival_date="{ item }">
+                        <span v-if="item.planned_arrival_date !== null">{{ item.planned_arrival_date }}</span>
+                        <span v-else>В любое время</span>
+                    </template>
+
                     <template v-slot:item.edit="{ item }">
                         <v-icon
+                            v-if="item.company_id === 0"
                             middle
                             @click="getPermit(item.id)"
                         >
                             mdi-account-edit
+                        </v-icon>
+
+                        <v-icon
+                            v-if="item.company_id !== 0"
+                            title="Распечатать пропуск"
+                            middle
+                            @click="print_command(item.id)"
+                        >
+                            mdi-printer
                         </v-icon>
                     </template>
 
@@ -149,6 +164,53 @@
                 </v-card>
             </v-dialog>
         </template>
+
+        <template>
+            <v-dialog content-class="dialog2" style="z-index: 99999;" v-model="dialog2" persistent max-width="500px">
+                <v-card>
+                    <v-card-title style="justify-content: center">
+                        <span class="headline" style="font-size: 20px !important;">ПРОВЕРЬТЕ ДАТУ И ВРЕМЯ</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-alert
+                                        v-if="system.allowPrint"
+                                        dense
+                                        text
+                                        type="success"
+                                    >
+                                        {{ system.message }}
+                                    </v-alert>
+
+                                    <v-alert
+                                        v-if="!system.allowPrint"
+                                        dense
+                                        border="left"
+                                        type="warning"
+                                    >
+                                        {{ system.message }}
+                                    </v-alert>
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-btn style="font-size: 14px !important;" color="blue darken-1" @click="closeForm(2)">Отменить</v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn style="font-size: 14px !important;" color="success darken-1" :disabled="!system.allowPrint" @click="print_r(id)">
+                            <v-icon
+                                middle
+                            >
+                                mdi-printer
+                            </v-icon>
+                            &nbsp;Распечатать
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </template>
     </div>
 </template>
 
@@ -166,6 +228,7 @@
                 calories: '',
                 computer_name: 1,
                 dialog: false,
+                dialog2: false,
                 mark_car: '',
                 gov_number: '',
                 pr_number: '',
@@ -193,6 +256,10 @@
                         value: 'last_name',
                     },
                     {
+                        text: 'Компания',
+                        value: 'company'
+                    },
+                    {
                         text: '#вод.удос.',
                         value: 'ud_number',
                     },
@@ -201,6 +268,7 @@
                     { text: 'Гос.номер', value: 'gov_number' },
                     { text: 'Марка', value: 'mark_car' },
                     { text: 'Дата создания', value: 'created_at' },
+                    { text: 'Дата планируемого заезда', value: 'planned_arrival_date' },
                     { text: 'Ред.', value: 'edit' },
                 ],
                 foreign_cars: [
@@ -213,7 +281,11 @@
                     {
                         f_id: 2, text: 'Иностранная'
                     }
-                ]
+                ],
+                system: {
+                    message: '',
+                    allowPrint: false
+                }
             }
         },
         props: [
@@ -290,10 +362,36 @@
                     }
                 })
             },
-            closeForm(){
-                this.getPermits();
-                this.errors = [];
-                this.dialog = false;
+            closeForm(form = 1){
+                if (form === 1) {
+                    this.getPermits();
+                    this.errors = [];
+                    this.dialog = false;
+                }
+                if (form === 2) {
+                    this.getPermits();
+                    this.errors = [];
+                    this.dialog2 = false;
+                }
+            },
+            print_command(permit_id){
+                axios.get(`/permit/${permit_id}/checking-for-print`)
+                .then(res => {
+                    console.log(res);
+                    this.system.message = res.data.data.message;
+                    this.system.allowPrint = res.data.data.allowPrint;
+                    this.id = res.data.data.permit.id;
+                    this.dialog2 = true;
+                })
+                .catch(err => {
+                    console.log(err.response.data.data);
+                    if(err.response.status === 409) {
+                        this.system.message = err.response.data.data.message;
+                        this.system.allowPrint = err.response.data.data.allowPrint;
+                        this.id = err.response.data.data.permit.id;
+                        this.dialog2 = true;
+                    }
+                })
             }
         },
         created(){

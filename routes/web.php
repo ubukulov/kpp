@@ -37,6 +37,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/get-permit-by-id/{id}', 'IndexController@getPermitById');
 
         Route::post('/permit/{id}/put-to-archive', 'IndexController@putToArchive');
+        Route::get('/permit/{id}/checking-for-print', 'IndexController@checkingPermitForPrint');
     });
 
     # Контроль персонала

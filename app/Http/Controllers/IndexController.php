@@ -238,6 +238,42 @@ class IndexController extends BaseController
         return json_encode($permit);
     }
 
+    public function checkingPermitForPrint($permit_id)
+    {
+        $permit = Permit::findOrFail($permit_id);
+        if (is_null($permit->planned_arrival_date)) {
+            return response()->json([
+               'data' => [
+                   'permit' => $permit,
+                   'message' => 'Пропуск можно распечатать',
+                   'allowPrint' => true
+               ]
+            ]);
+        } else {
+            $current_date = Carbon::now();
+            $planned_arrival_date = new Carbon($permit->planned_arrival_date);
+            $diff = $current_date->diff($planned_arrival_date);
+            if($diff->i <= 30) {
+                return response()->json([
+                    'data' => [
+                        'permit' => $permit,
+                        'message' => 'Пропуск можно распечатать',
+                        'allowPrint' => true
+                    ]
+                ]);
+            } else {
+                $message = "Внимание!!! Пропуск должно распечатывается в указанное время. Дата запланируемго заезда: " . $planned_arrival_date->format('d.m.Y / H:i:s');
+                return response()->json([
+                    'data' => [
+                        'permit' => $permit,
+                        'message' => $message,
+                        'allowPrint' => false
+                    ]
+                ], 409);
+            }
+        }
+    }
+
     // Метод для печати пропуска
     public function start_print($permit_id, $company_id = 0, $foreign_car = 0)
     {

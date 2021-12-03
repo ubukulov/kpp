@@ -79,9 +79,23 @@
                             <input type="text" class="form-control" required name="from_company" v-model="from_company">
                         </div>
 
-                        <div class="form-group">
-                            <label>Дата планируемого заезда</label>
-                            <input tabindex="9" value="<?=date('Y-m-d H:i:s')?>" type="text" id="date_in" required name="created_at" class="form-control">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Дата планируемого заезда</label>
+                            </div>
+
+                            <div class="col-md-9">
+                                <input :disabled="isChecked" v-model="planned_arrival_date" tabindex="9" value="<?=date('Y-m-d H:i:s')?>" type="text" id="date_in" :required="!isChecked" name="planned_arrival_date" class="form-control">
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" v-model="isChecked" name="isChecked" type="checkbox" id="flexCheckChecked">
+                                    <label class="form-check-label" for="flexCheckChecked">
+                                        В любое время
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -117,32 +131,13 @@
                                 <option value="3">Другие действия</option>
                             </select>
                         </div>
-
-                        <div v-if="operation_type != 3" class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Маршрут</label>
-                                    <select tabindex="8" name="direction_id" v-model="direction_id" class="form-control">
-                                        @foreach($directions as $direction)
-                                        <option value="{{$direction->id}}">{{$direction->title}}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div v-if="direction_id == 6" class="form-group">
-                                    <label>Напишите</label>
-                                    <input style="font-size: 16px !important;" name="to_city" type="text" required class="form-control" v-model="to_city">
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
             <!-- /.card-body -->
 
             <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Заказат</button>
+                <button type="submit" class="btn btn-primary">Заказать</button>
             </div>
         </form>
     </div>
@@ -200,6 +195,8 @@
                     lc_id: 0,
                     bt_id: 0,
                     direction_id: 0,
+                    isChecked: false,
+                    planned_arrival_date: "<?=date('Y-m-d H:i:s')?>"
                 }
             },
             methods: {

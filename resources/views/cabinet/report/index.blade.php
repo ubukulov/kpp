@@ -78,20 +78,13 @@
                                                 </v-menu>
                                             </v-col>
 
-                                            <v-col md="3">
-                                                <v-autocomplete
-                                                    :items="companies"
-                                                    :hint="`${companies.id}, ${companies.short_en_name}`"
-                                                    item-value="id"
-                                                    v-model="company_id"
-                                                    item-text="short_en_name"
-                                                    autocomplete
-                                                ></v-autocomplete>
-                                            </v-col>
+                                          
 
                                             <v-col md="3">
                                                 <v-btn type="button" @click="getPermits()" class="primary">Показать</v-btn>
+												@if(Auth::user()->company_id != 13)
                                                 <v-btn style="margin-left: 10px;" type="button" @click="downloadReport()" class="success">Скачать отчёт</v-btn>
+												@endif
                                             </v-col>
 
                                             <v-col md="12">

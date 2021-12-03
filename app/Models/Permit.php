@@ -12,7 +12,7 @@ class Permit extends Model
         'date_in', 'date_out', 'last_name', 'first_name', 'sur_name', 'phone', 'ud_number',
         'path_docs_fac', 'path_docs_back', 'created_at', 'updated_at', 'cat_tc_id', 'body_type_id',
         'is_driver', 'status', 'lc_id', 'bt_id', 'from_company', 'to_city', 'direction_id', 'employer_name',
-        'foreign_car', 'kpp_name', 'incoming_container_number', 'outgoing_container_number', 'note'
+        'foreign_car', 'kpp_name', 'incoming_container_number', 'outgoing_container_number', 'note', 'planned_arrival_date'
     ];
 
     public function doc_fac()

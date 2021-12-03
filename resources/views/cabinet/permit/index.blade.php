@@ -26,11 +26,13 @@
                         <thead>
                         <tr>
                             <th>ID</th>
-                            <th>ФИО</th>
+                            <th>ФИО водителя</th>
                             <th>Гос.номер</th>
                             <th>Тех.паспорт</th>
                             <th>Операция</th>
+                            <th>Дата планируемого заезда</th>
                             <th>Дата заезда</th>
+                            <th>Дата выезда</th>
                             <th>Действие</th>
                         </tr>
                         </thead>
@@ -39,7 +41,6 @@
                             <tr>
                                 <td>{{$permit->id}}</td>
                                 <td>{{$permit->last_name}}</td>
-                                <td>{{$permit->company}}</td>
                                 <td>{{$permit->gov_number}}</td>
                                 <td>{{$permit->tex_number}}</td>
                                 <td>
@@ -51,22 +52,19 @@
                                         Другие действие
                                     @endif
                                 </td>
+                                <td>
+                                    @if(empty($permit->planned_arrival_date))
+                                        В любое время
+                                    @else
+                                        {{ Carbon\Carbon::parse($permit->planned_arrival_date)->format('d.m.Y / H:i:s') }}
+                                    @endif
+                                </td>
                                 <td>{{ $permit->date_in }}</td>
+                                <td>{{ $permit->date_out }}</td>
                                 <td></td>
                             </tr>
                         @endforeach
                         </tbody>
-                        <tfoot>
-                        <tr>
-                            <th>ID</th>
-                            <th>ФИО</th>
-                            <th>Гос.номер</th>
-                            <th>Тех.паспорт</th>
-                            <th>Операция</th>
-                            <th>Дата заезда</th>
-                            <th>Действие</th>
-                        </tr>
-                        </tfoot>
                     </table>
                 </div>
                 <!-- /.card-body -->
