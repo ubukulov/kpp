@@ -9,7 +9,7 @@ class WhiteCarList extends Model
     protected $table = 'white_car_lists';
 
     protected $fillable = [
-        'company_id', 'gov_number', 'status', 'kpp_name'
+        'company_id', 'gov_number', 'status', 'kpp_name', 'position', 'full_name', 'mark_car'
     ];
 
     protected $dates = [
@@ -34,5 +34,10 @@ class WhiteCarList extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'ok');
+    }
+
+    public function scopeKpp7($query)
+    {
+        return $query->where('kpp_name', 'kpp7');
     }
 }

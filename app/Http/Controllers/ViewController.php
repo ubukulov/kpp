@@ -327,4 +327,10 @@ class ViewController extends BaseController
         $lists = WhiteCarList::active()->get();
         return view('white_car_lists', compact('lists'));
     }
+
+    public function whiteCarListsForKpp7()
+    {
+        $lists = WhiteCarList::active()->kpp7()->get();
+        return view('white_car_lists_kpp7', compact('lists'));
+    }
 }

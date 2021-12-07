@@ -105,3 +105,4 @@ Route::post('/view-detail-info-permit/download-permits-for-selected-time', 'View
 
 # Список белых машинов которые без пропусков заежает и выезжает
 Route::get('/white-car-lists', 'ViewController@whiteCarLists')->name('white.car.lists');
+Route::get('/white-car-lists-for-kpp7', 'ViewController@whiteCarListsForKpp7')->name('white.car.list.for.kpp7');
