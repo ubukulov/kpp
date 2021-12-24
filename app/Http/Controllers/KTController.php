@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ContainerTaskResource;
+use App\Models\Container;
 use App\Models\ContainerAddress;
 use App\Models\ContainerLog;
 use App\Models\ContainerStock;
@@ -12,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Auth;
+use Illuminate\Support\Facades\DB;
 
 class KTController extends Controller
 {
@@ -48,12 +50,10 @@ class KTController extends Controller
     {
         $container_task_id = (int) $container_task_id;
         $container_task = ContainerTask::findOrFail($container_task_id);
-        /*$container_ids = [];
-        foreach(json_decode($container_task->container_ids) as $container_id=>$container_number) {
-            $container_ids[] = $container_id;
-        }
-        $container_stocks = ContainerStock::whereIn('container_id', $container_ids)->get();*/
         $import_logs = $container_task->import_logs;
+        foreach($import_logs as $import_log) {
+            $import_log['position'] = $import_log->isPositionCancelOrEdit();
+        }
 
         return view('kt.task_container_logs', compact('import_logs', 'container_task'));
     }
@@ -75,6 +75,7 @@ class KTController extends Controller
         $import_logs = $container_task->import_logs;
         foreach($import_logs as $import_log) {
             $import_log['address'] = $import_log->getContainerAddress($container_task_id);
+            $import_log['position'] = $import_log->isPositionCancelOrEdit();
         }
 
         return response()->json($import_logs);
@@ -99,7 +100,7 @@ class KTController extends Controller
                     ->where(['user_id' => Auth::id()])
                     ->whereRaw("status != 'closed'")
                     ->orderByRaw("CASE status
-                                                    WHEN 'open' THEN 1
+                                            WHEN 'open' THEN 1
                                             WHEN 'waiting' THEN 1
                                             WHEN 'failed' THEN 2
                                         END")
@@ -135,6 +136,7 @@ class KTController extends Controller
             $task['type'] = $task->getType();
             $task['trans'] = $task->getTransType();
             $task['stat'] = $task->getCountCompletedItems() . ' из ' .$task->getCountItems();
+            $task['hasAnyPositionCancelOrEdit'] = $task->checkingForCancelOrEditAnyPosition();
             $tasks[] = $task;
         }
 
@@ -152,7 +154,196 @@ class KTController extends Controller
 
     public function controller()
     {
-
         return view('kt.controller');
+    }
+
+    // Запрос на удаление позиции из заявки
+    public function taskPositionCancel(Request $request)
+    {
+        $data = $request->all();
+        $container = Container::whereNumber($data['container_number'])->first();
+        if ($container) {
+            $container_task = ContainerTask::findOrFail($data['container_task_id']);
+            if ($container_task->task_type == 'receive') {
+                $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'incoming'])->first();
+            } else {
+                $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'in_order'])->first();
+            }
+
+            if ($container_stock) {
+                $container_stock->status = 'cancel';
+                $container_stock->note = $data['reason'];
+                $container_stock->save();
+
+                return response()->json('Заявка принято!');
+            } else {
+                return response()->json('Вы уже подали ранее! Заявка в обработке');
+            }
+        }
+    }
+
+    // Отменяет запрос на удаление позиции из заявки
+    public function rejectCancelPosition(Request $request)
+    {
+        $data = $request->all();
+        $container = Container::whereNumber($data['container_number'])->first();
+        $container_task = ContainerTask::findOrFail($data['container_task_id']);
+
+        $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'cancel'])->first();
+        if ($container_stock) {
+            if ($container_task->task_type == 'receive') {
+                $container_stock->status = 'incoming';
+                $container_stock->note = null;
+                $container_stock->save();
+            } else {
+                $container_stock->status = 'in_order';
+                $container_stock->note = null;
+                $container_stock->save();
+            }
+            return response()->json('Заявка на удаление отклонен');
+        }
+    }
+
+    // Удаляет конкретную позицию из заявки по подтверждение куратора
+    public function confirmCancelPosition(Request $request)
+    {
+        $data = $request->all();
+        DB::beginTransaction();
+        try {
+            $container = Container::whereNumber($data['container_number'])->first();
+            $container_task = ContainerTask::findOrFail($data['container_task_id']);
+            $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'cancel'])->first();
+            if ($container_stock) {
+                if($container_task->task_type == 'receive') {
+                    $cs = $container_stock->attributesToArray();
+                    $cs['user_id'] = Auth::id();
+                    $cs['container_number'] = $container->number;
+                    $cs['operation_type'] = 'canceled';
+                    $cs['address_from'] = $container_stock->container_address->name;
+                    $cs['address_to'] = 'Удалено по заявке';
+                    $cs['action_type'] = 'canceled';
+                    // Зафиксируем в лог
+                    ContainerLog::create($cs);
+                    ImportLog::destroy($data['import_log_id']);
+
+                    $container_stock->delete();
+                } else {
+                    $container_stock->status = 'received';
+                    $container_stock->container_task_id = null;
+                    $container_stock->note = null;
+                    $container_stock->save();
+                    $cs = $container_stock->attributesToArray();
+                    $cs['user_id'] = Auth::id();
+                    $cs['container_task_id'] = 0;
+                    $cs['container_number'] = $container->number;
+                    $cs['operation_type'] = 'canceled';
+                    $cs['address_from'] = $container_stock->container_address->name;
+                    $cs['address_to'] = $container_stock->container_address->name;
+                    $cs['action_type'] = 'canceled';
+                    // Зафиксируем в лог
+                    ContainerLog::create($cs);
+                    ImportLog::destroy($data['import_log_id']);
+                }
+
+                DB::commit();
+
+                return response()->json('Заявка на удаление выполнено');
+            } else {
+                return response()->json('Ранее удален либо не найдено', 403);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json($exception, 500);
+        }
+    }
+
+    // Запрос на редактирование (номер контейнера)
+    public function taskPositionEdit(Request $request)
+    {
+        $data = $request->all();
+        $container = Container::whereNumber($data['edit_container_number'])->first();
+        if ($container) {
+            $container_task = ContainerTask::findOrFail($data['edit_container_task_id']);
+            $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'incoming'])->first();
+            if ($container_stock) {
+                $container_stock->status = 'edit';
+                $container_stock->save();
+
+                $cs = $container_stock->attributesToArray();
+                $cs['user_id'] = Auth::id();
+                $cs['container_number'] = $container->number;
+                $cs['operation_type'] = 'edit';
+                $cs['address_from'] = $container->number;
+                $cs['address_to'] = $data['new_container_number'];
+                $cs['action_type'] = 'edit';
+                // Зафиксируем в лог
+                ContainerLog::create($cs);
+
+                return response()->json('Заявка принято!');
+            } else {
+                return response()->json('Вы уже подали ранее! Заявка в обработке');
+            }
+        } else {
+            return response()->json('Не найден контейнер', 403);
+        }
+    }
+
+    // Отменяет изменение номер контейнера
+    public function rejectEditPosition(Request $request)
+    {
+        $data = $request->all();
+        $container = Container::whereNumber($data['container_number'])->first();
+        $container_task = ContainerTask::findOrFail($data['container_task_id']);
+
+        $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'edit'])->first();
+        if ($container_stock) {
+            $container_stock->status = 'incoming';
+            $container_stock->save();
+            return response()->json('Заявка на редактирование отклонен');
+        }
+    }
+
+    // Изменяет номер контейнера по подтверждение куратора
+    public function confirmEditPosition(Request $request)
+    {
+        $data = $request->all();
+        DB::beginTransaction();
+        try {
+            $container = Container::whereNumber($data['container_number'])->first();
+            $container_task = ContainerTask::findOrFail($data['container_task_id']);
+            $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'edit'])->first();
+            if ($container_stock) {
+                // Изменяем в справочнике
+                $container->number = $data['new_container_number'];
+                $container->save();
+
+                // Меняем статус в стоке
+                $container_stock->status = 'incoming';
+                $container_stock->save();
+
+                // Изменяем в import_log
+                $import_log = ImportLog::findOrFail($data['import_log_id']);
+                $import_log->container_number = $data['new_container_number'];
+                $import_log->save();
+
+                $cs = $container_stock->attributesToArray();
+                $cs['user_id'] = Auth::id();
+                $cs['container_number'] = $container->number;
+                $cs['operation_type'] = 'edit_completed';
+                $cs['address_from'] = $data['container_number'];
+                $cs['address_to'] = $data['new_container_number'];
+                $cs['action_type'] = 'edit';
+                // Зафиксируем в лог
+                ContainerLog::create($cs);
+                DB::commit();
+
+                return response()->json('Заявка на редактирование выполнено');
+            } else {
+                return response()->json('Ранее удален либо не найдено', 403);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json($exception, 500);
+        }
     }
 }

@@ -60,6 +60,8 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/container/receive-container-by-keyboard', 'ContainerController@receiveContainerByKeyboard');
         Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
         Route::get('/task/{id}/print', 'KTController@printTask');
+        Route::post('task/position/cancel', 'KTController@taskPositionCancel')->name('task.position.cancel');
+        Route::post('/task/position/edit', 'KTController@taskPositionEdit')->name('task.position.edit');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -88,6 +90,10 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
         Route::get('/task/{id}/container-logs', 'KTController@showTaskContainerLogs2')->name('show.task-container-logs');
         Route::get('/task/{id}/import-logs', 'KTController@getContainerTaskLogs');
+        Route::post('task/reject-cancel-position', 'KTController@rejectCancelPosition');
+        Route::post('task/confirm-cancel-position', 'KTController@confirmCancelPosition');
+        Route::post('task/reject-edit-position', 'KTController@rejectEditPosition');
+        Route::post('task/confirm-edit-position', 'KTController@confirmEditPosition');
     });
 });
 

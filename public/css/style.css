@@ -165,6 +165,10 @@ input,select, button{
     font-size: 20px; color: red; box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
     transform: scale(1); animation: pulse 2s infinite; border-radius: 50%;
 }
+.red_border {
+    border: 2px solid red;
+}
+body { padding-right: 0 !important }
 @media (max-width: 600px) {
     .kt_header {
         height: 150px !important;

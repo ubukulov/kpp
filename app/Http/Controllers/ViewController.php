@@ -324,7 +324,7 @@ class ViewController extends BaseController
 
     public function whiteCarLists()
     {
-        $lists = WhiteCarList::active()->get();
+        $lists = WhiteCarList::active()->where('kpp_name', '<>', 'kpp7')->get();
         return view('white_car_lists', compact('lists'));
     }
 

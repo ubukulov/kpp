@@ -121,11 +121,7 @@ class ContainerTask extends Model
 
     public function getCountItems()
     {
-        $container_ids = [];
-        foreach(json_decode($this->container_ids) as $container_id=>$container_number) {
-            $container_ids[] = $container_id;
-        }
-        return count($container_ids);
+        return count($this->container_stocks());
     }
 
     // Метод формирует номер заявку
@@ -191,7 +187,8 @@ class ContainerTask extends Model
                 // Зафиксируем в лог
                 ContainerLog::create([
                     'user_id' => Auth::id(), 'container_id' => $container->id, 'container_number' => $container->number,
-                    'operation_type' => 'completed', 'address_from' => $current_address_name, 'address_to' => 'Удален из стока', 'state' => $container_stock->state
+                    'operation_type' => 'completed', 'address_from' => $current_address_name, 'address_to' => 'Удален из стока',
+                    'state' => $container_stock->state, 'action_type' => 'deleted'
                 ]);
 
                 // Удаляем из стока
@@ -214,7 +211,7 @@ class ContainerTask extends Model
                     // Зафиксируем в лог
                     ContainerLog::create([
                         'user_id' => Auth::id(), 'container_id' => $container->id, 'container_number' => $container->number,
-                        'operation_type' => 'completed', 'address_from' => $current_address_name, 'address_to' => 'Удален из стока', 'state' => $container_stock->state
+                        'operation_type' => 'completed', 'action_type' => 'deleted', 'address_from' => $current_address_name, 'address_to' => 'Удален из стока', 'state' => $container_stock->state
                     ]);
 
                     $import_log = ImportLog::where(['container_task_id' => $container_task_id, 'container_number' => $container->number])->first();
@@ -263,5 +260,20 @@ class ContainerTask extends Model
                 abort(404, "Контейнер с ИД - $container_id не найден в стоке");
             }
         }
+    }
+
+    // Проверяет, есть ли в заявке хоть один позиция на отмены
+    public function checkingForCancelOrEditAnyPosition()
+    {
+        foreach($this->container_stocks() as $container_stock) {
+            if($container_stock->status == 'cancel') {
+                return true;
+            }
+            if($container_stock->status == 'edit') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

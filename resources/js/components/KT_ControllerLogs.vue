@@ -79,6 +79,37 @@
                                             {{ item.address }}
                                         </span>
                                     </div>
+
+                                    <div style="width: 100%;" v-if="item.position.cancel">
+                                        <v-divider></v-divider>
+                                        <v-row>
+                                            <v-col cols="12">
+                                                <p style="color: red;">Удаление позиции из заявки</p>
+                                                <p>Причина: <br>{{ item.position.reason }}</p>
+                                            </v-col>
+
+                                            <v-col>
+                                                <v-btn @click="rejectCancelPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
+                                                <v-btn @click="confirmCancelPosition(item.container_task_id, item.container_number, item.id)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
+                                            </v-col>
+                                        </v-row>
+                                    </div>
+
+                                    <div style="width: 100%;" v-if="item.position.edit">
+                                        <v-divider></v-divider>
+                                        <v-row>
+                                            <v-col cols="12">
+                                                <p style="color: red;">Редактирование позиции из заявки</p>
+                                                <p>Номер контейнера (сейчас): {{ item.container_number }}</p>
+                                                <p>Номер контейнера (будет) : {{ item.position.new_container_number }}</p>
+                                            </v-col>
+
+                                            <v-col>
+                                                <v-btn @click="rejectEditPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
+                                                <v-btn @click="confirmEditPosition(item.container_task_id, item.container_number, item.id, item.position.new_container_number)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
+                                            </v-col>
+                                        </v-row>
+                                    </div>
                                 </v-row>
                             </v-container>
 
@@ -120,6 +151,73 @@
                         console.log(err);
                     })
             },
+            rejectCancelPosition(container_task_id, container_number){
+                let formData = new FormData();
+                formData.append('container_task_id', container_task_id);
+                formData.append('container_number', container_number);
+                this.overlay = true;
+                axios.post('/container-controller/task/reject-cancel-position', formData)
+                .then(res => {
+                    this.overlay = false;
+                    console.log(res);
+                    this.getContainerTaskLogs()
+                })
+                .catch(err => {
+                    this.overlay = false;
+                    console.log(err)
+                })
+            },
+            confirmCancelPosition(container_task_id, container_number, import_log_id){
+                let formData = new FormData();
+                formData.append('container_task_id', container_task_id);
+                formData.append('container_number', container_number);
+                formData.append('import_log_id', import_log_id);
+                this.overlay = true;
+                axios.post('/container-controller/task/confirm-cancel-position', formData)
+                    .then(res => {
+                        this.overlay = false;
+                        console.log(res);
+                        this.getContainerTaskLogs();
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        this.overlay = false;
+                    })
+            },
+            rejectEditPosition(container_task_id, container_number){
+                let formData = new FormData();
+                formData.append('container_task_id', container_task_id);
+                formData.append('container_number', container_number);
+                this.overlay = true;
+                axios.post('/container-controller/task/reject-edit-position', formData)
+                    .then(res => {
+                        this.overlay = false;
+                        console.log(res);
+                        this.getContainerTaskLogs()
+                    })
+                    .catch(err => {
+                        this.overlay = false;
+                        console.log(err)
+                    })
+            },
+            confirmEditPosition(container_task_id, container_number, import_log_id, new_container_number){
+                let formData = new FormData();
+                formData.append('container_task_id', container_task_id);
+                formData.append('container_number', container_number);
+                formData.append('new_container_number', new_container_number);
+                formData.append('import_log_id', import_log_id);
+                this.overlay = true;
+                axios.post('/container-controller/task/confirm-edit-position', formData)
+                    .then(res => {
+                        this.overlay = false;
+                        console.log(res);
+                        this.getContainerTaskLogs();
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        this.overlay = false;
+                    })
+            }
         },
         created(){
             this.getContainerTaskLogs();

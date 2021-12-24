@@ -42,7 +42,7 @@
                     cols="12"
                 >
                     <v-card
-                        :color="(item.task_type === 'receive') ? '#006600' : '#952175'"
+                        :color="whatClassBeUsed(item.task_type, item.hasAnyPositionCancelOrEdit)"
                         dark
                     >
                         <v-card-title
@@ -208,6 +208,12 @@
             },
             print_r(id){
                 window.location.href = '/container-terminals/task/'+id+'/print'
+            },
+            whatClassBeUsed(task_type, hasAnyPositionCancelOrEdit){
+                if (hasAnyPositionCancelOrEdit) {
+                    return '#0000FF';
+                }
+                return (task_type === 'receive') ? '#006600' : '#952175';
             }
         },
         created(){

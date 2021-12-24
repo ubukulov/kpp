@@ -415,7 +415,7 @@ class ContainerController extends BaseController
             if ($container_stock) {
                 $container_address = $container_stock->container_address;
                 $isCustoms = ($container_stock->customs == 'yes') ? 'Да' : 'Нет';
-                if ($container_address->name == 'damu_in') {
+                if ($container_address->name == 'damu_in' && $container_stock->status == 'incoming') {
                     return response([
                         'data' => [
                             'text' => "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> необходимо <span style='color: green;'>РАЗМЕСТИТЬ.</span>",
@@ -427,8 +427,17 @@ class ContainerController extends BaseController
                         ]
                     ], 200);
                 }
+                if ($container_address->name == 'damu_in' && $container_stock->status == 'cancel') {
+                    return response("Контейнер №".$container->number." найдено. Контейнер находится в процессе отмены", 403);
+                }
                 if($container_address->name == 'damu_out' && $container_stock->status == 'shipped') {
                     return response("Контейнер №".$container->number." найдено. Контейнер находится в зоне выдачи", 403);
+                }
+                if ($container_address->name != 'damu_in' && $container_stock->status == 'cancel') {
+                    return response("Контейнер №".$container->number." найдено. Контейнер находится в процессе отмены", 403);
+                }
+                if ($container_address->name == 'damu_in' && $container_stock->status == 'edit') {
+                    return response("Контейнер №".$container->number." найдено. Контейнер находиться в процессе редактирование", 403);
                 }
                 if($container_stock->status == 'received') {
                     return response([

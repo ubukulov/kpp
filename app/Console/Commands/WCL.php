@@ -40,7 +40,7 @@ class WCL extends Command
          */
         public function handle()
     {
-        $path_to_file = 'files/nef.xlsx';
+        $path_to_file = 'files/92.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -52,7 +52,7 @@ class WCL extends Command
             $mark_car = $arr['D'];
             $gov_number = str_replace(" ", "", $arr['C']);
             $gov_number = str_replace("/", "", $gov_number);
-            $company_id = 76;
+            $company_id = 78;
             $wcl = WhiteCarList::where(['gov_number' => $gov_number])->first();
             if (!$wcl) {
                 DB::beginTransaction();

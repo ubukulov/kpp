@@ -16,8 +16,19 @@ class AddColumnsToContainerLogs extends Migration
         Schema::table('container_logs', function (Blueprint $table) {
             $table->timestamp('start_date')->after('state')->nullable();
             $table->enum('action_type', [
-                'reception', 'ship', 'put', 'pick', 'move', 'move_another_zone'
+                'reception', 'ship', 'put', 'pick', 'move', 'move_another_zone', 'canceled', 'deleted', 'edit'
             ])->after('transaction_date');
+            /*
+             * reception = заявка на прием
+             * ship = заявка на выдачу
+             * put = размещен
+             * pick = выдан
+             * move = перемещение внутри зоны
+             * move_another_zone = перемещение в другую зону
+             * canceled = отменен из стока
+             * deleted = удален из стока
+             * edit = запрос на изменение номера контейнера
+             * */
             $table->string('company')->after('action_type')->nullable();
             $table->enum('customs', ['yes', 'not'])->after('company');
             $table->string('car_number_carriage')->after('customs');
