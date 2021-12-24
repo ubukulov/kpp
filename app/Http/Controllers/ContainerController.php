@@ -933,6 +933,10 @@ class ContainerController extends BaseController
                 }
             }
 
+            if (!$container) {
+                return response()->json("Контейнер $number не найден.", 403);
+            }
+
             // Записываем истории об импорте
             if ($data['task_type'] == 'receive') {
                 if (ContainerStock::exists($container->id)) {
