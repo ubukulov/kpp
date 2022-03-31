@@ -20,4 +20,9 @@ class Company extends Model
         if($this->type_company == 'rent') return 'Аренда';
         if($this->type_company == 'resident') return 'Резидент';
     }
+
+    public function wcl_cars()
+    {
+        return $this->belongsToMany(WclCompany::class, 'wcl_companies');
+    }
 }

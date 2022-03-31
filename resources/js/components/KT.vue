@@ -360,7 +360,7 @@
                             <v-btn
                                 :disabled="step === 1"
                                 text
-                                @click="step=8"
+                                @click="step=2"
                             >
                                 Назад
                             </v-btn>
@@ -808,7 +808,7 @@
                         this.start_date = Date.now();
                         this.getFreeRows();
                         console.log(res);
-                        this.step = 8;
+                        this.step = 9;
                     })
                     .catch(err => {
                         if(err.response.status === 403) {

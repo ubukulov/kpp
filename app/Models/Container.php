@@ -18,4 +18,9 @@ class Container extends Model
     {
         return $this->hasOne(ContainerStock::class);
     }
+
+    public function logs()
+    {
+        return $this->hasMany(ContainerLog::class)->orderBy('id', 'DESC');
+    }
 }

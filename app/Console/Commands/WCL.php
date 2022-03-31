@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\WclCompany;
 use Illuminate\Console\Command;
 use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
@@ -14,33 +15,33 @@ class WCL extends Command
      *
      * @var string
      */
-        protected $signature = 'wcl:update';
+    protected $signature = 'wcl:update';
 
-        /**
-         * The console command description.
-         *
-         * @var string
-         */
-        protected $description = 'Command description';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
 
-        /**
-         * Create a new command instance.
-         *
-         * @return void
-         */
-        public function __construct()
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
     {
         parent::__construct();
     }
 
-        /**
-         * Execute the console command.
-         *
-         * @return int
-         */
-        public function handle()
+    /**
+     * Execute the console command.
+     *
+     * @return int
+     */
+    public function handle()
     {
-        $path_to_file = 'files/92.xlsx';
+        /*$path_to_file = 'files/92.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -78,6 +79,14 @@ class WCL extends Command
                     abort(500, "$exception");
                 }
             }
-        }
+        }*/
+
+        WhiteCarList::chunk(50, function($wcl){
+            foreach($wcl as $item) {
+                WclCompany::create([
+                    'wcl_id' => $item->id, 'company_id' => $item->company_id
+                ]);
+            }
+        });
     }
 }

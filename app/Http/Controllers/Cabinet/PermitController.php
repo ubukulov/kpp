@@ -137,4 +137,17 @@ class PermitController extends Controller
         $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
         return json_encode($permits);
     }
+
+    public function getPermitsCustoms(Request $request)
+    {
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
+        $company_id = $request->input('company_id');
+        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed', 'kpp_name' => 'kpp4'])
+            ->where('lc_id', '!=', 1)
+            ->where('operation_type', '!=', 1)
+            ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+            ->get();
+        return json_encode($permits);
+    }
 }

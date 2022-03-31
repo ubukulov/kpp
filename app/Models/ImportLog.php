@@ -50,6 +50,26 @@ class ImportLog extends Model
         return '';
     }
 
+    public function getZone()
+    {
+        $container = Container::whereNumber($this->container_number)->first();
+        if($container) {
+            $container_stock = ContainerStock::where(['container_task_id' => $this->container_task_id, 'container_id' => $container->id])->first();
+            if($container_stock) {
+                $container_address = $container_stock->container_address;
+                if($container_address) {
+                    return $container_address->title;
+                } else {
+                    return '';
+                }
+            } else {
+                return __('words.issued');
+            }
+        }
+
+        return '';
+    }
+
     public function isPositionCancelOrEdit()
     {
         $container = Container::whereNumber($this->container_number)->first();
@@ -82,6 +102,10 @@ class ImportLog extends Model
             }
 
             return $arr;
+        } else {
+            $arr['cancel'] = false;
+            $arr['edit'] = false;
+            $arr['reason'] = '';
         }
     }
 }

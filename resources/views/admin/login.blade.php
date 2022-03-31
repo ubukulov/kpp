@@ -17,9 +17,53 @@
     <link rel="stylesheet" href="/dist/css/adminlte.min.css">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <style>
+        .blackout {
+            background: rgba(0,0,0,0.4) !important;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            position: absolute;
+            z-index: 9999;
+            left: 0;
+        }
+        .overlay {
+            margin: 0 auto;
+            width: 90px;
+            top: 40%;
+            position: absolute;
+            z-index: 10000;
+            left: 50%;
+        }
+    </style>
+
+    <script lang="javascript">
+        let doc = window.document;
+
+        window.onload = function(){
+            let bt = document.getElementById('blackout');
+            bt.style.display = 'none';
+        };
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'ENTER') {
+                let bt = document.getElementById('blackout');
+                bt.style.display = 'block';
+            }
+        });
+
+    </script>
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
+
+    <div id="blackout" class="blackout">
+        <div class="overlay">
+            <i style="color: #605ca8;" class="fas fa-5x fa-sync-alt fa-spin"></i>
+        </div>
+    </div>
+
     <div class="login-logo">
         <img class="mb-4" src="/img/logo.png" alt="">
     </div>
@@ -78,6 +122,14 @@
 <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
 <script src="/dist/js/adminlte.min.js"></script>
-
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('button[type="submit"]').click(function(){
+            $("#blackout").css({
+                'display' : 'block'
+            });
+        });
+    });
+</script>
 </body>
 </html>

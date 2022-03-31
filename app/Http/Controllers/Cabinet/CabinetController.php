@@ -216,4 +216,9 @@ HERE;
             return response(['data' => 'writing failed'], 500);
         }
     }
+
+    public function customs()
+    {
+        return view('cabinet.customs');
+    }
 }

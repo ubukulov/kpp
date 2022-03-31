@@ -31,8 +31,12 @@ class ContainerStock extends Model
 
     public static function exists($container_id)
     {
-        $result = ContainerStock::where(['container_id' => $container_id])->first();
-        return ($result) ? true : false;
+        $container_stock = ContainerStock::where(['container_id' => $container_id])->first();
+        if(isset($container_stock) && $container_stock->container_address_id == 1385) {
+            return false;
+        }
+
+        return ($container_stock) ? true : false;
     }
 
     public static function checking_container_by_address($container_address_id)

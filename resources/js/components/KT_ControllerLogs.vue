@@ -80,36 +80,39 @@
                                         </span>
                                     </div>
 
-                                    <div style="width: 100%;" v-if="item.position.cancel">
-                                        <v-divider></v-divider>
-                                        <v-row>
-                                            <v-col cols="12">
-                                                <p style="color: red;">Удаление позиции из заявки</p>
-                                                <p>Причина: <br>{{ item.position.reason }}</p>
-                                            </v-col>
+                                    <div v-if="item.position">
+                                        <div style="width: 100%;" v-if="item.position.cancel">
+                                            <v-divider></v-divider>
+                                            <v-row>
+                                                <v-col cols="12">
+                                                    <p style="color: red;">Удаление позиции из заявки</p>
+                                                    <p>Причина: <br>{{ item.position.reason }}</p>
+                                                </v-col>
 
-                                            <v-col>
-                                                <v-btn @click="rejectCancelPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
-                                                <v-btn @click="confirmCancelPosition(item.container_task_id, item.container_number, item.id)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
-                                            </v-col>
-                                        </v-row>
+                                                <v-col>
+                                                    <v-btn @click="rejectCancelPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
+                                                    <v-btn @click="confirmCancelPosition(item.container_task_id, item.container_number, item.id)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
+                                                </v-col>
+                                            </v-row>
+                                        </div>
+
+                                        <div style="width: 100%;" v-if="item.position.edit">
+                                            <v-divider></v-divider>
+                                            <v-row>
+                                                <v-col cols="12">
+                                                    <p style="color: red;">Редактирование позиции из заявки</p>
+                                                    <p>Номер контейнера (сейчас): {{ item.container_number }}</p>
+                                                    <p>Номер контейнера (будет) : {{ item.position.new_container_number }}</p>
+                                                </v-col>
+
+                                                <v-col>
+                                                    <v-btn @click="rejectEditPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
+                                                    <v-btn @click="confirmEditPosition(item.container_task_id, item.container_number, item.id, item.position.new_container_number)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
+                                                </v-col>
+                                            </v-row>
+                                        </div>
                                     </div>
 
-                                    <div style="width: 100%;" v-if="item.position.edit">
-                                        <v-divider></v-divider>
-                                        <v-row>
-                                            <v-col cols="12">
-                                                <p style="color: red;">Редактирование позиции из заявки</p>
-                                                <p>Номер контейнера (сейчас): {{ item.container_number }}</p>
-                                                <p>Номер контейнера (будет) : {{ item.position.new_container_number }}</p>
-                                            </v-col>
-
-                                            <v-col>
-                                                <v-btn @click="rejectEditPosition(item.container_task_id, item.container_number)" style="font-size: 10px !important;">Отменить</v-btn>
-                                                <v-btn @click="confirmEditPosition(item.container_task_id, item.container_number, item.id, item.position.new_container_number)" style="font-size: 10px !important; float: right; background-color: green">Подтвердить</v-btn>
-                                            </v-col>
-                                        </v-row>
-                                    </div>
                                 </v-row>
                             </v-container>
 

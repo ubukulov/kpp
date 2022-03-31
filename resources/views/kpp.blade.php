@@ -8,6 +8,7 @@
         :capacity="{{json_encode($lift_capacity)}}"
         :bodytypes="{{json_encode($body_type)}}"
         :directions="{{json_encode($directions)}}"
+        :user="{{json_encode(Auth::user())}}"
     ></kpp-component>
 
     @push('scripts')

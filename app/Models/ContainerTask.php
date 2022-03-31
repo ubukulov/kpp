@@ -74,7 +74,7 @@ class ContainerTask extends Model
     {
         $count = 0;
         if ($this->status == 'open' && $this->trans_type == 'train') {
-            $container_stocks = $this->container_stocks();
+            /*$container_stocks = $this->container_stocks();
             foreach ($container_stocks as $container_stock) {
                 if ($this->task_type == 'receive') {
                     if ($container_stock->status == 'received') {
@@ -84,6 +84,19 @@ class ContainerTask extends Model
 
                 if ($this->task_type == 'ship') {
                     if ($container_stock->status == 'shipped') {
+                        $count++;
+                    }
+                }
+            }*/
+            foreach ($this->import_logs as $import_log) {
+                if ($this->task_type == 'receive') {
+                    if ($import_log->state == 'posted') {
+                        $count++;
+                    }
+                }
+
+                if ($this->task_type == 'ship') {
+                    if ($import_log->state == 'selected') {
                         $count++;
                     }
                 }
@@ -121,7 +134,7 @@ class ContainerTask extends Model
 
     public function getCountItems()
     {
-        return count($this->container_stocks());
+        return count($this->import_logs);
     }
 
     // Метод формирует номер заявку

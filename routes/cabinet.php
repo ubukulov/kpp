@@ -27,6 +27,21 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('/samsung/barcode/get-orders', 'CabinetController@getOrders');
     Route::post('/samsung/barcode/command-print', 'CabinetController@printOrders');
 
+    # Растаможка Самсунг
+    Route::get('customs', 'CabinetController@customs')->name('cabinet.customs.index');
+    Route::post('/get/permits-customs', 'PermitController@getPermitsCustoms');
+
     # White Cars list
-    Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'cabinet'])->middleware('role:kpp-direktor');
+    Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'cabinet']);
+    Route::get('/white-car-list/{id}/destroy', 'WhiteCarController@destroy')->name('cabinet.wcl.destroy');
+
+    # Position's routes
+    Route::resource('/position', 'PositionController', ['as' => 'cabinet']);
+
+    # Department's routes
+    Route::resource('/department', 'DepartmentController', ['as' => 'cabinet']);
+
+    # WEBCONT
+    Route::get('webcont', 'WebcontController@index')->name('cabinet.webcont.index');
+    Route::get('webcont/{id}/show', 'WebcontController@show')->name('cabinet.webcont.show');
 });

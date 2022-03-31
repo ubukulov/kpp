@@ -26,6 +26,7 @@
                         </p>
                     </a>
                 </li>--}}
+
                 @role('otdel-kadrov')
                 <li class="nav-item">
                     <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
@@ -35,7 +36,22 @@
                         </p>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.position.index') }}" class="nav-link @if(request()->is('cabinet/position*')) active @endif">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Список должностей</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.department.index') }}" class="nav-link @if(request()->is('cabinet/department*')) active @endif">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Подразделение</p>
+                    </a>
+                </li>
                 @endrole
+
                 @role('kpp-direktor')
                 <li class="nav-item">
                     <a href="{{ route('cabinet.white-car-list.index') }}" class="nav-link @if(request()->is('cabinet/white-car-list*')) active @endif">
@@ -46,6 +62,7 @@
                     </a>
                 </li>
                 @endrole
+
                 <li class="nav-item">
                     <a href="{{ route('cabinet.report.index') }}" class="nav-link @if(request()->is('cabinet/reports*')) active @endif">
                         <i class="nav-icon fas fa-chart-pie"></i>
@@ -56,14 +73,18 @@
                 </li>
 
                 @if(Auth::user()->company->id == 2)
+
                     <li class="nav-item">
                         <a href="{{ route('cabinet.kpp.samsung') }}" class="nav-link @if(request()->is('cabinet/kpp*')) active @endif">
                             <i class="nav-icon fas fa-car"></i>
                             <p>
-                                КПП
+                                SCANGO
                             </p>
                         </a>
                     </li>
+
+                    @role('samsung-operator')
+
                     <li class="nav-item">
                         <a href="{{ route('cabinet.barcode.samsung') }}" class="nav-link @if(request()->is('cabinet/samsung/barcode*')) active @endif">
                             <i class="nav-icon fa fa-barcode"></i>
@@ -72,18 +93,46 @@
                             </p>
                         </a>
                     </li>
+                    @endrole
+
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.customs.index') }}" class="nav-link @if(request()->is('cabinet/customs*')) active @endif">
+                            <i class="nav-icon fa fa-barcode"></i>
+                            <p>
+                                Приезд авто на ILC
+                            </p>
+                        </a>
+                    </li>
                 @endif
 
                 @if(\Gate::allows('create-permit'))
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
+                            <i class="nav-icon fas fa-align-justify"></i>
+                            <p>
+                                Оформление пропуска
+                            </p>
+                        </a>
+                    </li>
+                @endif
+
                 <li class="nav-item">
-                    <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
-                        <i class="nav-icon fas fa-align-justify"></i>
+                    <a href="{{ route('cabinet.white-car-list.index') }}" class="nav-link @if(request()->is('cabinet/white-car-list*')) active @endif">
+                        <i class="nav-icon fas fa-car"></i>
                         <p>
-                            Оформление пропуска
+                            Машины (белый список)
                         </p>
                     </a>
                 </li>
-                @endif
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.webcont.index') }}" class="nav-link @if(request()->is('cabinet/webcont*')) active @endif">
+                        <i class="nav-icon fas fa-car"></i>
+                        <p>
+                            WEBCONT
+                        </p>
+                    </a>
+                </li>
 
                 {{--<li class="nav-item">
                     <a href="{{ route('cabinet.service.index') }}" class="nav-link @if(request()->is('cabinet/services*')) active @endif">

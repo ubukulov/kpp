@@ -11,7 +11,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-6">
-                            <h3 class="card-title">Список пользователей</h3>
+                            <h3 class="card-title">Список сотрудников</h3>
                         </div>
 
                         <div class="col-6 text-right">
@@ -42,7 +42,9 @@
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->full_name }}</td>
                             <td>
+								@if($employee->department)
                                 {{ $employee->department->title }}
+								@endif
                             </td>
                             <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
                             <td>

@@ -78,7 +78,7 @@
                                                 </v-menu>
                                             </v-col>
 
-                                          
+
 
                                             <v-col md="3">
                                                 <v-btn type="button" @click="getPermits()" class="primary">Показать</v-btn>
@@ -127,6 +127,8 @@
                                             :items="permits"
                                             :search="search"
                                             id="printTable"
+                                            :loading="isLoaded"
+                                            loading-text="Загружается... Пожалуйста подождите"
                                             disable-pagination
                                             hide-default-footer
                                         >
@@ -151,6 +153,10 @@
                                                 <span v-if="item.is_driver == 1">Водитель</span>
                                                 <span v-else-if="item.is_driver == 2">Клиент</span>
                                                 <span v-else>КПП</span>
+                                            </template>
+
+                                            <template v-slot:item.kpp_name="{item}">
+                                                <span style="text-transform: uppercase;">@{{ item.kpp_name }}</span>
                                             </template>
                                         </v-data-table>
 
@@ -209,14 +215,18 @@
 						{ text: 'Груз.под', value: 'lc_id' },
                         { text: 'Дата заезда', value: 'date_in' },
                         { text: 'Дата выезда', value: 'date_out' },
+                        { text: 'КПП', value: 'kpp_name' },
                     ],
                     menu2: false,
                     menu3: false,
                     progress_circule: false,
+                    isLoaded: false,
                 }
             },
             methods: {
                 getPermits(){
+                    this.isLoaded = true;
+                    this.permits = [];
                     let formData = new FormData();
                     formData.append('from_date', this.from_date);
                     formData.append('to_date', this.to_date);
@@ -225,10 +235,12 @@
                     axios.post('/cabinet/get/permits', formData)
                         .then(res => {
                             this.permits = res.data;
+                            this.isLoaded = false;
                             this.download_btn = true;
                         })
                         .catch(err => {
                             console.log(err)
+                            this.isLoaded = false;
                         })
                 },
                 downloadReport(){

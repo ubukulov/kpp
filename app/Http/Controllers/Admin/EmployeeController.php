@@ -56,8 +56,8 @@ class EmployeeController extends Controller
         $user = User::create($data);
 
         // если у пользователя не задан uuid, то его генерируем и сохраняем
-        $str = $user->id."-".$user->full_name;
-        $user->uuid = base64_encode($str);
+        //$str = $user->id."-".$user->full_name;
+        $user->uuid = base64_encode($user->iin);
         $user->save();
 
         // Зафиксируем статусы
@@ -128,10 +128,17 @@ class EmployeeController extends Controller
     {
         $user = User::findOrFail($id);
         $data = $request->all();
+        if(empty($user->password)) {
+            $data['password'] = (empty($data['password'])) ? null :bcrypt($data['password']);
+        } else {
+            $data['password'] = (empty($data['password'])) ? $user->password :bcrypt($data['password']);
+        }
+
+        $data['badge'] = (isset($data['badge']) && $data['badge'] == 'on') ? 1 : 0;
         // если у пользователя не задан uuid, то его генерируем и сохраняем
         if(empty($user->uuid)) {
-            $str = $user->id."-".$user->full_name;
-            $data['uuid'] = base64_encode($str);
+            //$str = $user->id."-".$user->full_name;
+            $data['uuid'] = base64_encode($user->iin);
         }
 
         $user->update($data);

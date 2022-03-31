@@ -21,7 +21,8 @@
         "laravel/framework": "^7.24",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^2.4",
-        "phpoffice/phpspreadsheet": "^1.16"
+        "phpoffice/phpspreadsheet": "^1.16",
+        "snowfire/beautymail": "^1.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.5",

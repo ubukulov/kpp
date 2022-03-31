@@ -17,4 +17,14 @@ class ContainerLog extends Model
     protected $dates = [
         'created_at', 'updated_at'
     ];
+
+    public function container()
+    {
+        return $this->belongsTo(Container::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

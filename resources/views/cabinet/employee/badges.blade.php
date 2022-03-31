@@ -41,6 +41,7 @@ use chillerlan\QRCode\QRCode;
             max-width: 100%;
             height: 40mm;
         }
+
         @page {
             size: A4;
             margin: 0;
@@ -59,15 +60,21 @@ use chillerlan\QRCode\QRCode;
                 background: initial;
                 page-break-after: always;
             }
+            .print_badges .row {
+                page-break-after: always;
+            }
+            .print_button {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-<br><br>
-<div class="container">
-    <div class="row">
-        @foreach($users as $user)
-            <div class="col-sm-4" style="margin-bottom: 10px">
+<div class="container print_badges">
+    @foreach($users->chunk(9) as $chunk)
+    <div class="row mt-5">
+        @foreach($chunk as $user)
+            <div class="col-sm-4" style="margin-bottom: 10px;">
                 <div class="badge" id="printSelection2">
                     <div class="user_img">
                         @if(empty($user->image))
@@ -92,8 +99,11 @@ use chillerlan\QRCode\QRCode;
             </div>
         @endforeach
     </div>
+    @endforeach
+
+
 </div>
 <br>
-<input name="1" value="Распечатать" type="button" onclick="window.print();">
+<input name="1" class="print_button" value="Распечатать" type="button" onclick="window.print();">
 </body>
 </html>

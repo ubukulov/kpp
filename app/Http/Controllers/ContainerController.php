@@ -22,7 +22,10 @@ class ContainerController extends BaseController
 {
     public function getZones()
     {
-        $zones = ContainerAddress::select(['zone', 'title'])->whereIn('kind', ['r', 'k', 'pole', 'cia'])->orderBy('title', 'ASC')->groupBy('zone')->get();
+        $zones = ContainerAddress::select(['zone', 'title'])
+            ->whereIn('kind', ['r', 'k', 'pole', 'cia', 'rich'])
+            ->orderBy('title', 'ASC')
+            ->groupBy('zone')->get();
         return response()->json($zones);
     }
 
@@ -202,7 +205,7 @@ class ContainerController extends BaseController
                 if ($this->isRussian($arr['A'])) {
                     continue;
                 }
-				if (empty($arr['A']) || strlen($arr['A']) < 11) {
+				if (empty($arr['A'])) {
 					continue;
 				}
                 if ($container_task->task_type == 'receive') {
@@ -322,10 +325,20 @@ class ContainerController extends BaseController
                     // добавляем в остатки
                     $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
                     foreach ($container_ids as $container_id => $container_number) {
+                        $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => 1385])->first();
                         $dataset = $container_dataset[$container_id];
                         $dataset['container_task_id'] = $container_task->id;
+                        $dataset['status'] = 'incoming';
                         $dataset['container_address_id'] = $container_address_dmu_in->id;
-                        $container_stock = ContainerStock::create($dataset);
+                        if ($container_stock) {
+                            $container_stock->container_task_id = $container_task->id;
+                            $container_stock->status = 'incoming';
+                            $container_stock->container_address_id = $container_address_dmu_in->id;
+                            $container_stock->save();
+                        } else {
+                            $container_stock = ContainerStock::create($dataset);
+                        }
+
                         if ($container_stock) {
                             $cs['start_date'] = Carbon::now();
                             $dataset['user_id'] = Auth::id();
@@ -402,7 +415,7 @@ class ContainerController extends BaseController
             return response('Заявка успешно оформлен', 200);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response('Ошибка с сервером', 500);
+            return response('Ошибка с сервером: '. $exception, 500);
         }
     }
 
@@ -565,7 +578,7 @@ class ContainerController extends BaseController
                     if ($this->isRussian($arr['A'])) {
                         continue;
                     }
-					if (empty($arr['A']) || strlen($arr['A']) < 11) {
+					if (empty($arr['A'])) {
 						continue;
 					}
 					if ($container_task->task_type == 'receive') {
@@ -685,26 +698,35 @@ class ContainerController extends BaseController
                     // добавляем в остатки
                     $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
                     foreach ($container_ids as $container_id => $container_number) {
-                        $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id])->first();
-                        if (!$container_stock) {
-                            $dataset = $container_dataset[$container_id];
-                            $dataset['container_task_id'] = $container_task->id;
-                            $dataset['container_address_id'] = $container_address_dmu_in->id;
-                            ContainerStock::create($dataset);
-                            $cs['start_date'] = Carbon::now();
-                            $dataset['user_id'] = Auth::id();
-                            $dataset['operation_type'] = 'incoming';
-                            $dataset['address_from'] = $container_task->trans_type;
-                            $dataset['address_to'] = $container_address_dmu_in->name;
-                            $dataset['action_type'] = 'reception';
-                            // Зафиксируем в лог
-                            ContainerLog::create($dataset);
-
-                            // Зафиксируем в import_logs
-                            $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container_number])->first();
-                            $import_log->state = 'not_posted';
-                            $import_log->save();
+                        $dataset = $container_dataset[$container_id];
+                        $dataset['container_task_id'] = $container_task->id;
+                        $dataset['status'] = 'incoming';
+                        $dataset['container_address_id'] = $container_address_dmu_in->id;
+                        $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => 1385])->first();
+                        if ($container_stock) {
+                            $container_stock->container_task_id = $container_task->id;
+                            $container_stock->status = 'incoming';
+                            $container_stock->container_address_id = $container_address_dmu_in->id;
+                            $container_stock->save();
+                        } else {
+                            $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => $container_address_dmu_in->id])->first();
+                            if (!$container_stock) {
+                                ContainerStock::create($dataset);
+                            }
                         }
+                        $cs['start_date'] = Carbon::now();
+                        $dataset['user_id'] = Auth::id();
+                        $dataset['operation_type'] = 'incoming';
+                        $dataset['address_from'] = $container_task->trans_type;
+                        $dataset['address_to'] = $container_address_dmu_in->name;
+                        $dataset['action_type'] = 'reception';
+                        // Зафиксируем в лог
+                        ContainerLog::create($dataset);
+
+                        // Зафиксируем в import_logs
+                        $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container_number])->first();
+                        $import_log->state = 'not_posted';
+                        $import_log->save();
                     }
                 } else {
                     foreach ($container_ids as $container_id => $container_number) {
@@ -963,13 +985,22 @@ class ContainerController extends BaseController
             if ($container_task->isSuccessImport()) {
                 if ($data['task_type'] == 'receive') {
                     $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
-                    // добавляем в остатки
-                    $container_stock = ContainerStock::create([
-                        'container_task_id' => $container_task->id, 'container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $data['state'], 'company' => $data['company'],
-                        'customs' => $data['custom'], 'car_number_carriage' => $data['car_number_carriage'], 'seal_number_document' => $data['seal_number_document'],
-                        'seal_number_fact' => $data['seal_number_fact'], 'datetime_submission' => $data['datetime_submission'], 'datetime_arrival' => $data['datetime_arrival'],
-                        'contractor' => $data['contractor'], 'note' => $data['note']
-                    ]);
+                    $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => 1385])->first();
+                    if ($container_stock) {
+                        $container_stock->container_task_id = $container_task->id;
+                        $container_stock->status = 'incoming';
+                        $container_stock->container_address_id = $container_address_dmu_in->id;
+                        $container_stock->save();
+                    } else {
+                        // добавляем в остатки
+                        $container_stock = ContainerStock::create([
+                            'container_task_id' => $container_task->id, 'container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id, 'state' => $data['state'], 'company' => $data['company'],
+                            'customs' => $data['custom'], 'car_number_carriage' => $data['car_number_carriage'], 'seal_number_document' => $data['seal_number_document'],
+                            'seal_number_fact' => $data['seal_number_fact'], 'datetime_submission' => $data['datetime_submission'], 'datetime_arrival' => $data['datetime_arrival'],
+                            'contractor' => $data['contractor'], 'note' => $data['note'], 'status' => 'incoming'
+                        ]);
+                    }
+
                     if ($container_stock) {
                         $cs = $container_stock->attributesToArray();
                         $cs['start_date'] = Carbon::now();

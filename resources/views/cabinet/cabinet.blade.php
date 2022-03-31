@@ -27,10 +27,54 @@
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 
+    <style>
+        .blackout {
+            background: rgba(0,0,0,0.4) !important;
+            margin: 0 auto;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            position: absolute;
+            z-index: 9999;
+            left: 0;
+        }
+        .overlay {
+            margin: 0 auto;
+            width: 90px;
+            top: 40%;
+            position: absolute;
+            z-index: 10000;
+            left: 50%;
+        }
+    </style>
+
+    <script lang="javascript">
+        let doc = window.document;
+
+        window.onload = function(){
+            let bt = document.getElementById('blackout');
+            bt.style.display = 'none';
+        };
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'F5') {
+                let bt = document.getElementById('blackout');
+                bt.style.display = 'block';
+            }
+        });
+
+    </script>
+
     @stack('cabinet_styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
+
+    <div id="blackout" class="blackout">
+        <div class="overlay">
+            <i style="color: #605ca8;" class="fas fa-5x fa-sync-alt fa-spin"></i>
+        </div>
+    </div>
 
 @include('cabinet.left_side')
 
@@ -115,5 +159,26 @@
 <script src="/dist/js/demo.js"></script>
 
 @stack('cabinet_scripts')
+<script type="text/javascript">
+    function no_cirilic(input){
+        let re = /[а-яё\. ]/gi;
+        input.value = input.value.replace(re, '')
+    }
+
+    $(document).ready(function(){
+        $('a').click(function(){
+            if($(this).attr('href') !== '#') {
+                $("#blackout").css({
+                    'display' : 'block'
+                });
+            }
+        });
+        /*$('button[type="submit"]').click(function(){
+            $("#blackout").css({
+                'display' : 'block'
+            });
+        });*/
+    });
+</script>
 </body>
 </html>

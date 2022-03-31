@@ -23,8 +23,6 @@
                         </div>
                     </div>
 
-
-
                     <div class="col-md-12">
                         <div class="form-group">
                             <label>Документ основание (Скан)</label>
@@ -272,15 +270,15 @@
                 customs: ['Да', 'Нет'],
                 container_number: '',
                 company: '',
-                car_number_carriage: '',
-                seal_number_document: '',
-                seal_number_fact: '',
-                note: '',
-                datetime_submission: '',
-                datetime_arrival: '',
-                contractor: '',
+                car_number_carriage: null,
+                seal_number_document: null,
+                seal_number_fact: null,
+                note: null,
+                datetime_submission: null,
+                datetime_arrival: null,
+                contractor: null,
                 state: '',
-                custom: '',
+                custom: null,
                 container_type: '',
                 orderAuto: false,
             }
@@ -306,7 +304,7 @@
                     if (!this.state) {
                         this.errors.push('Укажите статус');
                     }
-                    if (!this.custom) {
+                    /*if (!this.custom) {
                         this.errors.push('Контейнер растаможено?');
                     }
                     if (!this.datetime_submission) {
@@ -314,7 +312,7 @@
                     }
                     if (!this.datetime_arrival) {
                         this.errors.push('Укажите Дата/время прибытие');
-                    }
+                    }*/
 
                     if (this.errors.length === 0) {
                         this.overlay = true;

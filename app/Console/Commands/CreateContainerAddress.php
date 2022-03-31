@@ -40,7 +40,7 @@ class CreateContainerAddress extends Command
      */
     public function handle()
     {
-        $title = "ПОЛЕ";
+        $title = "СПРЕДЕР";
         $kind = $this->ask('Enter kind: ');
         $zone = strtoupper(substr(Str::slug($title),0,2).$kind);
 

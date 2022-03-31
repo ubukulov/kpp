@@ -13,9 +13,13 @@ class User extends Authenticatable
     use Notifiable, HasRolesAndPermissions;
 
     protected $fillable = [
-        'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'email', 'password',
+        'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'iin', 'email', 'password',
         'computer_name', 'printer_name', 'kpp_name',
-        'remember_token', 'uuid', 'image', 'created_at', 'updated_at'
+        'remember_token', 'uuid', 'image', 'badge',
+    ];
+
+    protected $dates = [
+        'created_at', 'updated_at'
     ];
 
     public function company()

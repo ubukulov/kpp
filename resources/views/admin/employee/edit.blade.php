@@ -44,6 +44,13 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" @if($employee->badge == 1) checked @endif name="badge" type="checkbox" id="hasBadge">
+                            <label class="form-check-label" for="hasBadge">
+                                Выдал бейджик ?
+                            </label>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
@@ -52,14 +59,34 @@
                             <input type="text" value="{{ $employee->full_name }}" class="form-control" name="full_name" required>
                         </div>
 
-                        <div class="form-group">
-                            <label>Телефон</label>
-                            <input type="text" value="{{ $employee->phone }}" class="form-control" name="phone">
-                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>ИИН</label><span style="color: red;">*</span>
+                                    <input type="text" value="{{ $employee->iin }}" required class="form-control" name="iin">
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" value="{{ $employee->email }}" class="form-control" name="email">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Телефон</label><span style="color: red;">*</span>
+                                    <input type="text" value="{{ $employee->phone }}" class="form-control" name="phone">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" value="{{ $employee->email }}" class="form-control" name="email">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Пароль</label>
+                                    <input type="text" placeholder="Если поле оставить пустой, то пароль не изменяться!" class="form-control" name="password">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,7 +208,7 @@
                                 <select name="kpp_id" class="form-control">
                                     <option value="0">Не выбрано</option>
                                     @foreach($kpp as $item)
-                                        <option value="{{$item->id}}">{{$item->title}}</option>
+                                        <option @if($employee->kpp_name == $item->name) selected @endif value="{{$item->id}}">{{$item->title}}</option>
                                     @endforeach
                                 </select>
                             </div>

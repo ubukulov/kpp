@@ -114,6 +114,7 @@ class ViewController extends BaseController
         $sheet->setCellValue('R1', 'Иностранная');
         $sheet->setCellValue('S1', 'Статус');
         $sheet->setCellValue('T1', 'Оформил');
+        $sheet->setCellValue('U1', 'КПП');
 
         if ($company_id == 0) {
             if($kpp_name == "") {
@@ -194,6 +195,7 @@ class ViewController extends BaseController
             $sheet->setCellValue('R'.$current_row,$foreign_car);
             $sheet->setCellValue('S'.$current_row,$permit->status);
             $sheet->setCellValue('T'.$current_row,$permit->is_driver);
+            $sheet->setCellValue('U'.$current_row, strtoupper($permit->kpp_name));
         }
 
         $writer = new Xlsx($spreadsheet);
@@ -324,13 +326,23 @@ class ViewController extends BaseController
 
     public function whiteCarLists()
     {
-        $lists = WhiteCarList::active()->where('kpp_name', '<>', 'kpp7')->get();
+        $lists = WhiteCarList::where('kpp_name', '<>', 'kpp7')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'wcl_companies.company_id', '=', 'companies.id')
+            ->where('wcl_companies.status', 'ok')
+            //->where('wcl_companies.wcl_id', 1553)
+            ->get();
         return view('white_car_lists', compact('lists'));
     }
 
     public function whiteCarListsForKpp7()
     {
-        $lists = WhiteCarList::active()->kpp7()->get();
+        $lists = WhiteCarList::where('kpp_name', '=', 'kpp7')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'wcl_companies.company_id', '=', 'companies.id')
+            ->where('wcl_companies.status', 'ok')
+            //->where('wcl_companies.wcl_id', 1553)
+            ->get();
         return view('white_car_lists_kpp7', compact('lists'));
     }
 }

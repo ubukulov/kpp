@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\WclCompany;
 use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
 use Illuminate\Http\Request;
@@ -20,93 +21,55 @@ class WhiteCarController extends Controller
     public function index()
     {
         /*$arr = [
-            0=> [20=> "096XKA02"],
-			1=> [20=> "978BNZ05"],
-			2=> [20=> "736ZVZ05"],
-			3=> [20=> "049XDZ05"],
-			4=> [20=> "410ACB05"],
-			5=> [20=> "258DLB05"],
-			6=> [20=> "792ADG05"],
-			7=> [20=> "347XRA02"],
-			8=> [20=> "391SNA02"],
-			9=> [20=> "233zsz05"],
-			10=> [20=> "H787000"],
-			11=> [20=> "Н769039"],
-			12=> [20=> "Н769040"],
-			13=> [20=> "Н769041"],
-			14=> [20=> "H713383"],
-			15=> [20=> "H783869"],
-			16=> [20=> "H782230"],
-			17=> [20=> "Н765407"],
-			18=> [20=> "Н768469"],
-			19=> [20=> "Н765257"],
-			20=> [20=> "Н765255"],
-			21=> [20=> "H777822"],
-			22=> [20=> "H777823"],
-			23=> [20=> "H777824"],
-			24=> [20=> "Н768318"],
-			25=> [20=> "H344402"],
-			26=> [20=> "Н765406"],
-			27=> [20=> "Н764404"],
-			28=> [20=> "H777826"],
-			29=> [20=> "С499902"],
-			30=> [20=> "C295302"],
-			31=> [20=> "С500802"],
-			32=> [20=> "C295202"],
-			33=> [20=> "С500202"],
-			34=> [20=> "С501002"],
-			35=> [20=> "С500102"],
-			36=> [20=> "C225502"],
-			37=> [20=> "С501102"],
-			38=> [20=> "Н665902"],
-			39=> [20=> "Н666002"],
-			40=> [20=> "Н665802"],
-			41=> [20=> "Н782705"],
-			42=> [20=> "С498702"],
-			43=> [20=> "Н782707"],
-			44=> [20=> "Н762006"],
-			45=> [20=> "Н808300"],
-			46=> [20=> "Н808400"],
-			47=> [20=> "C125302"],
-			48=> [20=> "H766551"],
-			49=> [20=> "Н766550"],
-			50=> [20=> "Н766568"],
-			51=> [20=> "Н746302"],
-			52=> [20=> "Н746402"],
-			53=> [20=> "Н763778"],
-			54=> [20=> "Н763779"],
-			55=> [20=> "Н713471"],
-			56=> [20=> "Н712970"],
-			57=> [20=> "С572002"],
-			58=> [20=> "С571402"],
-			59=> [20=> "С567902"],
-			60=> [20=> "С079202"],
-			61=> [20=> "H713459"],
-			62=> [20=> "H713275"],
-			63=> [20=> "H007902"],
-			64=> [20=> "542ACB05"],
-			65=> [20=> "059SZA02"],
-			66=> [20=> "664UEY05"],
-			67=> [20=> "691GHZ05"],
-			68=> [20=> "770AZA05"]
+            ['full_name' => "Бедельхан Адилет", 'position' => "Кладовщик", 'gov_number' => "A 660 DUP ", 'mark_car' => "ZAZ Chance"],
+            ['full_name' => "Сафонова Зоя Федоровна ", 'position' => "Кладовщик", 'gov_number' => "580 YHA 05", 'mark_car' => "Mitsubishi"],
+            ['full_name' => "Гордеева Татьяна ", 'position' => "Кладовщик", 'gov_number' => "411 ARU 05", 'mark_car' => "Daewoo Matiz "],
+            ['full_name' => "Усенов Олжас Мухтарович ", 'position' => "ОВК  ", 'gov_number' => "403 AHG 05", 'mark_car' => "Subaru legacy"],
+            ['full_name' => "Иванченко Анатолии Юрьевич", 'position' => "Кладовщик", 'gov_number' => "214 AEI 05", 'mark_car' => "ВАЗ 2114"],
+            ['full_name' => "Кудайберген Толагай", 'position' => "Кладовщик", 'gov_number' => "650 ABQ 05", 'mark_car' => "Honda Odyssey "],
+            ['full_name' => "Алдаберген Нуржан Нурлыбайулы ", 'position' => "Кладовщик", 'gov_number' => "427 ACH 05", 'mark_car' => "Nissan Maxima "],
+            ['full_name' => "Иванченко Валерий Юрьевич", 'position' => "Кладовщик", 'gov_number' => "441 ADI 05", 'mark_car' => "ВАЗ 2114"],
+            ['full_name' => "Кадыр Райымбек Айдынулы", 'position' => "Кладовщик", 'gov_number' => "297 IOZ 05", 'mark_car' => "Honda Odyssey"],
+            ['full_name' => "Зуев Евгений Владимирович ", 'position' => "Зам нач безопасности", 'gov_number' => "361 HTA 02", 'mark_car' => "Toyota Land Cruiser"],
+            ['full_name' => "Даутжанов Елдос Жазыкбекович", 'position' => "Водитель", 'gov_number' => "924 AAN 02", 'mark_car' => "VanHool"],
+            ['full_name' => "Турдаханов Дидар Амырханович", 'position' => "Клининговая компания", 'gov_number' => "815 ACY 05", 'mark_car' => "Lada"],
+            ['full_name' => "Кейм Евгений Дмитриевич ", 'position' => "Клининговая компания", 'gov_number' => "399 JPZ 05", 'mark_car' => "Volkswagen Jetta "],
+            ['full_name' => "Жданов Илья Сергеевич", 'position' => "Менеджер смены", 'gov_number' => "690 QAZ 05", 'mark_car' => "Hyundai Accent  "],
+            ['full_name' => "Бадалов Мехман Мусаевич", 'position' => "Менеджер по логистике  ", 'gov_number' => "464 YMY 05", 'mark_car' => "Hyundai Accent  "],
+            ['full_name' => "Серебряков Владимир Владимирович", 'position' => "Менеджер смены", 'gov_number' => "540 OQO 02", 'mark_car' => "Skoda "],
+            ['full_name' => "Абдулин Рамиз Пархатович", 'position' => "Кладовщик ", 'gov_number' => "752 HTB 05", 'mark_car' => "BMW"],
+            ['full_name' => "Федера Владимир Григорьевич ", 'position' => "Кладовщик ", 'gov_number' => "968 ASA 08", 'mark_car' => "Volkswagen Passat "],
+            ['full_name' => "Каверина Татьяна    Юрьевна", 'position' => "Кладовщик ", 'gov_number' => "203 ZVU 05", 'mark_car' => "Nissan Sunny "],
+            ['full_name' => "Василяди Андрей Валерьевич ", 'position' => "Кладовщик ", 'gov_number' => "669 BFA 05", 'mark_car' => "Hyundai Getz"],
+            ['full_name' => "Прокопова Алена Александровна", 'position' => "Кладовщик ", 'gov_number' => "090 CDA 05", 'mark_car' => "BMW X5"],
+            ['full_name' => "Жамуров Нурболат Бейсенбайулы", 'position' => "Кладовщик ", 'gov_number' => "989 BSZ 05", 'mark_car' => "Nissan Cefiro "],
+            ['full_name' => "Нагишбаев Темирлан Еркимбекулы", 'position' => "Оператор ", 'gov_number' => "109 ACK 05", 'mark_car' => "Toyota Mark 2"],
+            ['full_name' => "Шиве Анна Сергеевна ", 'position' => "Оператор ", 'gov_number' => "685 AAO 05", 'mark_car' => "Nissan Cefiro"],
         ];
 
         foreach($arr as $item) {
-            $company_id = array_keys($item)[0];
-            $gov_number = str_replace(" ", "", array_values($item)[0]);
+            $company_id = 83;
+            $gov_number = str_replace(" ", "", $item['gov_number']);
             $wcl = WhiteCarList::where(['gov_number' => $gov_number])->first();
             if (!$wcl) {
-                //dd($company_id, $gov_number);
                 DB::beginTransaction();
                 try {
                     $data['status'] = 'ok';
-                    $data['kpp_name'] = 'kpp2';
-                    $data['company_id'] = $company_id;
+                    $data['kpp_name'] = 'kpp1';
                     $data['gov_number'] = $gov_number;
+                    $data['full_name'] = $item['full_name'];
+                    $data['mark_car'] = $item['mark_car'];
+                    $data['position'] = $item['position'];
                     $white_car_list = WhiteCarList::create($data);
 
+                    if(!WclCompany::exists($white_car_list->id, $company_id)) {
+                        WclCompany::create([
+                            'wcl_id' => $white_car_list->id, 'company_id' => $company_id
+                        ]);
+                    }
+
                     WhiteCarLog::create([
-                        'wcl_id' => $white_car_list->id, 'user_id' => Auth::guard('admin')->id(), 'company_id' => $white_car_list->company_id,
+                        'user_id' => Auth::guard('admin')->id(),
                         'gov_number' => $white_car_list->gov_number, 'status' => $white_car_list->status
                     ]);
 
@@ -118,7 +81,12 @@ class WhiteCarController extends Controller
             }
         }*/
 
-        $white_car_lists = WhiteCarList::orderBy('id', 'DESC')->paginate(50);
+        $white_car_lists = WhiteCarList::orderBy('white_car_lists.id', 'DESC')
+            ->selectRaw('wcl_companies.id,wcl_companies.wcl_id,white_car_lists.gov_number, companies.short_ru_name, wcl_companies.status, wcl_companies.created_at')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
+            ->paginate();
+
         return view('admin.white_car.index', compact('white_car_lists'));
     }
 
@@ -143,26 +111,43 @@ class WhiteCarController extends Controller
     {
         $data = $request->all();
 
-        $request->validate([
+        /*$request->validate([
             'gov_number' => 'required|unique:white_car_lists|max:20',
-        ]);
+        ]);*/
 
         // Все данные прошло валидацию
         DB::beginTransaction();
         try {
-            $data['status'] = 'ok';
-            $white_car_list = WhiteCarList::create($data);
+            $gov_number = trim($data['gov_number']);
+            $company_id = trim($data['company_id']);
+            $data['gov_number'] = $gov_number;
+
+            if(WhiteCarList::exists($gov_number)) {
+                $white_car_list = WhiteCarList::where(['gov_number' => $gov_number])->first();
+            } else {
+                $white_car_list = WhiteCarList::create($data);
+            }
+
+            if(WclCompany::exists($white_car_list->id, $company_id)) {
+                $wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => $company_id])->first();
+                $wcl_company->status = 'ok';
+                $wcl_company->save();
+            } else {
+                $wcl_company = WclCompany::create([
+                    'wcl_id' => $white_car_list->id, 'company_id' => $company_id, 'status' => 'ok'
+                ]);
+            }
 
             WhiteCarLog::create([
-                'wcl_id' => $white_car_list->id, 'user_id' => Auth::guard('admin')->id(), 'company_id' => $white_car_list->company_id,
-                'gov_number' => $white_car_list->gov_number, 'status' => $white_car_list->status
+                'user_id' => Auth::guard('admin')->id(), 'message' => json_encode($data),
+                'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status
             ]);
 
             DB::commit();
             return redirect()->route('admin.white-car-list.index');
         } catch (\Exception $exception) {
             DB::rollBack();
-            abort(500, 'Произошло ошибка на стороне сервера. Попробуйте позже');
+            abort(500, 'Произошло ошибка на стороне сервера. Попробуйте позже'. $exception);
         }
     }
 
@@ -185,9 +170,10 @@ class WhiteCarController extends Controller
      */
     public function edit($id)
     {
-        $white_car_list = WhiteCarList::findOrFail($id);
+        $wcl_company = WclCompany::findOrFail($id);
+        $white_car_list = WhiteCarList::findOrFail($wcl_company->wcl_id);
         $companies = Company::orderBy('short_en_name')->get();
-        return view('admin.white_car.edit', compact('white_car_list', 'companies'));
+        return view('admin.white_car.edit', compact('white_car_list', 'companies', 'wcl_company'));
     }
 
     /**
@@ -201,12 +187,23 @@ class WhiteCarController extends Controller
     {
         DB::beginTransaction();
         try {
+            $data = $request->except('_token');
             $white_car_list = WhiteCarList::findOrFail($id);
-            $white_car_list->update($request->all());
+            $white_car_list->update($data);
+
+            if(WclCompany::exists($white_car_list->id, $data['company_id'])) {
+                $wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => $data['company_id']])->first();
+                $wcl_company->status = $data['status'];
+                $wcl_company->save();
+            } else {
+                $wcl_company = WclCompany::create([
+                    'wcl_id' => $white_car_list->id, 'company_id' => $data['company_id'], 'status' => 'ok'
+                ]);
+            }
 
             WhiteCarLog::create([
-                'wcl_id' => $white_car_list->id, 'user_id' => Auth::guard('admin')->id(), 'company_id' => $white_car_list->company_id,
-                'gov_number' => $white_car_list->gov_number, 'status' => $white_car_list->status
+                'user_id' => Auth::guard('admin')->id(), 'message' => json_encode($data),
+                'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status
             ]);
 
             DB::commit();

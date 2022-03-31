@@ -25,7 +25,7 @@
                     <label>Клиент</label>
                     <select name="company_id" class="form-control select2bs4">
                         @foreach($companies as $company)
-                            <option @if($white_car_list->company_id == $company->id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
+                            <option @if($company->id == $wcl_company->company_id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -33,8 +33,8 @@
                 <div class="form-group">
                     <label>Статус</label>
                     <select name="status" class="form-control">
-                        <option @if($white_car_list->status == 'ok') selected  @endif value="ok">В списке</option>
-                        <option @if($white_car_list->status == 'delete') selected  @endif value="delete">Не в списке</option>
+                        <option @if($wcl_company->status == 'ok') selected  @endif value="ok">Доступ разрешен</option>
+                        <option @if($wcl_company->status == 'not') selected  @endif value="not">Доступ запрещен</option>
                     </select>
                 </div>
             </div>
@@ -42,6 +42,7 @@
 
             <div class="card-footer">
                 <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a style="margin-left: 20px;" href="{{ route('admin.white-car-list.index') }}" class="btn btn-warning">Отменить</a>
             </div>
         </form>
     </div>

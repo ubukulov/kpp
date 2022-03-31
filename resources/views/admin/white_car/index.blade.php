@@ -38,8 +38,14 @@
                         <tr>
                             <td>{{ $wcl->id }}</td>
                             <td>{{ $wcl->gov_number }}</td>
-                            <td>{{ $wcl->company->short_ru_name }}</td>
-                            <td>{{ $wcl->getStatusText() }}</td>
+                            <td>{{ $wcl->short_ru_name }}</td>
+                            <td>
+                                @if($wcl->status == 'ok')
+                                    <i style="font-size: 20px; color: green;" class="fa fa-check-circle"></i> Доступ разрешен
+                                @else
+                                    <i style="font-size: 20px; color: #cc0000;" class="fa fa-minus-circle"></i> Доступ запрещен
+                                @endif
+                            </td>
                             <td>{{ date('d.m.Y', strtotime($wcl->created_at)) }}</td>
                             <td>
                                 <a href="{{ route('admin.white-car-list.edit', ['white_car_list' => $wcl->id]) }}">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\WclCompany;
 use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
 use Illuminate\Http\Request;
@@ -19,7 +20,13 @@ class WhiteCarController extends Controller
      */
     public function index()
     {
-        $white_car_lists = WhiteCarList::orderBy('id', 'DESC')->where(['status' => 'ok'])->get();
+        $white_car_lists = WclCompany::orderBy('white_car_lists.id', 'DESC')
+            //->with('company')
+            ->select('wcl_companies.*', 'companies.short_ru_name', 'white_car_lists.gov_number')
+            ->join('white_car_lists', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
+            ->where(['wcl_companies.company_id' => Auth::user()->company_id])
+            ->get();
         return view('cabinet.white_car.index', compact('white_car_lists'));
     }
 
@@ -30,8 +37,7 @@ class WhiteCarController extends Controller
      */
     public function create()
     {
-        $companies = Company::orderBy('short_en_name')->get();
-        return view('cabinet.white_car.create', compact('companies'));
+        return view('cabinet.white_car.create');
     }
 
     /**
@@ -42,21 +48,40 @@ class WhiteCarController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
+        $data = $request->except('_token');
+        $data['company_id'] = Auth::user()->company_id;
 
-        $request->validate([
+        /*$request->validate([
             'gov_number' => 'required|unique:white_car_lists|max:20',
-        ]);
+        ]);*/
 
         // Все данные прошло валидацию
         DB::beginTransaction();
         try {
-            $data['status'] = 'ok';
-            $white_car_list = WhiteCarList::create($data);
+            $gov_number = trim($data['gov_number']);
+            $company_id = Auth::user()->company_id;
+            $data['gov_number'] = $gov_number;
+
+            if(WhiteCarList::exists($gov_number)) {
+                $white_car_list = WhiteCarList::where(['gov_number' => $gov_number])->first();
+            } else {
+                $white_car_list = WhiteCarList::create($data);
+            }
+
+            if(WclCompany::exists($white_car_list->id, $company_id)) {
+                $wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => Auth::user()->company_id])->first();
+                $wcl_company->status = 'ok';
+                $wcl_company->save();
+            } else {
+                $wcl_company = WclCompany::create([
+                    'wcl_id' => $white_car_list->id, 'company_id' => $company_id, 'status' => 'ok'
+                ]);
+            }
 
             WhiteCarLog::create([
-                'wcl_id' => $white_car_list->id, 'user_id' => Auth::id(), 'company_id' => $white_car_list->company_id,
-                'gov_number' => $white_car_list->gov_number, 'status' => $white_car_list->status
+                'user_id' => Auth::id(),
+                'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status,
+                'message' => json_encode($data)
             ]);
 
             DB::commit();
@@ -86,9 +111,10 @@ class WhiteCarController extends Controller
      */
     public function edit($id)
     {
-        $white_car_list = WhiteCarList::findOrFail($id);
-        $companies = Company::orderBy('short_en_name')->get();
-        return view('cabinet.white_car.edit', compact('white_car_list', 'companies'));
+        $wcl_company = WclCompany::findOrFail($id);
+        $white_car_list = $wcl_company->wcl;
+        //$wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => Auth::user()->company_id])->first();
+        return view('cabinet.white_car.edit', compact('white_car_list', 'wcl_company'));
     }
 
     /**
@@ -102,12 +128,24 @@ class WhiteCarController extends Controller
     {
         DB::beginTransaction();
         try {
+            $data = $request->except('_token');
             $white_car_list = WhiteCarList::findOrFail($id);
-            $white_car_list->update($request->all());
+            $white_car_list->update($data);
+
+            if(WclCompany::exists($white_car_list->id, Auth::user()->company_id)) {
+                $wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => Auth::user()->company_id])->first();
+                $wcl_company->status = $data['status'];
+                $wcl_company->save();
+            } else {
+                $wcl_company = WclCompany::create([
+                    'wcl_id' => $white_car_list->id, 'company_id' => Auth::user()->company_id, 'status' => 'ok'
+                ]);
+            }
 
             WhiteCarLog::create([
-                'wcl_id' => $white_car_list->id, 'user_id' => Auth::id(), 'company_id' => $white_car_list->company_id,
-                'gov_number' => $white_car_list->gov_number, 'status' => $white_car_list->status
+                'user_id' => Auth::id(),
+                'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status,
+                'message' => json_encode($data)
             ]);
 
             DB::commit();
@@ -126,7 +164,17 @@ class WhiteCarController extends Controller
      */
     public function destroy($id)
     {
-        //WhiteCarList::destroy($id);
-        //return redirect()->route('admin.white-car-list.index');
+        $wcl_company = WclCompany::findOrFail($id);
+        $white_car_list = $wcl_company->wcl;
+
+        WhiteCarLog::create([
+            'user_id' => Auth::id(),
+            'gov_number' => $white_car_list->gov_number, 'status' => 'delete',
+            'message' => 'Client destroy'
+        ]);
+
+        WclCompany::destroy($id);
+
+        return redirect()->route('cabinet.white-car-list.index');
     }
 }

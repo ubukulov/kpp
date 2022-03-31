@@ -42,7 +42,7 @@ class ImportContainer extends Command
      */
     public function handle()
     {
-        $path_to_file = 'files/031021-9.xlsx';
+        $path_to_file = 'files/inv2022-11.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -52,29 +52,71 @@ class ImportContainer extends Command
         foreach ($sheetData as $key=>$arr) {
             if ($key == 1) continue;
             $zone = $arr['A'];
-            /*if (trim($zone) == '5 скл') {
-                $slag = '5-R';
-            }elseif (trim($zone) == 'Ангар') {
-                $slag = 'ANR';
-            } elseif (trim($zone) == 'ТС') {
-                $slag = 'TSR';
-            }*/
-            $slag = '30R';
+            $row = $arr['B'];
+            $place = $arr['C'];
+            $floor = $arr['D'];
 
-            if ($zone == 'Виртуальная') {
-                $row = 1;
-                $place = 1;
-                $floor = 1;
-            } else {
-                $row = $arr['B'];
-                $place = $arr['C'];
-                $floor = $arr['D'];
+            switch ($zone) {
+                case "30-КА";
+                    $slag = '30R';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                break;
+
+                case "5 CKЛАД";
+                    $slag = '5-R';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "АНГАР";
+                    $slag = 'ANR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "ПОЛЕ";
+                    $slag = 'POPOLE';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "РИЧСТАКЕР";
+                    $slag = 'RICH';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "СПР.КОНСОЛЬ";
+                    $slag = 'SPK';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "СПРЕДЕР";
+                    $slag = 'SPR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "ТС";
+                    $slag = 'TSR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "ТАМОЖЕННЫЙ ДОСМОТР";
+                    $slag = 'ZTCIA';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                default:
+                    $name = 'damu_in';
+                    break;
             }
 
-            $name = $slag."-".$row."-".$place."-".$floor;
             $number = trim(strtoupper($arr['E']));
-            $container_type = (empty($arr['F']) ||$arr['F'] == 45) ? '40' : $arr['F'];
-            $state = (empty($arr['G'])) ? null : $arr['G'];
+            if(empty($arr['F']) || $arr['F'] == 40) {
+                $container_type = '40';
+            } elseif($arr['F'] == 45) {
+                $container_type = '45';
+            } elseif($arr['F'] == 20) {
+                $container_type = '20';
+            }
+
+            //$state = (empty($arr['G'])) ? null : $arr['G'];
             $container = Container::whereNumber($number)->first();
             if (!$container){
                 $container = Container::create([
@@ -82,27 +124,29 @@ class ImportContainer extends Command
                 ]);
             }
 
-            if ($zone == 'Виртуальная') {
-                $container_address = ContainerAddress::findOrFail(1);
-            } else {
-                $container_address = ContainerAddress::whereName($name)->first();
-            }
+            $container_address = ContainerAddress::whereName($name)->first();
 
             if ($container_address) {
                 $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                 if ($container_stock) {
-                    $curr_add_name = $container_stock->container_address->name;
-                    $this->info("The container: $number is already exists by address name - $curr_add_name");
-                    $cnt++;
+                    if($container_stock->container_address_id != $container_address->id) {
+                        $container_stock->container_address_id = $container_address->id;
+                        $container_stock->status = 'received';
+                        $container_stock->note = 'Invent2022';
+                        $container_stock->save();
+                        $count++;
+                    }
                 } else {
                     ContainerStock::create([
-                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received', 'state' => $state
+                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received',
+                        'note' => 'Invent2022'
                     ]);
                     ContainerLog::create([
-                        'user_id' => 140, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
-                        'address_from' => 'из файла', 'address_to' => $container_address->name, 'state' => $state
+                        'user_id' => 116, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
+                        'address_from' => 'из файла', 'address_to' => $container_address->name,
+                        'note' => 'По инвенту 27.02.2022'
                     ]);
-                    $this->info("The container: $number successfully added.");
+                    //$this->info("The container: $number successfully added.");
                     $count++;
                 }
             } else {

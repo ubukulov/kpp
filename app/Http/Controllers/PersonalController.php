@@ -41,7 +41,6 @@ class PersonalController extends BaseController
             $barcode = $this->switch_en($barcode);
         }
 
-
         $user = User::whereUuid($barcode)
             ->with('position', 'company')
             ->first();
@@ -50,7 +49,7 @@ class PersonalController extends BaseController
             $data = [];
             $data['user_id'] = $user->id;
             $data['operation_type'] = 0;
-            $data['kpp_name'] = (!empty(Auth::user()->kpp_name)) ? Auth::user()->kpp_name : null;
+            $data['kpp_name'] = (!empty(Auth::user()->kpp_name)) ? Auth::user()->kpp_name : 'kpp1';
             $company = ($user->company->short_ru_name) ? $user->company->short_ru_name : '';
             $department = (isset($user->department->title)) ? $user->department->title : '';
             $position = ($user->position->title) ? $user->position->title : '';
@@ -83,21 +82,6 @@ class PersonalController extends BaseController
                 $result['html'] = $html;
                 return response(['data' => $result], 403);
             }
-
-            /*$full_name = $passage->user->full_name;
-            //$operation_name = ($passage->operation_type == 1) ? 'вошел' : 'вышел';
-            $date_time = $passage->created_at;
-            $img_path = (empty($user->image)) ? "/img/default-user-image.png" : $user->image;
-
-            $result = "<div class='container'><div class='row'><div class='col-md-6'><div style='margin-top: 30px !important;' class='scan-succes' align='center'><div><img width='200' src=\"$img_path\"/></div>Сотрудник: <span>"
-                .$full_name."</span></span></div></div>";
-
-            $result .= "<div class='col-md-6'><div style='margin-top: 30px !important;' class='scan-succes' align='center'>Все впорядке!<br>Можете пропустить!"
-                ."<br>Дата: <span>".$date_time."</span></div></div></div>";
-
-            $result .= "</div></div>";
-            return response(['data' => $result], 200);
-            //return response(json_encode($user), 200);*/
         } else {
             $html = "<div class='div_block warning_div'>
             НЕ НАЙДЕНО

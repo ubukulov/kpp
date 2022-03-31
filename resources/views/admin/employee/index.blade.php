@@ -34,7 +34,6 @@
                             <th>Отдел</th>
                             <th>Должность</th>
                             <th>Статус</th>
-{{--                            <th>Email</th>--}}
                             <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
@@ -64,6 +63,11 @@
                                 <a target="_blank" href="{{ route('admin.employee.badge', ['id' => $employee->id]) }}">
                                     <i class="fa fa-print"></i>
                                 </a>
+                                &nbsp;&nbsp;
+
+                                @if($employee->badge == 1)
+                                    <i style="font-size: 20px; color: green;" class="fa fa-check-circle"></i>
+                                @endif
                             </td>
                             <td>
                                     <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
@@ -73,13 +77,14 @@
                         </tbody>
                         <tfoot>
                         <tr>
+                            <th></th>
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
                             <th>Должность</th>
                             <th>Статус</th>
-{{--                            <th>Email</th>--}}
+                            <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>

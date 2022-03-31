@@ -9,7 +9,7 @@ class WhiteCarLog extends Model
     protected $table = 'white_car_logs';
 
     protected $fillable = [
-        'wcl_id', 'user_id', 'company_id', 'gov_number', 'status'
+        'wcl_id', 'user_id', 'company_id', 'gov_number', 'status', 'message'
     ];
 
     protected $dates = [

@@ -124,6 +124,21 @@ class IndexController extends BaseController
         // Отправка на печать
         $this->start_print($permit->id);
 
+        if(Auth::user()->kpp_name == 'kpp4' && $permit->company_id == 2) {
+            if($permit->operation_type > 1 && $permit->lc_id != 1) {
+                $beautymail = app()->make(\Snowfire\Beautymail\Beautymail::class);
+                $beautymail->send('emails.samsung', [
+                    'permit' => $permit
+                ], function($message)
+                {
+                    $message
+                        ->from('webcont@dlg.kz')
+                        ->to('propuskkpp@dlg.kz')
+                        ->subject('Уведомление о прибытии ТС в ILC');
+                });
+            }
+        }
+
         return response(['data' => 'Пропуск успешно создан']);
     }
 
@@ -284,6 +299,7 @@ class IndexController extends BaseController
 
         $permit = Permit::findOrFail($permit_id);
         $printer = "\\\\".$computer_name.$printer_name;
+        var_dump($printer);
         // Open connection to the thermal printer
         $fp = fopen($printer, "w");
         if (!$fp){
@@ -294,6 +310,7 @@ class IndexController extends BaseController
                 ]
             ], 500);
         }
+
         if ($company_id != 0){
             $comp = Company::findOrFail($company_id);
             $permit->company = $comp->short_en_name;

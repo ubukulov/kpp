@@ -34,6 +34,7 @@
 
             <div class="card-footer">
                 <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a style="margin-left: 20px;" href="{{ route('admin.white-car-list.index') }}" class="btn btn-warning">Отменить</a>
             </div>
         </form>
     </div>

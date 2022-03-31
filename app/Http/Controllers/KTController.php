@@ -92,39 +92,63 @@ class KTController extends Controller
         return redirect()->route('kt.kt_operator');
     }
 
-    public function getContainerTasks($filter_id)
+    public function getContainerTasks(Request $request, $filter_id)
     {
         switch ($filter_id) {
             case 0:
                 $container_tasks = ContainerTask::with('user')
                     ->where(['user_id' => Auth::id()])
                     ->whereRaw("status != 'closed'")
-                    ->orderByRaw("CASE status
-                                            WHEN 'open' THEN 1
-                                            WHEN 'waiting' THEN 1
-                                            WHEN 'failed' THEN 2
-                                        END")
+//                    ->orderByRaw("CASE status
+//                                            WHEN 'open' THEN 1
+//                                            WHEN 'waiting' THEN 1
+//                                            WHEN 'failed' THEN 2
+//                                        END")
                     ->orderBy('id', 'DESC')->get();
                 break;
 
             case 1:
-                $container_tasks = ContainerTask::with('user')->where(['status' => 'open'])->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->where(['status' => 'open'])
+                    ->orderBy('id', 'DESC');
+
+                if($request->has('page')) {
+                    $container_tasks = $container_tasks->paginate(50, ['*'], 'page', $request->get('page'));
+                } else {
+                    $container_tasks = $container_tasks->paginate(50);
+                }
                 break;
 
             case 2:
-                $container_tasks = ContainerTask::with('user')->where(['user_id' => Auth::id(), 'status' => 'closed'])->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->where(['user_id' => Auth::id(), 'status' => 'closed'])
+                    ->orderBy('id', 'DESC')
+                    ->paginate(50);
                 break;
 
             case 3:
-                $container_tasks = ContainerTask::with('user')->where(['user_id' => Auth::id(), 'status' => 'failed'])->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->where(['user_id' => Auth::id(), 'status' => 'failed'])
+                    ->orderBy('id', 'DESC')
+                    ->paginate(50);
                 break;
 
             case 4:
-                $container_tasks = ContainerTask::with('user')->where(['status' => 'closed'])->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->where(['status' => 'closed'])
+                    ->orderBy('id', 'DESC');
+
+                if($request->has('page')) {
+                    $container_tasks = $container_tasks->paginate(50, ['*'], 'page', $request->get('page'));
+                } else {
+                    $container_tasks = $container_tasks->paginate(50);
+                }
                 break;
 
             default:
-                $container_tasks = ContainerTask::with('user')->orderBy('id', 'DESC')->get();
+                $container_tasks = ContainerTask::with('user')
+                    ->orderBy('id', 'DESC')
+                    ->paginate(50);
                 break;
         }
 
@@ -245,6 +269,11 @@ class KTController extends Controller
                     ImportLog::destroy($data['import_log_id']);
                 }
 
+                if ($container_task->allowCloseThisTask() && $container_task->trans_type == 'auto') {
+                    $container_task->status = 'closed';
+                    $container_task->save();
+                }
+
                 DB::commit();
 
                 return response()->json('Заявка на удаление выполнено');
@@ -344,6 +373,20 @@ class KTController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
             return response()->json($exception, 500);
+        }
+    }
+
+    public function getContainerLogs($container_number)
+    {
+        $container = Container::where('number', 'like', '%'.$container_number)->first();
+        if ($container) {
+            $container_logs = $container->logs;
+            foreach($container_logs as $container_log){
+                $container_log['user'] = $container_log->user;
+            }
+            return response()->json($container_logs);
+        } else {
+            return response()->json('Не найден контейнер', 404);
         }
     }
 }

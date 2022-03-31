@@ -26,6 +26,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('/get-permits-list', 'IndexController@getPermits');
     Route::get('/command/print/{id}/{company_id?}/{foreign_car?}', 'IndexController@start_print');
     Route::get('/get-not-completed-permits-for-week', 'IndexController@getNotCompletedPermitsForWeek');
+    Route::post('/get-info-for-container', 'ContainerController@getInfoForContainer');
 
     # КПП Оператор
     Route::group(['middleware' => 'role:kpp-operator'], function(){
@@ -62,6 +63,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/task/{id}/print', 'KTController@printTask');
         Route::post('task/position/cancel', 'KTController@taskPositionCancel')->name('task.position.cancel');
         Route::post('/task/position/edit', 'KTController@taskPositionEdit')->name('task.position.edit');
+        Route::get('/container/{number}/get-logs', 'KTController@getContainerLogs');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)

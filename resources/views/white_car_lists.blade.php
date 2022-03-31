@@ -36,7 +36,7 @@
                         @foreach($lists as $list)
                             <tr>
                                 <td>{{ $list->gov_number }}</td>
-                                <td>{{ $list->company->short_ru_name }}</td>
+                                <td>{{ $list->short_ru_name }}</td>
                             </tr>
                         @endforeach
                         </tbody>
