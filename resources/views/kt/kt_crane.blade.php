@@ -18,7 +18,7 @@
                 <v-app>
                     <v-container>
                         <div style="padding: 10px; text-align: center;">
-                            <kt name="{{ Auth::user()->full_name }}"></kt>
+                            <kt :user="{{ json_encode(Auth::user()) }}"></kt>
                         </div>
                     </v-container>
                 </v-app>

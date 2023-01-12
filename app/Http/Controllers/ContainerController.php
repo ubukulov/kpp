@@ -56,6 +56,31 @@ class ContainerController extends BaseController
         return response()->json(ContainerAddress::getFreeFloors($request->all()));
     }
 
+    public function getListRows(Request $request)
+    {
+        $zone = $request->input('zone');
+        $container_address = ContainerAddress::whereZone($zone)
+            ->select('row')
+            ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
+            ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
+            ->get();
+
+        return response()->json($container_address);
+    }
+
+    public function getListContainersInRow(Request $request)
+    {
+        $zone = $request->input('zone');
+        $row  = $request->input('row');
+        $container_address = ContainerAddress::whereZone($zone)
+            ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
+            ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
+            ->whereRow($row)
+            ->get();
+
+        return response()->json($container_address);
+    }
+
     /**
      * Метод для размещения (завоз) контейнера в зоне.
      * @param Request $request
@@ -221,6 +246,10 @@ class ContainerController extends BaseController
                     $note = (isset($arr['L'])) ? $arr['L'] : null;
                     $seal_number_document = (isset($arr['I'])) ? $arr['I'] : null;
                     $seal_number_fact = (isset($arr['J'])) ? $arr['J'] : null;
+
+                    if(is_null($datetime_submission) OR is_null($datetime_arrival)){
+                        continue;
+                    }
                 } else {
                     $number = trim(strtoupper($arr['A']));
                     $company = trim(strtoupper($arr['B']));
@@ -293,7 +322,8 @@ class ContainerController extends BaseController
                 $container_dataset[$container->id] = [
                     'state' => $state, 'customs' => $custom, 'car_number_carriage' => $car_number_carriage, 'datetime_submission' => $datetime_submission,
                     'datetime_arrival' => $datetime_arrival, 'contractor' => $contractor, 'note' => $note, 'seal_number_document' => $seal_number_document,
-                    'seal_number_fact' => $seal_number_fact, 'container_id' => $container->id, 'container_number' => $number, 'company' => $company
+                    'seal_number_fact' => $seal_number_fact, 'container_id' => $container->id, 'container_number' => $number, 'company' => $company,
+                    'container_type' => $container->container_type
                 ];
 
                 // Записываем истории об импорте
@@ -324,6 +354,7 @@ class ContainerController extends BaseController
                 if ($data['task_type'] == 'receive') {
                     // добавляем в остатки
                     $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
+                    $containers_sam = [];
                     foreach ($container_ids as $container_id => $container_number) {
                         $container_stock = ContainerStock::where(['container_id' => $container_id, 'container_address_id' => 1385])->first();
                         $dataset = $container_dataset[$container_id];
@@ -337,6 +368,19 @@ class ContainerController extends BaseController
                             $container_stock->save();
                         } else {
                             $container_stock = ContainerStock::create($dataset);
+                            if($dataset['company'] == 'SAMSUNG') {
+                                $containers_sam[$dataset['container_number']]['task_number'] = $container_task->getNumber();
+                                $containers_sam[$dataset['container_number']]['number'] = $dataset['container_number'];
+                                $containers_sam[$dataset['container_number']]['date']   = $container_stock->created_at;
+                                $containers_sam[$dataset['container_number']]['container_type']   = $dataset['container_type'];
+                                $containers_sam[$dataset['container_number']]['state']   = $dataset['state'];
+                                $containers_sam[$dataset['container_number']]['car_number_carriage']   = $dataset['car_number_carriage'];
+                                $containers_sam[$dataset['container_number']]['datetime_submission']   = $dataset['datetime_submission'];
+                                $containers_sam[$dataset['container_number']]['datetime_arrival']   = $dataset['datetime_arrival'];
+                                $containers_sam[$dataset['container_number']]['seal_number_document']   = $dataset['seal_number_document'];
+                                $containers_sam[$dataset['container_number']]['seal_number_fact']   = $dataset['seal_number_fact'];
+                                $containers_sam[$dataset['container_number']]['note']   = $dataset['note'];
+                            }
                         }
 
                         if ($container_stock) {
@@ -349,6 +393,11 @@ class ContainerController extends BaseController
                             // Зафиксируем в лог
                             ContainerLog::create($dataset);
                         }
+                    }
+
+                    // Отправка сообщение о том что пришло контейнер
+                    if(!empty($containers_sam) && $container_task->trans_type == 'train') {
+                        $this->sendMessageSam($containers_sam);
                     }
                 } else {
                     foreach ($container_ids as $container_id => $container_number) {
@@ -378,6 +427,7 @@ class ContainerController extends BaseController
                         }
                     }
                 }
+
                 $container_task->status = 'open';
                 $container_task->save();
             } else {
@@ -594,6 +644,10 @@ class ContainerController extends BaseController
                         $note = (isset($arr['L'])) ? $arr['L'] : null;
                         $seal_number_document = (isset($arr['I'])) ? $arr['I'] : null;
                         $seal_number_fact = (isset($arr['J'])) ? $arr['J'] : null;
+
+                        if(is_null($datetime_submission) OR is_null($datetime_arrival)) {
+                            continue;
+                        }
                     } else {
                         $number = trim(strtoupper($arr['A']));
                         $company = trim(strtoupper($arr['B']));
@@ -1109,5 +1163,70 @@ class ContainerController extends BaseController
         } else {
             return response(['data' => 'Не найден адрес зоны'], 404);
         }
+    }
+
+    public function sendMessageSam($data)
+    {
+        $beautymail = app()->make(\Snowfire\Beautymail\Beautymail::class);
+        $beautymail->send('emails.samsung2', [
+            'data' => $data,
+        ], function($message)
+        {
+            $message
+                ->from('webcont@dlg.kz')
+                ->to('samsung-clients@htl.kz')
+                //->to('kairat.ubukulov@htl.kz')
+                ->subject('Уведомление о приходе контейнеров по ж/д');
+        });
+    }
+
+    public function noticeAboutTechnique(Request $request)
+    {
+        $technique_id = $request->input('technique_id');
+        $technique = Technique::findOrFail($technique_id);
+
+        $data = [
+            'technique' => $technique->name,
+            'user' => Auth::user()->full_name
+        ];
+
+        if($request->has('reason')) {
+            $reason = $request->input('reason');
+            $technique->status = 'not_works';
+            $technique->save();
+
+            ContainerLog::create([
+                'user_id' => Auth::id(), 'operation_type' => 'crane', 'action_type' => 'crane_not_works', 'note' => $reason
+            ]);
+
+            $data['note'] = $reason;
+            $subject = "WEBCONT. " . $technique->name . " не работает";
+        } else {
+            $technique->status = 'works';
+            $technique->save();
+
+            ContainerLog::create([
+                'user_id' => Auth::id(), 'operation_type' => 'crane', 'action_type' => 'crane_works'
+            ]);
+
+            $subject = "WEBCONT. " . $technique->name . " работает";
+        }
+
+        $data['status'] = ($technique->status == 'works') ? 'Работает' : 'Не работает';
+        $data['date'] = date('d.m.Y H:i');
+
+        $beautymail = app()->make(\Snowfire\Beautymail\Beautymail::class);
+        $beautymail->send('emails.crane', [
+            'data' => $data,
+        ], function($message) use ($subject)
+        {
+            $message
+                ->from('webcont@dlg.kz')
+                ->to('webcont.status@dlg.kz')
+//                ->to('kairat.ubukulov@htl.kz')
+                ->subject($subject);
+        });
+
+        return response('success', 200);
     }
 }

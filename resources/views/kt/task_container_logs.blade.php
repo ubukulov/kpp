@@ -33,6 +33,7 @@
                     <th>#</th>
                     <th>Контейнер</th>
                     <th>Статус</th>
+                    <th>Клиент</th>
                     <th>Адрес</th>
                     <th>Дата</th>
                     <th>Действие</th>
@@ -72,6 +73,7 @@
                                     @endif
                                 @endif
                             </td>
+                            <td width="280">{{ $im->company }}</td>
                             <td>
                                 @if($container_task->isOpen())
                                     {{ $im->getContainerAddress($container_task->id) }}

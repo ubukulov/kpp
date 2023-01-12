@@ -10,6 +10,45 @@ class AuthController extends BaseController
 {
     public function loginForm()
     {
+        /*$str = '[
+  [
+    {
+      "vendorCode": "6000000002",
+      "characteristics": [
+        {
+          "ТНВЭД": [
+            "6403993600"
+          ]
+        },
+        {
+          "Пол": [
+            "Мужской"
+          ]
+        },
+        {
+          "Стилистика": [
+            "casual"
+          ]
+        },
+        {
+          "Предмет": "Платья"
+        }
+      ],
+      "sizes": [
+        {
+          "techSize": "40-41",
+          "wbSize": "",
+          "price": 3999,
+          "skus": [
+            "1000000001"
+          ]
+        }
+      ]
+    }
+  ]
+]';
+        $str = json_decode($str);
+        dd($str);*/
     	return view('login');
     }
 
@@ -44,8 +83,14 @@ class AuthController extends BaseController
                     return redirect()->route('kt.kt_crane');
                 } elseif(Auth::user()->hasRole('kt-controller')) {
                     return redirect()->route('kt.controller');
+                } elseif(Auth::user()->hasRole('ashana')) {
+                    return redirect()->route('kitchen.index');
+                } elseif(Auth::user()->hasRole('mark-manager')) {
+                    return redirect()->route('mark.index');
+                } elseif(Auth::user()->hasRole('mark-dispatcher')) {
+                    return redirect()->route('mark.manager');
                 } else {
-                    return redirect()->route('cabinet.report.index');
+                    return redirect()->route('cabinet');
                 }
             } else {
                 return back()->with('message', 'Не найдено пользователь с такими данными');

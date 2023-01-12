@@ -39,7 +39,7 @@
                         <p>
                             Справочники
                             <i class="fas fa-angle-left right"></i>
-                            <span class="badge badge-info right">8</span>
+                            <span class="badge badge-info right">9</span>
                         </p>
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px;">
@@ -91,6 +91,12 @@
                                 <p>Список техников</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.printer.index') }}" class="nav-link @if(request()->is('admin/printer*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Список принтеров</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -125,13 +131,29 @@
                         </p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.white-car-list.index') }}" class="nav-link @if(request()->is('admin/white-car-list*')) active @endif">
+                <li class="nav-item has-treeview @if(request()->is('admin/white-car-list*')) menu-open @endif">
+                    <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-car"></i>
                         <p>
                             Машины (белые)
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">2</span>
                         </p>
                     </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/white-car-list*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.white-car-list.index') }}" class="nav-link @if(request()->is('admin/white-car-list*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Список машин</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.white-car-list.reports') }}" class="nav-link @if(request()->is('admin/white-car-list/reports*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Отчеты</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="nav-item has-treeview @if(request()->is('admin/webcont/*')) menu-open @endif">
                     <a href="#" class="nav-link">
@@ -139,7 +161,7 @@
                         <p>
                             WEBCONT
                             <i class="fas fa-angle-left right"></i>
-                            <span class="badge badge-info right">1</span>
+                            <span class="badge badge-info right">2</span>
                         </p>
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/webcont/*')) display: block; @else display: none; @endif">

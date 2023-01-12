@@ -154,7 +154,7 @@
 <!-- AdminLTE App -->
 <script src="/dist/js/adminlte.js"></script>
 <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-<script src="/dist/js/pages/dashboard.js"></script>
+{{--<script src="/dist/js/pages/dashboard.js"></script>--}}
 <!-- AdminLTE for demo purposes -->
 <script src="/dist/js/demo.js"></script>
 
@@ -166,13 +166,13 @@
     }
 
     $(document).ready(function(){
-        $('a').click(function(){
+        /*$('a').click(function(){
             if($(this).attr('href') !== '#') {
                 $("#blackout").css({
                     'display' : 'block'
                 });
             }
-        });
+        });*/
         /*$('button[type="submit"]').click(function(){
             $("#blackout").css({
                 'display' : 'block'

@@ -48,32 +48,15 @@
                                     <div class="form-group">
 										<label>Выберите количество упаковок(этикеток)</label>
 										<select class="form-control" v-model="count">
-											<option value="1">1</option>
-											<option value="2">2</option>
-											<option value="3">3</option>
-											<option value="4">4</option>
-											<option value="5">5</option>
-											<option value="6">6</option>
-											<option value="7">7</option>
-											<option value="8">8</option>
-											<option value="9">9</option>
-											<option value="10">10</option>
-											<option value="11">11</option>
-											<option value="12">12</option>
-											<option value="13">13</option>
-											<option value="14">14</option>
-											<option value="15">15</option>
-											<option value="16">16</option>
-											<option value="17">17</option>
-											<option value="18">18</option>
-											<option value="19">19</option>
-											<option value="20">20</option>
+                                            @for($i=1; $i<=60; $i++)
+											<option value="{{$i}}">{{$i}}</option>
+                                            @endfor
 										</select>
                                     </div>
                                 </div>
 
                                 <div class="card-footer">
-                                    <button @click="commandPrint" type="button" class="btn btn-success">Печать</button>
+                                    <button @click="commandPrint()" type="button" class="btn btn-success">Печать</button>
                                 </div>
                             </div>
                         </v-col>
@@ -117,8 +100,16 @@
                 },
                 commandPrint(){
                     let formData = new FormData();
-                    formData.append('count', this.count)
-                    formData.append('order_code', this.order_code)
+                    formData.append('count', this.count);
+                    formData.append('order_code', this.order_code);
+                    let address = this.orders.filter(item => item.ord_Code === this.order_code);
+                    let direction = '';
+                    if(address.length > 0) {
+                        direction = address[0].address;
+                    }
+
+                    formData.append('direction', direction);
+
 					if (this.order_code != '') {
 						axios.post('/cabinet/samsung/barcode/command-print', formData)
                         .then(res => {

@@ -40,7 +40,7 @@ class CreateContainerAddress extends Command
      */
     public function handle()
     {
-        $title = "СПРЕДЕР";
+        $title = "30-50";
         $kind = $this->ask('Enter kind: ');
         $zone = strtoupper(substr(Str::slug($title),0,2).$kind);
 
@@ -78,7 +78,7 @@ class CreateContainerAddress extends Command
         }
 
         if ($kind == 'k') {
-            for ($i=1; $i<=$row; $i++) {
+            for ($i=$iteration; $i<=$row; $i++) {
                 $s1 = $zone."-".$i."-1-1";
                 $s2 = $zone."-".$i."-1-2";
                 $s3 = $zone."-".$i."-2-1";

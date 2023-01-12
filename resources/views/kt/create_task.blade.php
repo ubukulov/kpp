@@ -6,7 +6,7 @@
                 @include('partials.kt_header')
                 <h4 class="text-center">Создать заявку</h4>
 
-                <kt-operator-task-create></kt-operator-task-create>
+                <kt-operator-task-create :user="{{ json_encode(Auth::user()) }}"></kt-operator-task-create>
             </div>
         </div>
     </div>

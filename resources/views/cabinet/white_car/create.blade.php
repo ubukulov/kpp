@@ -6,7 +6,7 @@
 @endpush
 @section('content')
     <!-- general form elements -->
-    <div class="card card-primary">
+    <div id="cabinet_wcl" class="card card-primary">
         <div class="card-header">
             <h3 class="card-title">Добавить</h3>
         </div>
@@ -15,36 +15,37 @@
 
         <form action="{{ route('cabinet.white-car-list.store') }}" method="POST" role="form">
             @csrf
-            <div id="cabinet_wcl" class="card-body">
+            <div class="card-body">
                 <div class="form-group">
-                    <label>ФИО водителя</label>
-                    <input type="text" value="{{ old('full_name') }}" style="text-transform: uppercase;" class="form-control" name="full_name">
+                    <label>ФИО водителя <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ old('full_name') }}" required style="text-transform: uppercase;" class="form-control" name="full_name">
                 </div>
 
                 <div class="form-group">
-                    <label>Должность</label>
-                    <input type="text" value="{{ old('position') }}" style="text-transform: uppercase;" class="form-control" name="position">
+                    <label>Должность <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ old('position') }}" required style="text-transform: uppercase;" class="form-control" name="position">
                 </div>
 
                 <div class="form-group">
-                    <label>Номер машины</label>
+                    <label>Номер машины <span style="color: red;">*</span></label>
                     <input type="text" value="{{ old('gov_number') }}" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" class="form-control @error('gov_number') is-invalid @enderror" name="gov_number" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Марка машины</label>
-                    <input type="text" value="{{ old('mark_car') }}" style="text-transform: uppercase;" class="form-control" name="mark_car">
+                    <label>Марка машины <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ old('mark_car') }}" required style="text-transform: uppercase;" class="form-control" name="mark_car">
                 </div>
 
                 <div class="form-group">
-                    <label>Тип пропуска</label>
+                    <label>Тип пропуска <span style="color: red;">*</span></label>
                     <select name="pass_type" v-model="pass_type" class="form-control">
+                        <option value="0">Укажите тип</option>
                         <option value="1">Сотрудник компании</option>
                         <option value="2">Постоянный подрядчик/партнер</option>
                     </select>
                 </div>
 
-                <div v-if="pass_type  != 1" class="form-group">
+                <div v-if="pass_type  == 2" class="form-group">
                     <label>Название компании Подрядчика/партнера</label>
                     <input type="text" class="form-control" required name="contractor_name">
                 </div>
@@ -52,7 +53,7 @@
             <!-- /.card-body -->
 
             <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Сохранить</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <button :disabled="pass_type == 0" type="submit" class="btn btn-primary">Сохранить</button>&nbsp;&nbsp;&nbsp;&nbsp;
                 <a href="{{ route('cabinet.white-car-list.index') }}" class="btn btn-warning">Отменить</a>
             </div>
         </form>
@@ -78,7 +79,7 @@
             el: '#cabinet_wcl',
             data () {
                 return {
-                    pass_type: 1,
+                    pass_type: 0,
                 }
             },
         });

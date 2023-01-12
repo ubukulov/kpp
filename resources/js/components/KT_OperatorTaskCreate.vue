@@ -6,8 +6,12 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Тип документа</label>
-                            <select v-model="task_type" class="form-control">
+                            <select v-if="user.company_id !== 2" v-model="task_type" class="form-control">
                                 <option value="receive">Прием</option>
+                                <option value="ship">Выдача</option>
+                            </select>
+
+                            <select disabled v-if="user.company_id === 2" v-model="task_type" class="form-control">
                                 <option value="ship">Выдача</option>
                             </select>
                         </div>
@@ -16,8 +20,12 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Тип транспорта</label>
-                            <select v-model="trans_type" class="form-control">
+                            <select v-if="user.company_id !== 2" v-model="trans_type" class="form-control">
                                 <option value="train">ЖД</option>
+                                <option value="auto">Авто</option>
+                            </select>
+
+                            <select disabled v-if="user.company_id === 2" v-model="trans_type" class="form-control">
                                 <option value="auto">Авто</option>
                             </select>
                         </div>
@@ -25,7 +33,7 @@
 
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label>Документ основание (Скан)</label>
+                            <label>Документ основание (Скан) не обязательно</label>
                             <input type="file" ref="document_base" @change="setUploadFile(2)" class="form-control">
                         </div>
                     </div>
@@ -255,6 +263,9 @@
         components: {
             datetime: Datetime
         },
+        props: [
+            'user'
+        ],
         data() {
             return {
                 overlay: false,
@@ -388,6 +399,10 @@
         },
         created() {
             this.file_path = this.file_receive;
+            let company_id = this.user.company_id;
+            this.task_type  = company_id !== 2 ? 'receive' : 'ship';
+            this.trans_type = company_id !== 2 ? 'train' : 'auto';
+            this.orderAuto  = company_id !== 2 ? false : true;
         }
     }
 </script>

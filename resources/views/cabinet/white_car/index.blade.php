@@ -3,13 +3,7 @@
     <!-- DataTables -->
     <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
-    <style>
-        .dataTables_filter input {
-            margin-left: 0 !important;
-            display: block !important;
-            width: 100% !important;
-        }
-    </style>
+
 @endpush
 @section('content')
     <div class="row">
@@ -18,7 +12,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-6">
-                            <h3 class="card-title">Список белых машин</h3>
+                            <h3 class="card-title">Перечень постоянных пропусков</h3>
                         </div>
 
                         <div class="col-6 text-right">
@@ -37,7 +31,8 @@
                             <th>Клиент</th>
                             <th>Статус</th>
                             <th>Дата</th>
-                            <th colspan="2">Действие</th>
+                            <th>Ред.</th>
+                            <th>Удалить</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -67,6 +62,17 @@
                         </tr>
                         @endforeach
                         </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>ID</th>
+                            <th>Гос.номер</th>
+                            <th>Клиент</th>
+                            <th>Статус</th>
+                            <th>Дата</th>
+                            <th>Ред.</th>
+                            <th>Удалить</th>
+                        </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <!-- /.card-body -->
@@ -84,8 +90,8 @@
     <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
 
-    <script type="text/javascript">
-        jQuery(document).ready(function($){
+    <script>
+        $(function () {
             $("#example1").DataTable({
                 "responsive": true,
                 "autoWidth": false,
@@ -95,6 +101,15 @@
                 "language": {
                     "url": "/dist/Russian.json"
                 },
+                "columns": [
+                    { "searchable": false },
+                    { "searchable": true },
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
             });
         });
     </script>

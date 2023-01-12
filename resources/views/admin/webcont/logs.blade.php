@@ -120,6 +120,15 @@
                                             @click="searchContainer()"
                                         >Найти</v-btn>
                                     </v-col>
+
+                                    <v-col cols="2">
+                                        <v-btn
+                                            v-if="container_logs.length > 0"
+                                            class="btn btn-dark"
+                                            style="background: #28a745 !important; background-color: #28a745 !important;"
+                                            @click="download()"
+                                        >Скачать</v-btn>
+                                    </v-col>
                                 </v-row>
 
                             </div>
@@ -130,6 +139,7 @@
                                     :items="container_logs"
                                     :items-per-page="20"
                                     :search="search"
+                                    id="printTable"
                                     :loading="isLoaded"
                                     loading-text="Загружается... Пожалуйста подождите"
                                 >
@@ -152,7 +162,7 @@
                                     </template>
 
                                     <template v-slot:item.created_at="{ item }">
-                                        @{{ item.created_at }}
+                                        @{{ new Date(item.created_at).toLocaleString() }}
                                     </template>
                                 </v-data-table>
                             </div>
@@ -175,6 +185,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 
     <script>
         $(function () {
@@ -264,6 +275,11 @@
                 },
                 fixDate2(){
                     this.$refs.menu2.save(this.date2);
+                },
+                download(){
+                    let file_name = 'webcont_' + Date.now() + '.xlsx';
+                    var workbook = XLSX.utils.table_to_book(document.getElementById('printTable'));
+                    XLSX.writeFile(workbook, file_name);
                 }
             },
             created(){

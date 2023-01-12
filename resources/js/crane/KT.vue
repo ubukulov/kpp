@@ -1,20 +1,23 @@
 <template>
     <div class="row">
         <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <div style="width: 45%;text-align: left;float: left;">
+                        <span style="text-align: left;"><strong>{{ user.full_name }}</strong></span>
+                    </div>
+                    <div style="width: 45%;float: right;text-align: right;">
+                        <a style="color: #000; text-align: right" href="/logout">Выйти</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="bottom_nav ==='operation_cont'" class="col-md-12">
             <template>
                 <v-window v-model="step">
                     <v-window-item :value="1">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div style="width: 45%;text-align: left;float: left;">
-                                    <span style="text-align: left;"><strong>{{ name }}</strong></span>
-                                </div>
-                                <div style="width: 45%;float: right;text-align: right;">
-                                    <a style="color: #fff; text-align: right" class="btn btn-primary" href="/logout">Выйти</a>
-                                </div>
-                            </div>
-                            <br><br>
-                        </div>
+
                         <br>
                         <div class="form-group">
                             <v-select
@@ -48,7 +51,7 @@
                                 v-if="zone_id !== 0, technique_id !== 0"
                                 color="primary"
                                 depressed
-                                @click="step++"
+                                @click="nextStep"
                             >
                                 Далее
                             </v-btn>
@@ -513,14 +516,106 @@
                     <!-- ./Пункт Перемещение в др. зону -->
                 </v-window>
             </template>
-
-            <v-overlay :value="overlay">
-                <v-progress-circular
-                    indeterminate
-                    size="64"
-                ></v-progress-circular>
-            </v-overlay>
         </div>
+
+        <div v-if="bottom_nav ==='operation_search'" class="col-md-12">
+
+            <div class="form-group">
+                <h4>Просмотр список контейнеров по зонам и рядам!</h4>
+            </div>
+
+            <div class="form-group">
+                <v-select
+                    :items="zones"
+                    outlined
+                    label="Зона"
+                    :hint="`${zones.zone}, ${zones.title}`"
+                    item-value="zone"
+                    v-model="zone_id"
+                    @change="getListRows()"
+                    item-text="title"
+                ></v-select>
+            </div>
+
+            <div class="form-group">
+                <v-select
+                    :disabled="is_row"
+                    label="Ряд"
+                    :items="rows"
+                    :hint="`${rows.row}`"
+                    item-value="row"
+                    outlined
+                    v-model="row_id"
+                    item-text="row"
+                    @change="getListContainers()"
+                ></v-select>
+            </div>
+
+            <div v-if="containersInRow.length > 0" class="form-group">
+                <ul style="list-style: number;">
+                    <li style="text-align: left;" v-for="(item, i) in containersInRow" :key="i">
+                        <strong>{{ item.number }}</strong> ({{ item.name }})
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div v-if="bottom_nav === 'services'" class="col-md-12">
+            <crane-services></crane-services>
+        </div>
+
+        <v-bottom-navigation v-model="bottom_nav">
+            <v-btn value="operation_cont">
+                <span style="font-size: 12px;">Операции</span>
+
+                <v-icon>mdi-history</v-icon>
+            </v-btn>
+
+            <v-btn value="operation_search">
+                <span style="font-size: 12px;">Поиск</span>
+
+                <v-icon>mdi-search-web</v-icon>
+            </v-btn>
+
+            <v-btn value="services">
+                <span style="font-size: 12px;">Сервисы</span>
+
+                <v-icon>mdi-menu</v-icon>
+            </v-btn>
+        </v-bottom-navigation>
+
+        <v-overlay :value="overlay">
+            <v-progress-circular
+                indeterminate
+                size="64"
+            ></v-progress-circular>
+        </v-overlay>
+
+        <v-dialog
+            v-model="craneDialog"
+            persistent
+            max-width="290"
+            class="craneNoticeDialog"
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    Внимание!!!
+                </v-card-title>
+                <v-card-text>
+                    Кран не работает. Измените статус крана, для начала работы.
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="green darken-1"
+                        text
+                        @click="craneDialog = false"
+                    >
+                        Ок
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
@@ -528,7 +623,7 @@
     import axios from 'axios';
     export default {
         props: [
-            'name'
+            'user'
         ],
         data(){
             return {
@@ -541,6 +636,7 @@
                 info_container: '',
                 info_result: '',
                 isCustoms: true,
+                craneDialog: false,
                 rows: [],
                 row_id: 0,
                 places: [],
@@ -562,6 +658,8 @@
                 container_ship_id: -1,
                 other_container_ship: '',
                 start_date: '',
+                bottom_nav: 'operation_cont',
+                containersInRow: []
             }
         },
         methods: {
@@ -582,7 +680,14 @@
                 axios.get('/container-crane/get-techniques')
                     .then(res => {
                         this.overlay = false;
-                        this.techniques = res.data;
+                        this.techniques = res.data.map(function(item){
+                            if(item.status === 'works') {
+                                item.name = `${item.name} (Работает)`
+                            } else {
+                                item.name = `${item.name} (Не работает)`
+                            }
+                            return item;
+                        });
                     })
                     .catch(err => {
                         console.log(err)
@@ -604,10 +709,10 @@
                         this.overlay = false;
                         this.rows = res.data;
                         this.is_row = false;
-                        console.log(this.rows)
+                        console.log(this.rows);
                     })
                     .catch(err => {
-                        console.log(err)
+                        console.log(err);
                         this.overlay = false;
                     })
             },
@@ -893,13 +998,64 @@
                     }
                 });
                 return z;
+            },
+            getListRows(){
+                this.overlay = true;
+                this.rows = [];
+                this.places = [];
+                this.floors = [];
+                this.row_id = 0;
+                this.place_id = 0;
+                this.floor_id = 0;
+                let formData = new FormData();
+                formData.append('zone', this.zone_id);
+                axios.post('/container-crane/container/getting-rows', formData)
+                    .then(res => {
+                        this.overlay = false;
+                        this.rows = res.data;
+                        this.is_row = false;
+                        console.log(this.rows);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        this.overlay = false;
+                    })
+            },
+            getListContainers(){
+                this.overlay = true;
+                let formData = new FormData();
+                this.containersInRow = [];
+                this.places = [];
+                this.floors = [];
+                this.place_id = 0;
+                this.floor_id = 0;
+                formData.append('zone', this.zone_id);
+                formData.append('row', this.row_id);
+                axios.post('/container-crane/container/getting-containers-in-row', formData)
+                    .then(res => {
+                        this.overlay = false;
+                        this.containersInRow = res.data;
+                        console.log(res.data);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        this.overlay = false;
+                    })
+            },
+            nextStep(){
+                let crane = this.techniques.find(item => item.id === this.technique_id);
+                if(crane.status === 'not_works') {
+                    this.craneDialog = true;
+                } else {
+                    this.step++;
+                }
             }
         },
         created() {
             this.getTechniques();
             this.getZones();
             this.getContainerShips();
-        }
+        },
     }
 </script>
 
@@ -919,5 +1075,9 @@
     .v-application--is-ltr .v-text-field .v-label {
         font-size: 24px !important;
         font-weight: normal !important;
+    }
+    .v-dialog__content {
+        top: 30% !important;
+        position: absolute !important;
     }
 </style>

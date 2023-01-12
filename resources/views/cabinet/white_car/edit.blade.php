@@ -6,7 +6,7 @@
 @endpush
 @section('content')
     <!-- general form elements -->
-    <div class="card card-primary">
+    <div id="cabinet_wcl_edit" class="card card-primary">
         <div class="card-header">
             <h3 class="card-title">Редактировать</h3>
         </div>
@@ -15,29 +15,29 @@
         <form action="{{ route('cabinet.white-car-list.update', ['white_car_list' => $white_car_list->id]) }}" method="POST" role="form">
             @csrf
             @method('PUT')
-            <div id="cabinet_wcl_edit" class="card-body">
+            <div class="card-body">
                 <div class="form-group">
-                    <label>ФИО водителя</label>
-                    <input type="text" value="{{ $white_car_list->full_name }}" style="text-transform: uppercase;" class="form-control" name="full_name">
+                    <label>ФИО водителя <span style="color: red;">*</span></label>
+                    <input type="text" required value="{{ $white_car_list->full_name }}" style="text-transform: uppercase;" class="form-control" name="full_name">
                 </div>
 
                 <div class="form-group">
-                    <label>Должность</label>
-                    <input type="text" value="{{ $white_car_list->position }}" style="text-transform: uppercase;" class="form-control" name="position">
+                    <label>Должность <span style="color: red;">*</span></label>
+                    <input type="text" required value="{{ $white_car_list->position }}" style="text-transform: uppercase;" class="form-control" name="position">
                 </div>
 
                 <div class="form-group">
-                    <label>Номер машины</label>
+                    <label>Номер машины <span style="color: red;">*</span></label>
                     <input type="text" value="{{ $white_car_list->gov_number }}" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" class="form-control @error('gov_number') is-invalid @enderror" name="gov_number" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Марка машины</label>
-                    <input type="text" value="{{ $white_car_list->mark_car }}" style="text-transform: uppercase;" class="form-control" name="mark_car">
+                    <label>Марка машины <span style="color: red;">*</span></label>
+                    <input type="text" required value="{{ $white_car_list->mark_car }}" style="text-transform: uppercase;" class="form-control" name="mark_car">
                 </div>
 
                 <div class="form-group">
-                    <label>Тип пропуска</label>
+                    <label>Тип пропуска <span style="color: red;">*</span></label>
                     <select name="pass_type" v-model="pass_type" class="form-control">
                         <option @if($white_car_list->pass_type == 1) selected  @endif value="1">Сотрудник компании</option>
                         <option @if($white_car_list->pass_type == 2) selected  @endif value="2">Постоянный подрядчик/партнер</option>

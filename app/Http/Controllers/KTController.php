@@ -51,8 +51,23 @@ class KTController extends Controller
         $container_task_id = (int) $container_task_id;
         $container_task = ContainerTask::findOrFail($container_task_id);
         $import_logs = $container_task->import_logs;
+        $container_stocks = $container_task->container_stocks();
+
+        $containers_arr = [];
+        foreach($container_stocks as $container_stock) {
+            $containers_arr[$container_stock->container->number] = $container_stock->toArray();
+        }
+
         foreach($import_logs as $import_log) {
             $import_log['position'] = $import_log->isPositionCancelOrEdit();
+
+            if(array_key_exists($import_log->container_number, $containers_arr)) {
+                $import_log['company']      = $containers_arr[$import_log->container_number]['company'];
+                $import_log['contractor']   = $containers_arr[$import_log->container_number]['contractor'];
+            } else {
+                $import_log['company']      = null;
+                $import_log['contractor']   = null;
+            }
         }
 
         return view('kt.task_container_logs', compact('import_logs', 'container_task'));

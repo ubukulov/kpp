@@ -16,6 +16,7 @@
 
                         <div class="col-6 text-right">
                             <a href="{{ route('admin.white-car-list.create') }}" class="btn btn-dark">Добавить</a>
+                            <a href="{{ route('admin.wcl.importForm') }}" class="btn btn-warning">Импорт</a>
                         </div>
                     </div>
 
@@ -30,7 +31,7 @@
                             <th>Клиент</th>
                             <th>Статус</th>
                             <th>Дата</th>
-                            <th colspan="2">Действие</th>
+                            <th>Действие</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -52,11 +53,6 @@
                                     <i class="nav-icon fas fa-edit"></i>&nbsp;Ред.
                                 </a>
                             </td>
-                            <td>
-                                <a href="{{ route('admin.white-car-list.edit', ['white_car_list' => $wcl->id]) }}">
-                                    <i class="nav-icon fas fa-"></i>
-                                </a>
-                            </td>
                         </tr>
                         @endforeach
                         </tbody>
@@ -65,13 +61,12 @@
                             <th>ID</th>
                             <th>Гос.номер</th>
                             <th>Клиент</th>
+                            <th>Статус</th>
                             <th>Дата</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>
                     </table>
-
-                    {{ $white_car_lists->links() }}
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -92,11 +87,9 @@
             $("#example1").DataTable({
                 "responsive": true,
                 "autoWidth": false,
-                "bPaginate": false,
-                "info": false,
                 "language": {
                     "url": "/dist/Russian.json"
-                },
+                }
             });
         });
     </script>

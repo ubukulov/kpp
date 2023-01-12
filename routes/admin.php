@@ -1,7 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
+Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['throttle:limit_admin']*/], function(){
     Route::get('/login', 'AuthController@login')->name('admin.login');
     Route::post('/authenticate', 'AuthController@authenticate')->name('admin.authenticate');
     Route::get('/logout', 'AuthController@logout')->name('admin.logout');
@@ -54,8 +54,15 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
         # Technique
         Route::resource('/technique', 'TechniqueController', ['as' => 'admin']);
 
+        # Printers
+        Route::resource('/printer', 'PrinterController', ['as' => 'admin']);
+
         # White Cars list
         Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'admin']);
+        Route::get('/white-car-list/report/wcl-changes', 'WhiteCarController@getWCLReports')->name('admin.white-car-list.reports');
+        Route::get('/white-car-list/{company_id}/get-changes', 'WhiteCarController@getWCLChanges');
+        Route::get('/white-car-list/import/form', 'WhiteCarController@importForm')->name('admin.wcl.importForm');
+        Route::post('/white-car-list/import-execute', 'WhiteCarController@importExecute');
 
         # Dashboard statistics
         Route::get('/get-operations-crane-operator-for-today', 'StatController@getOperationCraneOperatorForToday');
@@ -67,6 +74,6 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
             Route::get('/get/logs', 'WebcontController@getLogsForAdmin');
             Route::post('/search', 'WebcontController@search');
         });
-
+        Route::get('/employee/{id}/auth', 'AdminController@authByEmployee')->name('admin.employee.auth');
     });
 });

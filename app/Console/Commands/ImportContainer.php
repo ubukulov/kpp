@@ -42,7 +42,7 @@ class ImportContainer extends Command
      */
     public function handle()
     {
-        $path_to_file = 'files/inv2022-11.xlsx';
+        $path_to_file = 'files/INV021122/20.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -51,43 +51,55 @@ class ImportContainer extends Command
         $cnt = 0;
         foreach ($sheetData as $key=>$arr) {
             if ($key == 1) continue;
-            $zone = $arr['A'];
+            $zone = trim($arr['A']);
             $row = $arr['B'];
             $place = $arr['C'];
             $floor = $arr['D'];
+            $number = trim(strtoupper($arr['E']));
+            if($number == '') {
+                continue;
+            }
+
+            if(empty($arr['F']) || $arr['F'] == 40) {
+                $container_type = '40';
+            } elseif($arr['F'] == 45) {
+                $container_type = '45';
+            } elseif($arr['F'] == 20) {
+                $container_type = '20';
+            }
 
             switch ($zone) {
-                case "30-КА";
+                case "30-ка";
                     $slag = '30R';
                     $name = $slag."-".$row."-".$place."-".$floor;
                 break;
 
-                case "5 CKЛАД";
+                case "5 скл";
                     $slag = '5-R';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
 
-                case "АНГАР";
+                case "Ангар";
                     $slag = 'ANR';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
 
-                case "ПОЛЕ";
+                case "Поле";
                     $slag = 'POPOLE';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
 
-                case "РИЧСТАКЕР";
+                case "Ричстакер";
                     $slag = 'RICH';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
 
-                case "СПР.КОНСОЛЬ";
+                case "Спр.конс.";
                     $slag = 'SPK';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
 
-                case "СПРЕДЕР";
+                case "Спредер";
                     $slag = 'SPR';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;
@@ -107,15 +119,6 @@ class ImportContainer extends Command
                     break;
             }
 
-            $number = trim(strtoupper($arr['E']));
-            if(empty($arr['F']) || $arr['F'] == 40) {
-                $container_type = '40';
-            } elseif($arr['F'] == 45) {
-                $container_type = '45';
-            } elseif($arr['F'] == 20) {
-                $container_type = '20';
-            }
-
             //$state = (empty($arr['G'])) ? null : $arr['G'];
             $container = Container::whereNumber($number)->first();
             if (!$container){
@@ -129,22 +132,23 @@ class ImportContainer extends Command
             if ($container_address) {
                 $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                 if ($container_stock) {
-                    if($container_stock->container_address_id != $container_address->id) {
-                        $container_stock->container_address_id = $container_address->id;
-                        $container_stock->status = 'received';
-                        $container_stock->note = 'Invent2022';
-                        $container_stock->save();
-                        $count++;
-                    }
+//                    if($container_stock->container_address_id != $container_address->id) {
+//                        $container_stock->container_address_id = $container_address->id;
+//                        $container_stock->status = 'received';
+//                        $container_stock->note = 'Invent2022';
+//                        $container_stock->save();
+//                        $count++;
+//                    }
+                    continue;
                 } else {
                     ContainerStock::create([
                         'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received',
-                        'note' => 'Invent2022'
+                        'note' => 'Invent '.date('d.m.Y')
                     ]);
                     ContainerLog::create([
                         'user_id' => 116, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
                         'address_from' => 'из файла', 'address_to' => $container_address->name,
-                        'note' => 'По инвенту 27.02.2022'
+                        'note' => 'По инвенту '.date('d.m.Y')
                     ]);
                     //$this->info("The container: $number successfully added.");
                     $count++;

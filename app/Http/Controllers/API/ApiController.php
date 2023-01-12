@@ -7,7 +7,9 @@ use App\Models\Company;
 use App\Models\Driver;
 use App\Models\Permit;
 use App\Models\PermitStatus;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class ApiController extends Controller
 {
@@ -34,5 +36,14 @@ class ApiController extends Controller
         } else {
             return response('Пропуск не найдено', 404);
         }
+    }
+
+    public function authentication(Request $request)
+    {
+        $user = User::where('email', $request->input('email'))->first();
+        if(!$user || Hash::check($request->input('password'), $user->password)){
+            return response('Email or password not matched', 404);
+        }
+        return response($user, 200);
     }
 }

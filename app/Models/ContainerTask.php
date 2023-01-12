@@ -35,6 +35,11 @@ class ContainerTask extends Model
     {
         $import_logs = $this->import_logs;
         $count = 0;
+
+        if(count($import_logs) == 0) {
+            return false;
+        }
+
         foreach($import_logs as $import_log) {
             if ($import_log->status == 'not') {
                 $count++;
@@ -129,7 +134,11 @@ class ContainerTask extends Model
         foreach(json_decode($this->container_ids) as $container_id=>$container_number) {
             $container_ids[] = $container_id;
         }
-        return ContainerStock::where(['container_task_id' => $this->id])->whereIn('container_id', $container_ids)->orderBy('container_address_id')->get();
+        return ContainerStock::where(['container_task_id' => $this->id])
+            ->with('container')
+            ->whereIn('container_id', $container_ids)
+            ->orderBy('container_address_id')
+            ->get();
     }
 
     public function getCountItems()

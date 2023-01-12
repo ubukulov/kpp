@@ -32,6 +32,7 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
+                            <th>ИИН</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -55,6 +56,9 @@
                                 @endif
                             </td>
                             <td>
+                                {{ $employee->iin }}
+                            </td>
+                            <td>
                                 {{ $employee->position->title }}
                             </td>
                             <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
@@ -70,7 +74,9 @@
                                 @endif
                             </td>
                             <td>
-                                    <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
+                                <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
+                                &nbsp;&nbsp;
+                                <button type="button" class="btn btn-success" @click="authByUser({{ $employee->id }})">Войти</button>
                             </td>
                         </tr>
                         @endforeach
@@ -82,6 +88,7 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
+                            <th>ИИН</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -132,6 +139,9 @@
                     if(this.ids.length != 0) {
                         window.open('/admin/employee/badges/'+this.ids.join(), '_blank');
                     }
+                },
+                authByUser(id){
+                    window.open('/admin/employee/' + id + '/auth' , '_blank');
                 }
             },
             created(){

@@ -24,4 +24,5 @@ Route::group(['namespace' => 'API'], function(){
     Route::get('/get-driver-info-by-phone/{phone}', 'ApiController@getDriverInfoByPhone');
     Route::get('/get-companies-info', 'ApiController@getCompaniesInfo');
     Route::post('/sync-permit-status-with-other-platform', 'ApiController@changePermitStatus');
+    Route::post('/authentication', 'ApiController@authentication');
 });

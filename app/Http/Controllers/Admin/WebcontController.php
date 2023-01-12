@@ -40,9 +40,18 @@ class WebcontController extends Controller
         $date1 = $request->input('date1');
         $date2 = $request->input('date2');
         if (is_null($number)) {
-            $container_logs = ContainerLog::whereRaw("(created_at >= ? AND created_at <= ?)", [$date1." 00:00", $date2." 23:59"])->get();
+            $container_logs = ContainerLog::whereRaw("(container_logs.created_at >= ? AND container_logs.created_at <= ?)", [$date1." 00:00", $date2." 23:59"])
+                ->selectRaw('container_logs.*, users.full_name, techniques.name as technique')
+                ->join('users', 'users.id', '=', 'container_logs.user_id')
+                ->join('techniques', 'techniques.id', '=', 'container_logs.technique_id')
+                ->get();
         } else {
-            $container_logs = ContainerLog::where("container_number", "LIKE", "%".$number)->whereRaw("(created_at >= ? AND created_at <= ?)", [$date1." 00:00", $date2." 23:59"])->get();
+            $container_logs = ContainerLog::where("container_logs.container_number", "LIKE", "%".$number)
+                ->selectRaw('container_logs.*, users.full_name, techniques.name as technique')
+                ->whereRaw("(container_logs.created_at >= ? AND container_logs.created_at <= ?)", [$date1." 00:00", $date2." 23:59"])
+                ->leftJoin('users', 'users.id', '=', 'container_logs.user_id')
+                ->leftJoin('techniques', 'techniques.id', '=', 'container_logs.technique_id')
+                ->get();
         }
 
         return response()->json($container_logs);

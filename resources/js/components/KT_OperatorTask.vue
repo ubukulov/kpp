@@ -198,6 +198,7 @@
                                                             <div><strong>Телефон:</strong> {{ item.user.phone }}</div>
                                                             <div><strong>Клиент:</strong> {{ item.company }}</div>
                                                             <div><strong>Номер машины/вагона:</strong> {{ item.car_number_carriage }}</div>
+                                                            <div><strong>Контейнер:</strong> {{ item.container_number }}</div>
                                                             <table class="table table-bordered mt-2">
                                                                 <thead>
                                                                 <th>Из</th>
@@ -247,9 +248,10 @@
 <script>
     import axios from 'axios'
     import dateformat from "dateformat";
+
     export default {
         props: [
-
+            'user'
         ],
         data(){
             return {
@@ -362,6 +364,13 @@
         },
         created(){
             this.getContainerTasks();
+            if(this.user.company_id === 2) {
+                this.filters = this.filters.filter(item  => {
+                    if((item.id === 0) || (item.id === 2)) {
+                        return item;
+                    }
+                })
+            }
         }
     }
 </script>

@@ -180,6 +180,7 @@ return [
         Barryvdh\Debugbar\ServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         App\Providers\SmsServiceProvider::class,
+        App\Providers\RepositoryServiceProvider::class,
     ],
 
     /*

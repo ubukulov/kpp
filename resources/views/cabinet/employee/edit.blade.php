@@ -20,11 +20,19 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>Компания</label>
-                            <select disabled name="company_id" class="form-control select2bs4" style="width: 100%;">
-                                @foreach($companies as $company)
-                                    <option @if($company->id == $employee->company_id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
-                                @endforeach
-                            </select>
+                            @if(Auth::user()->hasRole('otdel-kadrov'))
+                                <select name="company_id" class="form-control select2bs4" style="width: 100%;">
+                                    @foreach($companies as $company)
+                                        <option @if($company->id == $employee->company_id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <select disabled name="company_id" class="form-control select2bs4" style="width: 100%;">
+                                    @foreach($companies as $company)
+                                        <option @if($company->id == $employee->company_id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
 
                         <div class="form-group">

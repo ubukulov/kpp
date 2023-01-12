@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Cabinet\ReportController;
 
 # Кабинет клиента
 Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'Cabinet'], function(){
@@ -14,7 +15,7 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('/employees/badges/{ids}', 'EmployeeController@badges');
 
     # Отчеты по машинам
-    Route::get('/reports', 'ReportController@index')->name('cabinet.report.index');
+    Route::get('/reports', [ReportController::class, 'index'])->name('cabinet.report.index');
     Route::post('/reports/download-report', 'ReportController@downloadReport');
 
     # КПП для Самсунга
@@ -44,4 +45,34 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     # WEBCONT
     Route::get('webcont', 'WebcontController@index')->name('cabinet.webcont.index');
     Route::get('webcont/{id}/show', 'WebcontController@show')->name('cabinet.webcont.show');
+
+    # WMS
+    Route::group(['prefix' => 'wms'], function(){
+        Route::get('orders', 'WmsController@orders')->name('cabinet.wms.orders');
+        Route::get('boxes', 'WmsController@boxes')->name('cabinet.wms.boxes');
+        Route::get('estore', 'WmsController@estore')->name('cabinet.wms.estore');
+        Route::get('resend-receive', 'WmsController@resendReceive')->name('cabinet.wms.resend');
+        Route::get('/resend-receive/{type}/{receiptID}', 'WmsController@resendUpdate')->name('cabinet.wms.resendUpdated');
+        Route::get('/resend-receive-ackans/{receiptID}', 'WmsController@resendAckanUpdate')->name('cabinet.wms.ackansUpdated');
+        Route::get('/resend-ship-ackans/{OrderID}', 'WmsController@resendShipAckanUpdate')->name('cabinet.wms.shipAckansUpdated');
+        Route::get('/resend-ship/{type}/{shipID}', 'WmsController@resendShip')->name('cabinet.wms.resendShip');
+        Route::get('/resend-return-grinfo/{receiptID}', 'WmsController@resendReturnGrin')->name('cabinet.wms.resendReturnGrin');
+        Route::get('/resend-return-ackans/{receiptID}', 'WmsController@resendReturnAckan')->name('cabinet.wms.resendReturnAckan');
+        Route::get('/pallet-sscc', 'WmsController@palletSSCC')->name('cabinet.wms.palletSSCC');
+        Route::get('/pallet-sscc/generate', 'WmsController@generatePalletSSCC')->name('cabinet.wms.generatePalletSSCC');
+        Route::post('/pallet-sscc/{code}/print', 'WmsController@printPalletSSCC')->name('cabinet.wms.printPalletSSCC');
+        Route::get('/sss', 'WmsController@sss');
+    });
+
+    # Ashana
+    Route::get('ashana', 'KitchenController@ashana')->name('cabinet.ashana.index');
+    Route::get('/talon', 'KitchenController@talon')->name('cabinet.ashana.talon');
+    Route::get('/ashana/reports', 'KitchenController@reports')->name('cabinet.ashana.reports');
+    Route::post('ashana/get-logs', 'KitchenController@getLogs');
+
+    # Ячейки
+    Route::get('/barcode-for-wms-boxes', 'WmsController@barcodeForWmsBoxes')->name('cabinet.barcodeForWmsBoxes');
+    Route::post('/barcode-for-wms-boxes', 'WmsController@barcodeForWmsBoxes2');
+    Route::get('/barcode-get-client-boxes/{depID}', 'WmsController@getClientBoxes');
+    Route::get('/jti/barcode-command-print', 'WmsController@jtiCommandPrint');
 });

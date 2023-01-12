@@ -24,8 +24,9 @@ class ViewController extends BaseController
         $pre_month = DB::select("SELECT COUNT(*) as cnt FROM permits
                          WHERE date_in IS NOT NULL AND status='printed'
                          AND MONTH(date_in)=MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)) AND YEAR(date_in)=YEAR(NOW())");
+        $companies = Company::all();
 
-        return view('view', compact('cur_month', 'pre_month'));
+        return view('view', compact('cur_month', 'pre_month', 'companies'));
     }
 
     public function getCarInfo($tex_number)

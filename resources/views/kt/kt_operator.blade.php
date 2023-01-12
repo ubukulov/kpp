@@ -25,7 +25,7 @@
                     </div>
                 </div>
                 <a style="margin-bottom: 10px;" class="btn btn-success" href="{{ route('o.create.task') }}">Создать заявку</a>
-                <kt-operator-task></kt-operator-task>
+                <kt-operator-task :user="{{ json_encode(Auth::user()) }}"></kt-operator-task>
             </div>
         </div>
     </div>

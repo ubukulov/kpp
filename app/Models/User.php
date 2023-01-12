@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasRolesAndPermissions;
 use Illuminate\Notifications\Notifiable;
@@ -35,6 +36,16 @@ class User extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function countAshanaToday()
+    {
+        return $this->hasMany(AshanaLog::class)->whereDate('date', Carbon::now())->count();
+    }
+
+    public function ashana()
+    {
+        return $this->hasMany(AshanaLog::class);
     }
 
     public function setUuidIfNot()
@@ -72,8 +83,7 @@ class User extends Authenticatable
     {
         $user_history = UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
         if(!$user_history){
-            UserHistory::create(['user_id' => $this->id, 'status' => 'works']);
-            return UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
+            return UserHistory::create(['user_id' => $this->id, 'status' => 'works']);
         }
 
         return $user_history;
@@ -90,5 +100,7 @@ class User extends Authenticatable
                 return true;
             }
         }
+
+        return false;
     }
 }

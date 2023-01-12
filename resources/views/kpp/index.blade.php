@@ -1,6 +1,6 @@
 @extends('layouts.app')
-    @push('styles')
-    @endpush
+@push('styles')
+@endpush
 @section('content')
     <kpp-component
         :datetime="{{json_encode(date('d.m.Y H:i'))}}"

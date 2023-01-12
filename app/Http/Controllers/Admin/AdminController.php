@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Artisan;
+use Auth;
 
 class AdminController extends Controller
 {
@@ -26,5 +28,12 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.whatsapp.index');
+    }
+
+    public function authByEmployee($employee_id)
+    {
+        $user = User::findOrFail($employee_id);
+        Auth::login($user);
+        return redirect()->route('cabinet');
     }
 }

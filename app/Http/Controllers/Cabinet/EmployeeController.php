@@ -22,7 +22,12 @@ class EmployeeController extends Controller
     public function index()
     {
         $company = Auth::user()->company;
-        $employees = User::where(['company_id' => $company->id])->get();
+        if(Auth::user()->hasRole('otdel-kadrov')) {
+            $employees = User::orderBy('id', 'DESC')->get();
+        } else {
+            $employees = User::where(['company_id' => $company->id])->get();
+        }
+
         return view('cabinet.employee.index', compact('employees'));
     }
 
