@@ -136,7 +136,7 @@ class EmployeeController extends Controller
 
         $data['badge'] = (isset($data['badge']) && $data['badge'] == 'on') ? 1 : 0;
         // если у пользователя не задан uuid, то его генерируем и сохраняем
-        if(empty($user->uuid)) {
+        if(empty($user->uuid) || $data['iin'] != $user->iin) {
             //$str = $user->id."-".$user->full_name;
             $data['uuid'] = base64_encode($user->iin);
         }

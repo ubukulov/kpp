@@ -6,6 +6,8 @@ use App\Models\AshanaLog;
 use App\Models\User;
 use App\Traits\KitchenTraits;
 use Illuminate\Http\Request;
+use File;
+use Auth;
 
 class KitchenController extends BaseController
 {
@@ -18,19 +20,20 @@ class KitchenController extends BaseController
 
     public function getStatistics($option_id)
     {
-        $condition = 'ashana_logs.date >= CURDATE()';
+        $user = Auth::user();
+        $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date >= CURDATE()";
         switch($option_id) {
             case 1:
                 $result = $this->query($condition);
                 break;
 
             case 2:
-                $condition = 'ashana_logs.date >= (CURDATE()-1) AND ashana_logs.date < CURDATE()';
+                $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date = CURDATE() - INTERVAL 1 DAY";
                 $result = $this->query($condition);
                 break;
 
             case 3:
-                $condition = 'ashana_logs.date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)';
+                $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)";
                 $result = $this->query($condition);
                 break;
 
@@ -77,11 +80,20 @@ class KitchenController extends BaseController
         $users = User::where(['users.iin' => $username])->orWhere(['users.uuid' => $username])->get();
 
         if(count($users) == 0) {
-            return response('НЕ НАЙДЕНО. ОБРАЩАЙТЕСЬ В ОТДЕЛ КАДРОВ ЗА ТАЛОНОМ.', 404);
+            return response([
+                'message' => 'НЕ НАЙДЕНО. ОБРАЩАЙТЕСЬ В ОТДЕЛ КАДРОВ ЗА ТАЛОНОМ.'
+            ], 404);
         }
 
         foreach($users as $user) {
             if($user->hasWorkPermission()) {
+
+                if($user->company->ashana === 1) {
+                    return response([
+                        'message' => 'Для сотрудников этой компании запрещено питаться в столовое'
+                    ], 406);
+                }
+
                 return response([
                     'full_name' => $user->full_name,
                     'company_name' => $user->company->short_ru_name,
@@ -127,9 +139,30 @@ class KitchenController extends BaseController
                 return response('Ваш лимит обедов за сегодня исчерпан', 406);
             }
 
+            // Подготовка папок для сохранение картинки
+            $dir = '/kitchen_photos/'. substr(md5(microtime()), mt_rand(0, 30), 2) . '/' . substr(md5(microtime()), mt_rand(0, 30), 2);
+            if($request->input('path_to_image') && !empty($request->input('path_to_image'))) {
+                if(!File::isDirectory(public_path(). $dir)){
+                    File::makeDirectory(public_path(). $dir, 0777, true);
+                }
+            }
+
+            if ($request->input('path_to_image') && !empty($request->input('path_to_image'))){
+                $image = $request->input('path_to_image'); // image base64 encoded
+                preg_match("/data:image\/(.*?);/",$image,$image_extension); // extract the image extension
+                $image = preg_replace('/data:image\/(.*?);base64,/','',$image); // remove the type part
+                $image = str_replace(' ', '+', $image);
+                $imageName = $user->id.'_'.time() . '.' . $image_extension[1]; //generating unique file name;
+                File::put(public_path(). $dir.'/'.$imageName,base64_decode($image));
+                $pathToImage = $dir.'/'.$imageName;
+            } else {
+                $pathToImage = null;
+            }
+
+
             AshanaLog::create([
                 'user_id' => $user->id, 'company_id' => $user->company_id, 'din_type' => $din_type,
-                'cashier_id' => $cashier_id
+                'cashier_id' => $cashier_id, 'path_to_image' => $pathToImage
             ]);
 
             return response([

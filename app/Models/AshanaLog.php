@@ -18,10 +18,11 @@ class AshanaLog extends Model
      * company_id - ид компании в котором числяться сотрудник
      * din_type - возможное значение, 1 - комплек обед, 2 - булочки
      * date - дата и время когда кушал сотрудник
+     * path_to_image - путь к картинку
      */
 
     protected $fillable = [
-        'cashier_id', 'user_id', 'company_id', 'din_type', 'date'
+        'cashier_id', 'user_id', 'company_id', 'din_type', 'date', 'path_to_image'
     ];
     public $timestamps = false;
 

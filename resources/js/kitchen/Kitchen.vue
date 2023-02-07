@@ -2,17 +2,53 @@
     <v-app>
         <v-main>
             <v-container>
-                <div v-if="info" v-html="infoHtml"></div>
-                <div class="form-group">
-                    <label>Отсканируйте или введите ID пользователя</label><br>
-                    <textarea onfocus="this.value=''" @keyup.enter="checkScanCode()" ref="username" id="username" v-model="username" cols="40" rows="4" style="border:1px solid red;"></textarea>
-                </div>
+                <v-row>
+                    <v-col cols="4">
+                        <div v-if="info" v-html="infoHtml"></div>
+                        <div class="form-group">
+                            <label>Отсканируйте или введите ID пользователя</label><br>
+                            <textarea onfocus="this.value=''" @keyup.enter="checkScanCode()" ref="username" id="username" v-model="username" cols="40" rows="4" style="border:1px solid red;"></textarea>
+                        </div>
 
-                <div class="form-group">
-                    <button type="button" @click="checkScanCode()" class="btn btn-success nicebtn2">Внести</button>
-                </div>
+                        <div class="form-group">
+                            <button type="button" @click="checkScanCode()" class="btn btn-success nicebtn2">Внести</button>
+                        </div>
+                    </v-col>
 
-                <v-dialog v-model="dialog"  persistent max-width="700px">
+                    <v-col cols="8">
+                        <div v-show="isCameraOpen && isLoading" class="camera-loading">
+                            <ul class="loader-circle">
+                                <li></li>
+                                <li></li>
+                                <li></li>
+                            </ul>
+                        </div>
+
+                        <div v-if="isCameraOpen" v-show="!isLoading" class="camera-box" :class="{ 'flash' : isShotPhoto }">
+
+                            <div class="camera-shutter" :class="{'flash' : isShotPhoto}"></div>
+
+                            <video v-show="!isPhotoTaken" ref="camera" :width="1280" :height="720" autoplay></video>
+
+                            <canvas v-show="isPhotoTaken" id="photoTaken" ref="canvas" :width="1280" :height="720"></canvas>
+                        </div>
+
+                        <!--<div v-if="isCameraOpen && !isLoading" class="camera-shoot">
+                            <button type="button" class="button" @click="takePhoto">
+                                <img src="https://img.icons8.com/material-outlined/50/000000/camera&#45;&#45;v2.png">
+                            </button>
+                        </div>-->
+
+                        <!--<div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
+                            <a id="downloadPhoto" download="my-photo.jpg" class="button" role="button" @click="downloadImage">
+                                Download
+                            </a>
+                        </div>-->
+                    </v-col>
+                </v-row>
+
+
+                <v-dialog v-model="dialog"  max-width="700px">
 
                     <v-card>
                         <v-card-title>
@@ -41,7 +77,7 @@
                                             <v-btn color="success" :disabled="isDisable2" @click="addAshana(2)">Булочки</v-btn>
                                         </div>
 
-                                        <div class="content_mw" v-if="user.count === 3">
+                                        <div class="content_mw" v-if="user.count === 2">
                                             <h2 style="font-size: 30px; color: red;"><strong>Ваш лимит обедов за сегодня исчерпан</strong></h2>
                                         </div>
                                     </v-col>
@@ -54,38 +90,6 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-
-                <template>
-                    <v-card>
-                        <v-card-title>
-                            <v-autocomplete
-                                :items="options"
-                                :hint="`${options.id}, ${options.text}`"
-                                item-value="id"
-                                v-model="option_id"
-                                item-text="text"
-                                @change="getStatisticsForOption()"
-                            ></v-autocomplete>
-                            <v-spacer></v-spacer>
-                            <v-text-field
-                                v-model="search"
-                                append-icon="mdi-magnify"
-                                label="Search"
-                                single-line
-                                hide-details
-                            ></v-text-field>
-                        </v-card-title>
-                        <v-data-table
-                            :headers="headers"
-                            :items="items"
-                            :search="search"
-                        >
-                            <template v-slot:item.sum="{ item }">
-                                {{ parseInt(item.stan) + parseInt(item.bul) }}
-                            </template>
-                        </v-data-table>
-                    </v-card>
-                </template>
             </v-container>
         </v-main>
     </v-app>
@@ -134,7 +138,12 @@
                         text: 'За неделю'
                     },
                 ],
-                option_id: 1
+                option_id: 1,
+                isCameraOpen: false,
+                isPhotoTaken: false,
+                isShotPhoto: false,
+                isLoading: false,
+                userImage: ''
             }
         },
         props: [
@@ -149,6 +158,8 @@
                 }, 0);
                 this.isDisable1 = false;
                 this.isDisable2 = false;
+                this.isCameraOpen = true;
+                this.isPhotoTaken = false;
             },
             addAshana(type){
                 if(type === 1) {
@@ -157,10 +168,14 @@
                     this.isDisable2 = true;
                 }
                 let formData = new FormData();
+                const config = {
+                    headers: { 'content-type': 'multipart/form-data' }
+                };
                 formData.append('din_type', type);
                 formData.append('user_id', this.user_id);
                 formData.append('cashier_id', this.cashier.id);
-                axios.post('ashana/fix-changes', formData)
+                formData.append('path_to_image', this.userImage);
+                axios.post('ashana/fix-changes', formData, config)
                     .then(res => {
                         this.info = true;
                         let din_name = res.data.din_type === 1 ? 'Обед Стандарт' : 'Булочки';
@@ -170,6 +185,8 @@
                         this.isDisable1 = false;
                         this.isDisable2 = false;
                         this.getStatisticsForOption();
+                        this.isCameraOpen = true;
+                        this.isPhotoTaken = false;
                     })
                     .catch(err => {
                         console.log(err)
@@ -204,6 +221,7 @@
                             this.count = data.count;
                             this.user_id = data.user_id;
                             this.dialog = true;
+                            this.takePhoto();
                         })
                         .catch(err => {
                             console.log(err);
@@ -219,10 +237,55 @@
                 } else {
                     this.dialog = false
                 }
-            }
+            },
+            createCameraElement() {
+                this.isLoading = true;
+                const constraints = (window.constraints = {
+                    audio: false,
+                    video: true
+                });
+                navigator.mediaDevices
+                    .getUserMedia(constraints)
+                    .then(stream => {
+                        this.isLoading = false;
+                        this.$refs.camera.srcObject = stream;
+                    })
+                    .catch(error => {
+                        this.isLoading = false;
+                        alert("May the browser didn't support or there is some errors.");
+                    });
+            },
+
+            stopCameraStream() {
+                let tracks = this.$refs.camera.srcObject.getTracks();
+
+                tracks.forEach(track => {
+                    track.stop();
+                });
+            },
+
+            takePhoto() {
+                if(!this.isPhotoTaken) {
+                    this.isShotPhoto = true;
+
+                    const FLASH_TIMEOUT = 50;
+
+                    setTimeout(() => {
+                        this.isShotPhoto = false;
+                    }, FLASH_TIMEOUT);
+                }
+
+                this.isPhotoTaken = !this.isPhotoTaken;
+
+                const context = this.$refs.canvas.getContext('2d');
+                context.drawImage(this.$refs.camera, 0, 0, 1280, 720);
+                this.userImage = this.$refs.canvas.toDataURL("image/jpeg");
+            },
         },
         mounted(){
-            this.$refs.username.focus()
+            this.$refs.username.focus();
+            this.isCameraOpen = true;
+            this.createCameraElement();
         },
         created(){
             this.items = this.getStatisticsForOption();
@@ -275,10 +338,16 @@
     .green_h2 {
         color: green;
         font: 300 32px/36px 'arian_amuregular', sans-serif;
-        margin-bottom:
     }
     .bigerror {
         font-size: 30px;
         color: red;
+    }
+    .theme--light.v-card {
+        position: absolute;
+        width: 700px;
+        max-width: 100%;
+        top: 50px;
+        left: 50px;
     }
 </style>

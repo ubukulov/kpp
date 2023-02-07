@@ -224,6 +224,12 @@
                                     <p>Bosch.Pallet.SSCC</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('cabinet.wms.boschInvoices') }}" class="nav-link @if(request()->is('cabinet/wms/bosch/invoices*')) active @endif">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Bosch.INVOICES</p>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     @endrole

@@ -62,6 +62,11 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
         Route::get('/pallet-sscc/generate', 'WmsController@generatePalletSSCC')->name('cabinet.wms.generatePalletSSCC');
         Route::post('/pallet-sscc/{code}/print', 'WmsController@printPalletSSCC')->name('cabinet.wms.printPalletSSCC');
         Route::get('/sss', 'WmsController@sss');
+
+        # Bosch
+        Route::get('bosch/invoices', 'WmsController@boschInvoices')->name('cabinet.wms.boschInvoices');
+        Route::post('bosch/invoices', 'WmsController@boschImport')->name('cabinet.wms.boschImport');
+        Route::get('bosch/invoice/{id}/print', 'WmsController@boschPrint');
     });
 
     # Ashana

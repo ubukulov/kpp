@@ -95,30 +95,34 @@
                                         ></v-autocomplete>
                                     </v-col>
 
-                                    <v-col md="4">
+                                    <v-col md="3">
+                                        <v-autocomplete
+                                            :hint="`${kitchens_reports_type.value}, ${kitchens_reports_type.text}`"
+                                            :items="kitchens_reports_type"
+                                            v-model="krt_id"
+                                            item-value="value"
+                                            item-text="text"
+                                            label="Тип отчета"
+                                            required
+                                        ></v-autocomplete>
+                                    </v-col>
+
+                                    <v-col md="3">
                                         <v-text-field
-                                            v-model="standart"
+                                            v-if="krt_id === 1"
+                                            v-model="count_work_day"
                                             type="number"
-                                            label="Стандарт"
+                                            label="Количество рабочих дней"
                                             required
                                         ></v-text-field>
                                     </v-col>
 
-                                    <v-col md="4">
-                                        <v-text-field
-                                            v-model="bulochki"
-                                            type="number"
-                                            label="Булочки"
-                                            required
-                                        ></v-text-field>
-                                    </v-col>
-
-                                    <v-col md="4">
+                                    <v-col md="3">
                                         <v-btn type="button" @click="getAshanaLogs()" class="primary">Показать</v-btn>
                                     </v-col>
                                 </v-row>
 
-                                <template>
+                                <template v-if="krt_id === 0">
                                     <v-card>
                                         <v-card-title>
                                             Список пользователей
@@ -163,6 +167,59 @@
                                             <template v-slot:item.din_type="{item}">
                                                 <span v-if="item.din_type == 1">Стандарт</span>
                                                 <span v-else>Булочки</span>
+                                            </template>
+                                        </v-data-table>
+
+                                    </v-card>
+                                </template>
+
+                                <template v-if="krt_id === 1">
+                                    <v-card>
+                                        <v-card-title>
+                                            Список пользователей
+                                            <v-spacer></v-spacer>
+                                            <v-text-field
+                                                v-model="search"
+                                                append-icon="mdi-magnify"
+                                                label="Поиск"
+                                                single-line
+                                                hide-details
+                                            ></v-text-field>
+                                            <v-spacer></v-spacer>
+                                            <v-btn
+                                                v-if="users_new.length > 0"
+                                                @click="toExcel"
+                                            >
+                                                <v-icon
+                                                    middle
+                                                >
+                                                    mdi-download
+                                                </v-icon>
+                                                Скачать
+                                            </v-btn>
+                                        </v-card-title>
+                                        <v-data-table
+                                            :headers="headers_new"
+                                            :items="users_new"
+                                            :search="search"
+                                            id="printTable"
+                                            disable-pagination
+                                            hide-default-footer
+                                        >
+                                            <template v-slot:item.id="{index}">
+                                                <td>@{{index+1}}</td>
+                                            </template>
+
+                                            <template v-slot:item.summ="{item}">
+                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) }}</td>
+                                            </template>
+
+                                            <template v-slot:item.work_day="{item}">
+                                                <td>@{{ count_work_day }}</td>
+                                            </template>
+
+                                            <template v-slot:item.one_hundred="{item}">
+                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) > count_work_day ? (parseInt(item.abk) + parseInt(item.kpp3)) - count_work_day : 0 }}</td>
                                             </template>
                                         </v-data-table>
 
@@ -222,7 +279,24 @@
                         { text: 'Тип обеда', value: 'din_type' },
                         { text: 'Талонов', value: 'cnt' },
                     ],
+                    headers_new: [
+                        {
+                            text: '№',
+                            align: 'start',
+                            sortable: false,
+                            value: 'id',
+                        },
+                        { text: 'Компания', value: 'company_name' },
+                        { text: 'Ф.И.О', value: 'full_name' },
+                        { text: 'Должность', value: 'p_name' },
+                        { text: 'АБК', value: 'abk' },
+                        { text: 'КПП3', value: 'kpp3' },
+                        { text: 'Сумма', value: 'summ' },
+                        { text: 'Рабочих дней', value: 'work_day' },
+                        { text: 'Превышение, 100% оплата', value: 'one_hundred' },
+                    ],
                     users: [],
+                    users_new: [],
                     link_excel: false,
                     href_excel: "",
                     user_id: 0,
@@ -236,6 +310,12 @@
                         { text: 'ИП Cargotraffic', value: 1097}
                     ],
                     kitchen_id: 0,
+                    kitchens_reports_type: [
+                        { text: 'Старый отчет', value: 0 },
+                        { text: 'Новый отчет', value: 1}
+                    ],
+                    krt_id: 0,
+                    count_work_day: 22,
                 }
             },
             methods: {
@@ -245,10 +325,17 @@
                     formData.append('cashier_id', this.kitchen_id);
                     formData.append('from_date', this.from_date);
                     formData.append('to_date', this.to_date);
+                    formData.append('krt_id', this.krt_id);
+                    formData.append('count_work_day', this.count_work_day);
                     axios.post('/cabinet/ashana/get-logs', formData)
                         .then(res => {
                             console.log(res.data)
-                            this.users = res.data;
+                            if(this.krt_id === 0) {
+                                this.users = res.data;
+                            } else {
+                                this.users_new = res.data;
+                            }
+
                         })
                         .catch(err => console.log(err))
                 },
