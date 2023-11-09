@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasRolesAndPermissions;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable, HasRolesAndPermissions;
+    use Notifiable, HasRolesAndPermissions, HasApiTokens;
 
     protected $fillable = [
-        'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'email', 'password',
-        'computer_name', 'printer_name', 'kpp_name',
-        'remember_token', 'uuid', 'image', 'created_at', 'updated_at'
+        'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'iin', 'email', 'password',
+        'computer_name', 'printer_name', 'kpp_name', 'remember_token', 'uuid', 'image', 'badge', 'settings'
+    ];
+
+    protected $dates = [
+        'created_at', 'updated_at'
     ];
 
     public function company()
@@ -33,6 +38,16 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function countAshanaToday()
+    {
+        return $this->hasMany(AshanaLog::class)->whereDate('date', Carbon::now())->count();
+    }
+
+    public function ashana()
+    {
+        return $this->hasMany(AshanaLog::class);
+    }
+
     public function setUuidIfNot()
     {
         $str = $this->id."-".$this->full_name;
@@ -43,7 +58,7 @@ class User extends Authenticatable
     public function getUuid()
     {
         if(empty($this->uuid)) {
-            $this->setUuidIfNot();
+            //$this->setUuidIfNot();
         }
         return $this->uuid;
     }
@@ -68,8 +83,7 @@ class User extends Authenticatable
     {
         $user_history = UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
         if(!$user_history){
-            UserHistory::create(['user_id' => $this->id, 'status' => 'works']);
-            return UserHistory::where(['user_id' => $this->id])->orderBy('id', 'DESC')->first();
+            return UserHistory::create(['user_id' => $this->id, 'status' => 'works']);
         }
 
         return $user_history;
@@ -86,5 +100,32 @@ class User extends Authenticatable
                 return true;
             }
         }
+
+        return false;
+    }
+
+    public function generateUniqueRandomNumber()
+    {
+        $number = rand(1000000, 9999999);
+        $user = User::whereUuid($number)->first();
+
+        if($user) {
+            $this->generateUniqueRandomNumber();
+        }
+
+        return $number;
+    }
+
+    public function hasItemInSettings($name, $key, $value)
+    {
+        $settings = json_decode($this->settings, true);
+        if(!empty($settings) && isset($settings[$name][$key])) {
+            $departments = explode(",", $settings[$name][$key]);
+            if(in_array($value, $departments)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

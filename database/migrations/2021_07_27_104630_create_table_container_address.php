@@ -17,12 +17,11 @@ class CreateTableContainerAddress extends Migration
             $table->id();
             $table->string('title');
             $table->string('zone');
-            $table->enum('kind', ['r', 'k', 'v']);
+            $table->enum('kind', ['r', 'k', 'in', 'out', 'pole', 'spreder']);
             $table->integer('row');
             $table->integer('place');
             $table->integer('floor');
             $table->string('name')->unique();
-            $table->string('space')->default('damu');
             $table->timestamps();
         });
     }

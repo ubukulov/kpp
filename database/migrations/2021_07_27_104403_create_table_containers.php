@@ -16,7 +16,7 @@ class CreateTableContainers extends Migration
         Schema::create('containers', function (Blueprint $table) {
             $table->id();
             $table->string('number')->unique();
-            $table->enum('container_type', ['40', '20']);
+            $table->enum('container_type', ['40', '45', '20']);
             $table->string('company')->nullable();
             $table->timestamps();
         });

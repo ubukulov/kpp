@@ -17,3 +17,5 @@ yarn-error.log
 /public/files
 /.idea
 /public/task_files
+/public/marking_files
+/public/images

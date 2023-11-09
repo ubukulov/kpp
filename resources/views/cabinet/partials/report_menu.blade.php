@@ -15,10 +15,9 @@
                 </ul>
             </li>--}}
             <li><a @if(request()->is('cabinet/reports*')) class="active_report_menu" @endif href="{{ route('cabinet.report.index') }}">Список пропусков</a></li>
-            <li><a href="http://bestwebgallery.com">Best Web Gallery</a></li>
         </ul>
     </li>
-    <li><a href="#">По сотрудникам</a>
+    <!--<li><a href="#">По сотрудникам</a>
         <ul>
             <li><a href="#">Sales</a></li>
             <li><a href="#">Another Link</a></li>
@@ -30,7 +29,7 @@
                 </ul>
             </li>--}}
         </ul>
-    </li>
+    </li>-->
     {{--<li><a href="#">About</a></li>
     <li><a href="#">Contact Us</a></li>--}}
 </ul>

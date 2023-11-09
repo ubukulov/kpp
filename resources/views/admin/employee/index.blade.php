@@ -24,7 +24,10 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <table id="example1" class="table table-bordered table-striped">
+
+                    @include('partials.emp_filters')
+
+                    <table id="emp_table" class="table table-bordered table-striped">
                         <thead>
                         <tr>
                             <th></th>
@@ -32,9 +35,9 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
+                            <th>ИИН</th>
                             <th>Должность</th>
                             <th>Статус</th>
-{{--                            <th>Email</th>--}}
                             <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
@@ -46,40 +49,52 @@
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->full_name }}</td>
                             <td>
-                                {{ $employee->company->short_ru_name }}
+                                {{ $employee->short_ru_name }}
                             </td>
                             <td>
-                                @if($employee->department_id == 0)
-                                    Не указано
-                                @else
-                                    {{ $employee->department->title }}
+                                {{ $employee->department_name }}
+                            </td>
+                            <td>
+                                {{ $employee->iin }}
+                            </td>
+                            <td>
+                                {{ $employee->position_name }}
+                            </td>
+                            <td>
+                                    {{ trans("words.".$employee->status) }}
+                            </td>
+                            <td>
+                                @if(strlen($employee->uuid) == 7)
+                                    <i title="Новый бейджик" style="font-size: 20px; color: green;" class="fa fa-id-card" aria-hidden="true"></i> &nbsp;
                                 @endif
-                            </td>
-                            <td>
-                                {{ $employee->position->title }}
-                            </td>
-                            <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
-{{--                            <td>{{ $employee->email }}</td>--}}
-                            <td>
                                 <a target="_blank" href="{{ route('admin.employee.badge', ['id' => $employee->id]) }}">
                                     <i class="fa fa-print"></i>
                                 </a>
+                                &nbsp;&nbsp;
+
+                                @if($employee->badge == 1)
+                                    <i style="font-size: 20px; color: green;" class="fa fa-check-circle"></i>
+                                @endif
                             </td>
                             <td>
-                                    <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
+                                <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
+                                &nbsp;&nbsp;
+                                <button type="button" class="btn btn-success" @click="authByUser({{ $employee->id }})">Войти</button>
                             </td>
                         </tr>
                         @endforeach
                         </tbody>
                         <tfoot>
                         <tr>
+                            <th></th>
                             <th>ID</th>
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
+                            <th>ИИН</th>
                             <th>Должность</th>
                             <th>Статус</th>
-{{--                            <th>Email</th>--}}
+                            <th>Бейджик</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>
@@ -103,12 +118,38 @@
 
     <script>
         $(function () {
-            $("#example1").DataTable({
+            $("#emp_table").DataTable({
                 "responsive": true,
                 "autoWidth": false,
                 "language": {
                     "url": "/dist/Russian.json"
                 }
+            });
+
+            $.fn.dataTable.ext.search.push(
+                function( settings, searchData, index, rowData, counter ) {
+
+                    var offices = $('input:checkbox[name="emp_status"]:checked').map(function() {
+                        return this.value;
+                    }).get();
+
+
+                    if (offices.length === 0) {
+                        return true;
+                    }
+
+                    if (offices.indexOf(searchData[7]) !== -1) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            );
+
+            var table = $('#emp_table').DataTable();
+
+            $('input:checkbox').on('change', function () {
+                table.draw();
             });
         });
     </script>
@@ -127,6 +168,9 @@
                     if(this.ids.length != 0) {
                         window.open('/admin/employee/badges/'+this.ids.join(), '_blank');
                     }
+                },
+                authByUser(id){
+                    window.open('/admin/employee/' + id + '/auth' , '_blank');
                 }
             },
             created(){

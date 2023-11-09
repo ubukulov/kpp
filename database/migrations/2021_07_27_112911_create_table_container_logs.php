@@ -18,7 +18,7 @@ class CreateTableContainerLogs extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('container_id');
             $table->string('container_number');
-            $table->enum('operation_type', ['incoming', 'received', 'in_order', 'shipped', 'completed']);
+            $table->enum('operation_type', ['incoming', 'received', 'in_order', 'shipped', 'completed', 'canceled', 'edit', 'edit_completed']);
             $table->unsignedBigInteger('technique_id')->nullable();
             $table->string('address_from')->nullable();
             $table->string('address_to')->nullable();

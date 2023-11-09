@@ -1,6 +1,6 @@
 @extends('layouts.app')
-    @push('styles')
-    @endpush
+@push('styles')
+@endpush
 @section('content')
     <kpp-component
         :datetime="{{json_encode(date('d.m.Y H:i'))}}"
@@ -8,6 +8,7 @@
         :capacity="{{json_encode($lift_capacity)}}"
         :bodytypes="{{json_encode($body_type)}}"
         :directions="{{json_encode($directions)}}"
+        :user="{{json_encode(Auth::user())}}"
     ></kpp-component>
 
     @push('scripts')

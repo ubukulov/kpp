@@ -8,7 +8,7 @@
     <!-- general form elements -->
     <div class="card card-primary">
         <div class="card-header">
-            <h3 class="card-title">Добавить пользователя</h3>
+            <h3 class="card-title">Добавить сотрудника</h3>
         </div>
         <!-- /.card-header -->
         <!-- form start -->
@@ -18,16 +18,24 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Укажите компанию</label>
-                            <select name="company_id" class="form-control select2bs4" style="width: 100%;">
-                                @foreach($companies as $company)
-                                    <option value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
-                                @endforeach
-                            </select>
+                            <label>Компания</label>
+                            @if(Auth::user()->hasRole('otdel-kadrov'))
+                                <select name="company_id" class="form-control select2bs4" style="width: 100%;">
+                                    @foreach($companies as $company)
+                                        <option value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <select disabled name="company_id" class="form-control select2bs4" style="width: 100%;">
+                                    @foreach($companies as $company)
+                                        <option @if(Auth::user()->company_id == $company->id) selected @endif value="{{ $company->id }}">{{ $company->short_ru_name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
 
                         <div class="form-group">
-                            <label>Укажите подразделению</label>
+                            <label>Подразделение</label>
                             <select name="department_id" class="form-control select2bs4" style="width: 100%;">
                                 @foreach($departments as $department)
                                     <option value="{{ $department->id }}">{{ $department->title }}</option>
@@ -36,29 +44,34 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Укажите должность</label>
+                            <label>Должность</label>
                             <select name="position_id" class="form-control select2bs4" style="width: 100%;">
                                 @foreach($positions as $position)
                                     <option value="{{ $position->id }}">{{ $position->title }}</option>
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>ФИО</label>
-                            <input type="text" class="form-control" name="full_name" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Телефон</label>
-                            <input type="text" class="form-control" name="phone">
-                        </div>
 
                         <div class="form-group">
                             <label>Email</label>
                             <input type="email" class="form-control" name="email">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>ФИО</label><span style="color: red;">*</span>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Телефон</label><span style="color: red;">*</span>
+                            <input type="text" required class="form-control" name="phone">
+                        </div>
+
+                        <div class="form-group">
+                            <label>ИИН</label><span style="color: red;">*</span>
+                            <input type="text" required class="form-control" name="iin">
                         </div>
 
                         <div class="form-group">
@@ -69,12 +82,11 @@
                 </div>
 
                 <hr>
-                <p>Укажите данные о трудоустройстве</p>
 
                 <div class="row">
                     <div class="col-md-2">
                         <div class="form-group">
-                            <label>Статус</label>
+                            <label>Текущий статус</label>
                             <select name="status" class="form-control">
                                 <option value="works">Работает</option>
                                 <option value="fired">Уволен</option>

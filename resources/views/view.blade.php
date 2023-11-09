@@ -38,7 +38,7 @@
 
                     <div class="col-md-12">
                         <v-row>
-                            <v-col md="2">
+                            <v-col md="1">
                                 <v-menu
                                     v-model="menu2"
                                     :close-on-content-click="false"
@@ -61,7 +61,7 @@
                                 </v-menu>
                             </v-col>
 
-                            <v-col md="2">
+                            <v-col md="1">
                                 <v-menu
                                     class="menu3"
                                     v-model="menu3"
@@ -88,6 +88,7 @@
                             <v-col md="2">
                                 <div class="form-group">
                                     <v-autocomplete
+                                        label="Компания"
                                         :items="companies"
                                         :hint="`${companies.id}, ${companies.short_en_name}`"
                                         :search-input.sync="searchInput"
@@ -97,6 +98,17 @@
                                         autocomplete
                                     ></v-autocomplete>
                                 </div>
+                            </v-col>
+
+                            <v-col md="1">
+                                <v-autocomplete
+                                    :items="types"
+                                    :hint="`${types.id}, ${types.text}`"
+                                    item-value="id"
+                                    v-model="types_id"
+                                    item-text="text"
+                                    autocomplete
+                                ></v-autocomplete>
                             </v-col>
 
                             <v-col md="2">
@@ -148,8 +160,9 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label>№тех.паспорта</label>
-                                            <input placeholder="AB020111" style="text-transform: uppercase;" v-model="tex_number" tabindex="1" type="text" class="form-control">
+                                            <label>Гос.номер</label>
+
+                                            <input style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-4" style="padding-top: 40px;">
@@ -160,8 +173,8 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Гос.номер</label>
-                                            <input disabled style="text-transform: uppercase;" v-model="gov_number" tabindex="2" type="text" placeholder="888BBZ05" required name="gov_number" class="form-control">
+                                            <label>№тех.паспорта</label>
+                                            <input disabled placeholder="AB020111" style="text-transform: uppercase;" v-model="tex_number" tabindex="1" type="text" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -328,21 +341,26 @@
                     {id: 1, text: 'Свод'},
                 ],
                 report_id: 0,
+                types: [
+                    {id: 0, text: 'Разовый'},
+                    {id: 1, text: 'Постоянный'},
+                ],
+                types_id: 0,
                 kpps: [
                     {id: 0, text: 'Все'},
-                    {id: 1, text: 'КПП 2'},
-                    {id: 2, text: 'КПП 4'},
-                    {id: 3, text: 'КПП 5'},
+                    {id: 1, text: 'КПП 1'},
+                    {id: 2, text: 'КПП 2'},
+                    {id: 3, text: 'КПП 4'},
                 ],
                 kpp_id: 0,
             }
         },
         methods: {
             checkCar(){
-                axios.get('/view-detail-info-permit/get-car-info/'+this.tex_number)
+                axios.get('/view-detail-info-permit/get-car-info/'+this.gov_number)
                     .then(res => {
                         console.log(res)
-                        this.gov_number = res.data.gov_number
+                        this.tex_number = res.data.tex_number
                         this.mark_car = res.data.mark_car
                         this.pr_number = res.data.pr_number
                         this.date_in = res.data.date_in
@@ -408,6 +426,7 @@
                 formData.append('company_id', this.company_id);
                 formData.append('report_id', this.report_id);
                 formData.append('kpp_id', this.kpp_id);
+                formData.append('types_id', this.types_id);
                 axios.post('/view-detail-info-permit/download-permits-for-selected-time', formData)
                     .then(res => {
                         window.location.href = res.data;

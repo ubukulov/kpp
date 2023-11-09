@@ -1,7 +1,44 @@
 <template>
     <div class="row">
         <div class="col-md-12 left_content">
-            <div class="row">
+            <div v-if="user.kpp_name == 'kpp4'" class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Вид операции</label>
+                        <select @change="selectedOperationType($event)" v-model="operation_type" tabindex="10" name="operation_type" id="type3" class="form-control">
+                            <option value="1">Погрузка</option>
+                            <option value="2">Разгрузка</option>
+                            <option value="3">Другие действия</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div v-show="parseInt(operation_type) !== 3" class="col-md-3">
+                    <div class="form-group">
+                        <label style="color: red;">Номер контейнера (новые)</label>
+                        <input placeholder="ABCD1234567, ASCF7654321" onkeyup="return no_cirilic(this);" min="11" max="23" maxlength="23" style="text-transform: uppercase;" v-model="incoming_container_number" type="text" class="form-control">
+                    </div>
+                </div>
+
+
+
+                <div v-show="parseInt(operation_type) !== 3" class="col-md-5" style="padding-top: 52px;">
+                    <button type="button" @click="checkContainer()" class="btn btn-warning">Проверить!!!</button>
+                </div>
+
+                <div v-if="!isRequiredForVerification && operation_type !== 3" class="col-md-12">
+                    <v-alert
+                        dense
+                        border="left"
+                        type="warning"
+                        v-html="info"
+                    >
+
+                    </v-alert>
+                </div>
+            </div>
+
+            <div v-show="isRequiredForVerification" class="row">
                 <div class="col-md-6">
                     <h4 style="font-style: italic;">Данные о машине</h4>
                     <div class="row">
@@ -26,7 +63,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Номер прицепа</label>
-                                <input v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
+                                <input onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" v-model="pr_number" tabindex="4" type="text" name="pr_number" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -42,46 +79,54 @@
                             <div class="form-group">
                                 <label>Грузоподъемность ТС</label>
                                 <!--                        <input v-model="company" tabindex="9" type="text" name="company" required class="form-control">-->
-                                <v-autocomplete
+                                <v-select
                                     :items="capacity"
                                     class="form-control"
                                     :hint="`${capacity.id}, ${capacity.title}`"
                                     item-value="id"
                                     v-model="capacity_id"
                                     item-text="title"
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Тип кузова</label>
-                                <v-autocomplete
+                                <v-select
                                     :items="bodytypes"
                                     class="form-control"
                                     :hint="`${bodytypes.id}, ${bodytypes.title}`"
                                     item-value="id"
                                     v-model="bt_id"
                                     item-text="title"
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label style="color: red;">Номер контейнера (новые)</label>
-                                <input placeholder="ABCD1234567" onkeyup="return no_cirilic(this);" min="11" max="11" maxlength="11" style="text-transform: uppercase;font-size: 16px !important;" v-model="incoming_container_number" type="text" class="form-control">
+                                <input placeholder="ABCD1234567, ASCF7654321" onkeyup="return no_cirilic(this);" min="11" max="23" maxlength="23" style="text-transform: uppercase;font-size: 16px !important;" v-model="incoming_container_number" type="text" class="form-control">
                             </div>
                         </div>
                     </div>
 
-                    <div v-if="operation_type != 3" class="form-group">
-                        <label>Собственник по техпаспорту/частник</label>
-                        <input type="text" class="form-control" v-model="from_company">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div v-if="operation_type !== 3" class="form-group">
+                                <label>Собственник по техпаспорту/частник</label>
+                                <input type="text" class="form-control" v-model="from_company">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Какая транспортная компания наняла?</label>
+                                <input type="text" class="form-control" v-model="employer_name">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Какая транспортная компания наняла?</label>
-                        <input type="text" class="form-control" v-model="employer_name">
-                    </div>
+
+
 
                     <div class="form-group">
                         <label>Дата заезда</label>
@@ -121,49 +166,62 @@
                     <div class="form-group">
                         <label>Компания</label>
                         <v-autocomplete
-                            :items="companies"
+                            :items="filteredCompanies"
                             class="form-control"
-                            :hint="`${companies.id}, ${companies.short_en_name}`"
+                            :hint="`${filteredCompanies.id}, ${filteredCompanies.short_en_name}`"
                             :search-input.sync="searchInput"
                             item-value="id"
                             v-model="company_id"
                             item-text="short_en_name"
+                            @change="confirmSelectedItem()"
                             autocomplete
                         ></v-autocomplete>
                     </div>
 
-                    <div class="form-group">
-                        <label>Вид операции</label>
-                        <select v-model="operation_type" tabindex="10" name="operation_type" id="type" class="form-control">
-                            <option value="0"></option>
-                            <option value="1">Погрузка</option>
-                            <option value="2">Разгрузка</option>
-                            <option value="3">Другие действия</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Вид операции</label>
+                                <select v-model="operation_type" tabindex="10" name="operation_type" id="type" class="form-control">
+                                    <option value="0"></option>
+                                    <option value="1">Погрузка</option>
+                                    <option value="2">Разгрузка</option>
+                                    <option value="3">Другие действия</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div v-if="operation_type > 1" class="form-group">
+                                <label>Номер инвойса/CMR</label>
+                                <input type="text" class="form-control" v-model="invoice_cmr_number">
+                            </div>
+                        </div>
                     </div>
 
-                    <div v-if="operation_type != 3" class="row">
+
+
+                    <!--<div v-if="operation_type !== 3" class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Маршрут</label>
-                                <v-autocomplete
+                                <v-select
                                     :items="directions"
                                     class="form-control"
                                     :hint="`${directions.id}, ${directions.title}`"
                                     item-value="id"
                                     v-model="direction_id"
                                     item-text="title"
-                                    autocomplete
-                                ></v-autocomplete>
+                                ></v-select>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div v-if="direction_id == 6" class="form-group">
+                            <div v-if="direction_id === 6" class="form-group">
                                 <label>Напишите</label>
                                 <input style="font-size: 16px !important;" type="text" class="form-control" v-model="to_city">
                             </div>
                         </div>
-                    </div>
+                    </div>-->
 
                     <div class="form-group">
                         <label>Иностранная машина?</label>
@@ -196,7 +254,7 @@
                 <div class="col-md-12">
                     <p v-if="errors.length" style="margin-bottom: 0px !important;">
                         <b>Пожалуйста исправьте указанные ошибки:</b>
-                    <ul style="color: red; padding-left: 15px; list-style: circle; text-align: left;">
+                    <ul style="color: #cc0000; padding-left: 15px; list-style: circle; text-align: left;">
                         <li v-for="error in errors">{{error}}</li>
                     </ul>
                     </p>
@@ -204,8 +262,7 @@
 
                 <div class="col-md-12">
                     <div class="form-group">
-                        <button id="ppb" :disabled="orderButtonDisabled" @click="createPermitByKpp()" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
-                        &nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-warning" @click="enablePrintButton()">Активировать кнопку</button>
+                        <button @click="createPermitByKpp()" :disabled="active_btn" style="padding: 10px 50px; font-size: 20px;" type="button" class="btn btn-success">Создать пропуск и печатать</button>
                     </div>
                 </div>
             </div>
@@ -227,7 +284,7 @@
                     <th scope="col">Вид операции</th>
                     <th scope="col">Телефон</th>
                     <th scope="col">Гос.номер</th>
-                    <th scope="col">Печать</th>
+                    <th scope="col">Действие</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -237,10 +294,10 @@
                     <td>{{ permit.tex_number }}</td>
                     <td>{{ permit.ud_number }}</td>
                     <td>{{ permit.company }}</td>
-                    <td v-if="permit.operation_type == 1">
+                    <td v-if="permit.operation_type === 1">
                         Погрузка
                     </td>
-                    <td v-else-if="permit.operation_type == 2">
+                    <td v-else-if="permit.operation_type === 2">
                         Разгрузка
                     </td>
                     <td v-else>
@@ -250,11 +307,20 @@
                     <td>{{ permit.gov_number }}</td>
                     <td>
                         <v-icon
+                            title="Распечатать пропуск"
                             middle
                             @click="print_r(permit.id)"
                         >
                             mdi-printer
                         </v-icon>
+
+                        <!--<v-icon
+                            title="Распечатать пропуск"
+                            middle
+                            @click="window.print()"
+                        >
+                            mdi-printer-alert
+                        </v-icon>-->
                     </td>
                 </tr>
                 </tbody>
@@ -292,10 +358,14 @@
                 from_company: '',
                 to_city: '',
                 direction_id: 0,
-                orderButtonDisabled: false,
                 employer_name: '',
                 incoming_container_number: '',
                 foreign_car: 0,
+                active_btn: false,
+                filteredCompanies: [],
+                invoice_cmr_number: null,
+                isRequiredForVerification: false,
+                info: 'Перед выдачой пропуска нужно проверить контейнер на заявку!!!'
             }
         },
         props: [
@@ -303,13 +373,20 @@
             'companies',
             'capacity',
             'bodytypes',
-            'directions'
+            'directions',
+            'user'
         ],
         methods: {
+            selectedOperationType(event){
+                if(parseInt(event.target.value) === 3) {
+                    this.isRequiredForVerification = true;
+                } else {
+                    this.isRequiredForVerification = false;
+                }
+            },
             checkCar(){
                 axios.get('/get-car-info/'+this.tex_number)
                     .then(res => {
-                        console.log(res);
                         this.gov_number = res.data.gov_number;
                         this.mark_car = res.data.mark_car;
                         this.pr_number = res.data.pr_number;
@@ -319,7 +396,7 @@
                         this.from_company = res.data.from_company;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -329,12 +406,31 @@
             checkDriver(){
                 axios.get('/get-driver-info/'+this.ud_number)
                     .then(res => {
-                        console.log(res.data.fio)
-                        this.last_name = res.data.fio
-                        this.phone = res.data.phone
+                        this.last_name = res.data.fio;
+                        this.phone = res.data.phone;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
+                    })
+            },
+            checkContainer(){
+                let formData = new FormData();
+                formData.append('containers', this.incoming_container_number);
+                formData.append('operation_type', this.operation_type);
+                axios.post('/checking-container-for-application', formData)
+                    .then(res => {
+                        console.log(res);
+                        this.info = res.data;
+                        this.isRequiredForVerification = true;
+                    })
+                    .catch(err => {
+                        this.isRequiredForVerification = false;
+                        this.info = err.response.data;
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -364,7 +460,7 @@
                 if (!this.phone) {
                     this.errors.push('Укажите телефон');
                 }
-                if (this.company_id == 0) {
+                if (this.company_id === 0) {
                     this.errors.push('Укажите компанию');
                 }
                 if (this.operation_type == 0) {
@@ -382,8 +478,12 @@
                 if (this.incoming_container_number && this.incoming_container_number.length < 11) {
                     this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                 }
-
-                if (this.operation_type != 3) {
+                if (this.company_id == 91 && this.operation_type == 2) {
+                    if (!this.incoming_container_number) {
+                        this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
+                    }
+                }
+                /*if (this.operation_type != 3) {
                     if (this.direction_id == 0) {
                         this.errors.push('Укажите маршрут');
                     }
@@ -395,17 +495,31 @@
                             this.errors.push('Укажите названия маршрута ');
                         }
                     }
+                }*/
+
+                if (this.operation_type > 1) {
+                    if (!this.invoice_cmr_number) {
+                        this.errors.push('Укажите номер инвойса/CMR');
+                    }
+                    /*if (!this.from_company) {
+                        this.errors.push('Укажите транспортной компании/частник');
+                    }
+                    if (this.direction_id == 6) {
+                        if (!this.to_city) {
+                            this.errors.push('Укажите названия маршрута ');
+                        }
+                    }*/
                 }
 
                 if (this.foreign_car == 0) {
                     this.errors.push('Укажите поле "Машина иностранная?"');
                 }
-
-                if (this.errors.length == 0) {
-                    this.orderButtonDisabled = true;
+                if (this.errors.length === 0) {
                     const config = {
                         headers: { 'content-type': 'multipart/form-data' }
                     };
+
+                    this.active_btn = true;
 
                     let formData = new FormData();
                     formData.append('gov_number', this.gov_number);
@@ -421,12 +535,13 @@
                     formData.append('bt_id', this.bt_id);
                     formData.append('operation_type', this.operation_type);
                     formData.append('computer_name', this.computer_name);
-                    formData.append('direction_id', this.direction_id);
+                    //formData.append('direction_id', this.direction_id);
                     formData.append('employer_name', this.employer_name);
                     formData.append('foreign_car', this.foreign_car);
                     formData.append('incoming_container_number', this.incoming_container_number);
+                    formData.append('invoice_cmr_number', this.invoice_cmr_number);
 
-                    if(this.operation_type != 3) {
+                    if(this.operation_type !== 3) {
                         formData.append('from_company', this.from_company);
                         formData.append('to_city', this.to_city);
                     }
@@ -436,6 +551,7 @@
 
                     axios.post('/order-permit-by-kpp', formData, config)
                     .then(res => {
+                        this.active_btn = false;
                         this.gov_number = '';
                         this.tex_number = '';
                         this.mark_car = '';
@@ -445,8 +561,14 @@
                         this.last_name = '';
                         this.from_company = '';
                         this.employer_name = '';
+                        this.incoming_container_number = '';
                         this.to_city = '';
                         this.phone = '';
+                        /*if(this.user.kpp_name == 'kpp4') {
+                            this.company_id = 31;
+                        } else {
+                            this.company_id = 0;
+                        }*/
                         this.company_id = 0;
                         this.capacity_id = 0;
                         this.direction_id = 0;
@@ -455,16 +577,16 @@
                         $('#path_docs_fac').val('');
                         $('#path_docs_back').val('');
                         this.permits = this.getPermits();
-                        this.orderButtonDisabled = false;
                         $("body,html").animate({
                             scrollTop: 0
                         }, 800);
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
-                        } else {
-                            console.log(err);
+                        }
+                        if (err.response.status === 403) {
+                            this.errors.push(err.response.data);
                         }
                     })
                 }
@@ -475,7 +597,7 @@
                         this.permits = res.data;
                     })
                     .catch(err => {
-                        if(err.response.status == 401) {
+                        if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
                             console.log(err)
@@ -488,7 +610,7 @@
                     console.log(res)
                 })
                 .catch(err => {
-                    if(err.response.status == 401) {
+                    if(err.response.status === 401) {
                         window.location.href = '/login';
                     } else {
                         console.log(err)
@@ -497,17 +619,36 @@
             },
             currentDateTime(){
                 let d = new Date();
-                //return ((d.getDate() < 10)?"0":"") + d.getDate() +"."+(((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) +"."+ d.getFullYear()+" "+((d.getHours() < 10)?"0":"") + d.getHours() +":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
                 return d.getFullYear()+ "-" + (((d.getMonth()+1) < 10)?"0":"") + (d.getMonth()+1) + "-" + ((d.getDate() < 10)?"0":"") + d.getDate() +"T"+ ((d.getHours() < 10)?"0":"") + d.getHours() + ":"+ ((d.getMinutes() < 10)?"0":"") + d.getMinutes();
             },
-            enablePrintButton(){
-                $("#ppb").removeAttr('disabled');
+            confirmSelectedItem(){
+                if(this.company_id === 2 || this.company_id === 31) {
+                    if(confirm("Вы уверены что выбрали правильную компания? ")){
+                        //this.company_id = 0;
+                    } else {
+                        this.company_id = 0;
+                    }
+                }
             }
         },
         created(){
-            //this.date_in = this.currentDateTime();
             this.getPermits();
-            console.log("date_in",this.currentDateTime());
+            if(this.user.kpp_name === 'kpp4') {
+                this.isRequiredForVerification = false;
+            } else {
+                this.isRequiredForVerification = true;
+            }
+            let ss = this.user;
+
+            this.filteredCompanies = this.companies.filter(function(item){
+                if(ss.kpp_name === 'kpp4') {
+                    if (item.id === 2 || item.id === 31) {
+                        return item;
+                    }
+                } else {
+                    return item;
+                }
+            });
         }
     }
 </script>

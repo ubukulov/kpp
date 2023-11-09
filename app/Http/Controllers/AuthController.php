@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
-class AuthController extends BaseController
+class AuthController
 {
     public function loginForm()
     {
@@ -29,25 +32,51 @@ class AuthController extends BaseController
         ], $messages);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return back()->withErrors($validator->errors())->withInput();
         } else {
-            if(Auth::attempt($credentials, $remember)) {
-                if (Auth::user()->hasRole('kpp-operator')) {
-                    return response(route('security.kpp'));
-                } elseif (Auth::user()->hasRole('personal-control')){
-                    return response(route('personal.control'));
-                } elseif(Auth::user()->hasRole('otdel-kadrov')) {
-                    return response(route('cabinet.employees.index'));
-                } elseif(Auth::user()->hasRole('kt-operator')) {
-                    return response(route('kt.kt_operator'));
-                } elseif(Auth::user()->hasRole('kt-crane')) {
-                    return response(route('kt.kt_crane'));
-                } else {
-                    return response(route('cabinet.report.index'));
-                }
-            } else {
-                return response('По введенному Email или пароль не найден пользователь', 404);
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                throw ValidationException::withMessages([
+                    'email' => ['Не найдено пользователь с такими данными'],
+                ]);
             }
+
+            //dd($user->tokens);
+
+            $token = $user->createToken('API TOKEN')->plainTextToken;
+            session()->put('token', $token);
+
+            Auth::login($user);
+
+            //if(Auth::attempt($credentials, $remember)) {
+
+                if ($user->hasRole('kpp-operator')) {
+                    return redirect()->route('security.kpp');
+                } elseif ($user->hasRole('personal-control')){
+                    return redirect()->route('personal.control');
+                } elseif($user->hasRole('otdel-kadrov')) {
+                    return redirect()->route('cabinet.employees.index');
+                } elseif($user->hasRole('kt-operator')) {
+                    return redirect()->route('kt.kt_operator');
+                } elseif($user->hasRole('kt-crane')) {
+                    return redirect()->route('kt.kt_crane');
+                } elseif($user->hasRole('kt-controller')) {
+                    return redirect()->route('kt.controller');
+                } elseif($user->hasRole('ashana')) {
+                    return redirect()->route('kitchen.index');
+                } elseif($user->hasRole('mark-manager')) {
+                    return redirect()->route('mark.index');
+                } elseif($user->hasRole('mark-dispatcher')) {
+                    return redirect()->route('mark.manager');
+                } elseif($user->hasRole('kpp-security')) {
+                    return redirect()->route('white.car.lists');
+                } else {
+                    return redirect()->route('cabinet');
+                }
+            /*} else {
+                return back()->with('message', 'Не найдено пользователь с такими данными');
+            }*/
         }
     }
 

@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\Company;
 use App\Models\Driver;
+use App\Models\Kpp;
 use App\Models\Permit;
+use App\Models\WclCompany;
+use App\Models\WclLog;
+use App\Models\WhiteCarList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use File;
+use Auth;
 
 class ViewController extends BaseController
 {
@@ -23,16 +28,20 @@ class ViewController extends BaseController
         $pre_month = DB::select("SELECT COUNT(*) as cnt FROM permits
                          WHERE date_in IS NOT NULL AND status='printed'
                          AND MONTH(date_in)=MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)) AND YEAR(date_in)=YEAR(NOW())");
+        $companies = Company::all();
 
-        return view('view', compact('cur_month', 'pre_month'));
+        return view('view', compact('cur_month', 'pre_month', 'companies'));
     }
 
-    public function getCarInfo($tex_number)
+    public function getCarInfo($gov_number)
     {
-        $tex_number = strtolower(trim($tex_number));
-        $car = Car::where(['cars.tex_number' => $tex_number])
-            ->join('permits', 'permits.tex_number', '=', 'cars.tex_number')
-            ->first();
+        $gov_number = strtolower(trim($gov_number));
+        $car = Car::where(['cars.gov_number' => $gov_number])->first();
+        if($car) {
+            $car = Car::where(['cars.gov_number' => $gov_number])
+                ->join('permits', 'permits.tex_number', 'cars.tex_number')
+                ->first();
+        }
         return json_encode($car);
     }
 
@@ -47,19 +56,37 @@ class ViewController extends BaseController
     {
         $data = $request->all();
         $report_id = $data['report_id'];
-        switch ($report_id) {
-            case 0:
-                $link_to_file = $this->generateLogs($data);
-                break;
+        $types_id = $data['types_id'];
+        if($types_id == 0) {
+            switch ($report_id) {
+                case 0:
+                    $link_to_file = $this->generateLogs($data);
+                    break;
 
-            case 1:
-                $link_to_file = $this->generateSvod($data);
-                break;
+                case 1:
+                    $link_to_file = $this->generateSvod($data);
+                    break;
 
-            default:
-                $link_to_file = $this->generateLogs($data);
-                break;
+                default:
+                    $link_to_file = $this->generateLogs($data);
+                    break;
+            }
+        } else {
+            switch ($report_id) {
+                case 0:
+                    $link_to_file = $this->generateLogsWcl($data);
+                    break;
+
+                case 1:
+                    $link_to_file = $this->generateSvodWcl($data);
+                    break;
+
+                default:
+                    $link_to_file = $this->generateLogsWcl($data);
+                    break;
+            }
         }
+
 
         return $link_to_file;
     }
@@ -77,15 +104,15 @@ class ViewController extends BaseController
                 break;
 
             case 1:
-                $kpp_name = "kpp2";
+                $kpp_name = "kpp1";
                 break;
 
             case 2:
-                $kpp_name = "kpp4";
+                $kpp_name = "kpp2";
                 break;
 
             case 3:
-                $kpp_name = "kpp5";
+                $kpp_name = "kpp4";
                 break;
         }
 
@@ -113,6 +140,7 @@ class ViewController extends BaseController
         $sheet->setCellValue('R1', 'Иностранная');
         $sheet->setCellValue('S1', 'Статус');
         $sheet->setCellValue('T1', 'Оформил');
+        $sheet->setCellValue('U1', 'КПП');
 
         if ($company_id == 0) {
             if($kpp_name == "") {
@@ -193,6 +221,7 @@ class ViewController extends BaseController
             $sheet->setCellValue('R'.$current_row,$foreign_car);
             $sheet->setCellValue('S'.$current_row,$permit->status);
             $sheet->setCellValue('T'.$current_row,$permit->is_driver);
+            $sheet->setCellValue('U'.$current_row, strtoupper($permit->kpp_name));
         }
 
         $writer = new Xlsx($spreadsheet);
@@ -211,25 +240,33 @@ class ViewController extends BaseController
         switch ($kpp_id) {
             case 0:
                 $kpp_name = "";
+                $name = "КПП (все)";
                 break;
 
             case 1:
-                $kpp_name = "kpp2";
+                $kpp_name = "kpp1";
+                $name = "КПП №1";
                 break;
 
             case 2:
-                $kpp_name = "kpp4";
+                $kpp_name = "kpp2";
+                $name = "КПП №2";
                 break;
 
             case 3:
-                $kpp_name = "kpp5";
+                $kpp_name = "kpp4";
+                $name = "КПП №4";
+                break;
+
+            default:
+                $name = "КПП (все)";
                 break;
         }
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('СВОД');
-        $str = "Отчет по заезду автомашин через КПП № 2 на объект «Даму» в период с $from_date по $to_date";
+        $str = "Отчет по заезду автомашин через $name на объект «Даму» в период с $from_date по $to_date";
         $sheet->mergeCells('A1:M1');
         $sheet->setCellValue('A1', $str);
         $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
@@ -315,6 +352,251 @@ class ViewController extends BaseController
 
         $writer = new Xlsx($spreadsheet);
         $filename = date('Y_m_d_H_i_s') . '_svods.xlsx';
+        $path_to_file = '/reports/it/' . $filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+    public function whiteCarLists()
+    {
+        $lists = WhiteCarList::/*where('kpp_name', '<>', 'kpp7')*/where('wcl_companies.status', 'ok')
+            ->selectRaw('white_car_lists.kpp_name, white_car_lists.gov_number, companies.short_ru_name, wcl_companies.id as wcl_com_id, white_car_lists.id')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'wcl_companies.company_id', '=', 'companies.id')
+            //->where('wcl_companies.status', 'ok')
+            //->where('wcl_companies.wcl_id', 1553)
+            ->get();
+        return view('white_car_lists', compact('lists'));
+    }
+
+    public function fixDateInTime(Request $request, $wcl_com_id)
+    {
+        $wcl_company = WclCompany::findOrFail($wcl_com_id);
+        $wcl_log = WclLog::create([
+            'wcl_com_id' => $wcl_com_id, 'gov_number' => $wcl_company->wcl->gov_number, 'company' => $wcl_company->company->short_ru_name
+        ]);
+
+        return response()->json($wcl_log);
+    }
+
+    public function searchByNumberInWCL(Request $request)
+    {
+        $search_number = $request->input('search_key');
+        /*$lists = WhiteCarList::where('wcl_companies.status', 'ok')
+            ->selectRaw('white_car_lists.kpp_name, white_car_lists.gov_number, companies.short_ru_name, wcl_companies.id as wcl_com_id, white_car_lists.id')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'wcl_companies.company_id', '=', 'companies.id')
+            ->where('white_car_lists.gov_number', 'LIKE', '%'.$search_number.'%')
+            ->get();*/
+
+        $lists = WhiteCarList::where('wcl_companies.status', 'ok')
+            ->selectRaw('white_car_lists.kpp_name, white_car_lists.gov_number, companies.short_ru_name, wcl_companies.id as wcl_com_id, white_car_lists.id, wcl_companies.company_id')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'wcl_companies.company_id', '=', 'companies.id')
+            ->where('white_car_lists.gov_number', 'LIKE', '%'.$search_number.'%')
+            ->get();
+
+        $user_kpp = Kpp::whereName(Auth::user()->kpp_name)->first();
+        foreach($lists as $list) {
+            $company = Company::findOrFail($list->company_id);
+            if($company->hasKpp(Auth::user()->kpp_name)) {
+                $list->kpp_name = $user_kpp->title . ". ЗАЕЗД РАЗРЕШЕН!";
+                $list->permit = true;
+            } else {
+                $kpps = $company->kpps;
+                $arr = [];
+                foreach($kpps as $kpp) {
+                    $arr[] = $kpp->title;
+                }
+
+                $list->kpp_name = $user_kpp->title . ". ЗАЕЗД ДОЛЖЕН ОСУЩЕСТВЛЯТЬСЯ ЧЕРЕЗ: " . implode(', ', $arr);
+                $list->permit = false;
+            }
+        }
+
+        return response()->json($lists);
+    }
+
+    public function generateLogsWcl($data)
+    {
+        $from_date = $data['from_date'];
+        $to_date = $data['to_date'];
+        $company_id = $data['company_id'];
+        $kpp_id = $data['kpp_id'];
+
+        /*switch ($kpp_id) {
+            case 0:
+                $kpp_name = "";
+                break;
+
+            case 1:
+                $kpp_name = "kpp1";
+                break;
+
+            case 2:
+                $kpp_name = "kpp2";
+                break;
+
+            case 3:
+                $kpp_name = "kpp4";
+                break;
+        }*/
+
+        $kpp_name = "";
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Список машин (белый список)');
+
+        $sheet->setCellValue('A1', 'Гос.номер');
+        $sheet->setCellValue('B1', 'Компания');
+        $sheet->setCellValue('C1', 'Марка');
+        $sheet->setCellValue('D1', 'ФИО');
+        $sheet->setCellValue('E1', 'Должность');
+        $sheet->setCellValue('F1', 'Дата');
+
+        if ($company_id == 0) {
+            if($kpp_name == "") {
+                $logs = WclLog::whereRaw("(wcl_logs.created_at >= ? AND wcl_logs.created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                    ->selectRaw('wcl_logs.*, white_car_lists.mark_car,white_car_lists.full_name,white_car_lists.position')
+                    ->join('wcl_companies', 'wcl_companies.id', 'wcl_logs.wcl_com_id')
+                    ->join('white_car_lists', 'white_car_lists.id', 'wcl_companies.wcl_id')
+                    ->get();
+            } else {
+                $logs = WclLog::whereRaw("(wcl_logs.created_at >= ? AND wcl_logs.created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                    ->selectRaw('wcl_logs.*, white_car_lists.mark_car,white_car_lists.full_name,white_car_lists.position')
+                    ->join('wcl_companies', 'wcl_companies.id', 'wcl_logs.wcl_com_id')
+                    ->join('white_car_lists', 'white_car_lists.id', 'wcl_companies.wcl_id')
+                    ->get();
+            }
+        } else{
+            if($kpp_name == "") {
+                $logs = WclLog::whereRaw("(wcl_logs.created_at >= ? AND wcl_logs.created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                    ->selectRaw('wcl_logs.*, white_car_lists.mark_car,white_car_lists.full_name,white_car_lists.position')
+                    ->join('wcl_companies', 'wcl_companies.id', 'wcl_logs.wcl_com_id')
+                    ->join('white_car_lists', 'white_car_lists.id', 'wcl_companies.wcl_id')
+                    ->where(['wcl_companies.company_id' => $company_id])
+                    ->get();
+            } else {
+                $logs = WclLog::whereRaw("(wcl_logs.created_at >= ? AND wcl_logs.created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                    ->selectRaw('wcl_logs.*, white_car_lists.mark_car,white_car_lists.full_name,white_car_lists.position')
+                    ->join('wcl_companies', 'wcl_companies.id', 'wcl_logs.wcl_com_id')
+                    ->join('white_car_lists', 'white_car_lists.id', 'wcl_companies.wcl_id')
+                    ->where(['wcl_companies.company_id' => $company_id])
+                    ->get();
+            }
+        }
+
+        $row_start = 1;
+        $current_row = $row_start;
+        foreach($logs as $key=>$log) {
+            $current_row++;
+            $sheet->insertNewRowBefore($row_start + $key+1, 1);
+            $sheet->setCellValue('A'.$current_row,$log->gov_number);
+            $sheet->setCellValue('B'.$current_row,$log->company);
+            $sheet->setCellValue('C'.$current_row,$log->mark_car);
+            $sheet->setCellValue('D'.$current_row,$log->full_name);
+            $sheet->setCellValue('E'.$current_row,$log->position);
+            $sheet->setCellValue('F'.$current_row,$log->created_at);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = date('Y_m_d_H_i_s') . '_wcl_logs.xlsx';
+        $path_to_file = '/reports/it/' . $filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+    public function generateSvodWcl($data)
+    {
+        $from_date = $data['from_date'];
+        $to_date = $data['to_date'];
+        /*$kpp_id = $data['kpp_id'];
+        switch ($kpp_id) {
+            case 0:
+                $kpp_name = "";
+                $name = "КПП (все)";
+                break;
+
+            case 1:
+                $kpp_name = "kpp1";
+                $name = "КПП №1";
+                break;
+
+            case 2:
+                $kpp_name = "kpp2";
+                $name = "КПП №2";
+                break;
+
+            case 3:
+                $kpp_name = "kpp4";
+                $name = "КПП №4";
+                break;
+
+            default:
+                $name = "КПП (все)";
+                break;
+        }*/
+
+        $kpp_name = "";
+        $name = "КПП №1";
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('СВОД (белый список)');
+        $str = "Отчет по заезду автомашин через $name на объект «Даму» в период с $from_date по $to_date";
+        $sheet->mergeCells('A1:M1');
+        $sheet->setCellValue('A1', $str);
+        $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
+
+        if($kpp_name == "") {
+            $logs = WclLog::whereRaw("(created_at >= ? AND created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->selectRaw('company, COUNT(*) as cnt')
+                ->groupBy('company')
+                ->orderBy('company')
+                ->get();
+        } else {
+            $logs = WclLog::whereRaw("(created_at >= ? AND created_at <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->selectRaw('company, COUNT(*) as cnt')
+                ->groupBy('company')
+                ->orderBy('company')
+                ->get();
+        }
+
+
+        $sheet->setCellValue('A3', 'Компании');
+        $sheet->setCellValue('B3', 'Общий итог');
+
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+
+        $row_start = 3;
+        $current_row = $row_start;
+        $sum = 0;
+        foreach($logs as $key=>$log) {
+            $current_row++;
+            $sheet->insertNewRowBefore($row_start + $key+1, 1);
+            $sheet->setCellValue('A'.$current_row,$log->company);
+            $sheet->setCellValue('B'.$current_row,$log->cnt);
+            $sum += $log->cnt;
+        }
+
+        $current_row += 2;
+
+        $sheet->setCellValue('A'.$current_row,'Общий итог');
+        $sheet->setCellValue('B'.$current_row,$sum);
+
+
+        $sheet->getStyle('A3')->getFont()->setBold(true);
+        $sheet->getStyle('B3')->getFont()->setBold(true);
+
+        $sheet->getStyle('A'.$current_row)->getFont()->setBold(true);
+        $sheet->getStyle('B'.$current_row)->getFont()->setBold(true);
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = date('Y_m_d_H_i_s') . '_svods_wcl.xlsx';
         $path_to_file = '/reports/it/' . $filename;
         $writer->save(public_path() . $path_to_file);
 

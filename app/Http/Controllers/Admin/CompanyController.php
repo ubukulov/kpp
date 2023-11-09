@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Company;
 use App\Http\Controllers\Controller;
+use App\Models\Kpp;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View
      */
     public function index()
     {
@@ -22,30 +27,45 @@ class CompanyController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Factory|View
      */
     public function create()
     {
-        return view('admin.company.create');
+        $kpp = Kpp::all();
+        return view('admin.company.create', compact('kpp'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
-        Company::create($request->all());
-        return redirect()->route('company.index');
+        try {
+            $company = Company::create($request->all());
+
+            // добавление к компанию выбранные КПП
+            foreach($request->input('kpp') as $item) {
+                $kpp = Kpp::findOrFail($item);
+                $company->kpps()->attach($kpp);
+            }
+
+            DB::commit();
+            return redirect()->route('company.index');
+
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            dd("Попробуйте чуть позже. Ошибка: " . $exception->getMessage());
+        }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return void
      */
     public function show($id)
     {
@@ -56,33 +76,51 @@ class CompanyController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return Factory|View
      */
     public function edit($id)
     {
         $company = Company::findOrFail($id);
-        return view('admin.company.edit', compact('company'));
+        $kpp = Kpp::all();
+        return view('admin.company.edit', compact('company', 'kpp'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
     public function update(Request $request, $id)
     {
-        $company = Company::findOrFail($id);
-        $company->update($request->all());
-        return redirect()->route('company.index');
+        try {
+            $company = Company::findOrFail($id);
+            $company->update($request->all());
+
+            // Обновление записей по КПП
+            $company->kpps()->detach();
+            foreach($request->input('kpp') as $item) {
+                $kpp = Kpp::findOrFail($item);
+                if(!$company->hasKpp($kpp->name)) {
+                    $company->kpps()->attach($kpp);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('company.index');
+
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            dd("Произошло ошибка при обновление данных. Текст ошибки: " . $exception->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return void
      */
     public function destroy($id)
     {

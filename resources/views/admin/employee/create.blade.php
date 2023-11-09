@@ -44,27 +44,51 @@
                                 @endforeach
                             </select>
                         </div>
+
+                        <div class="form-group">
+                            <label>Укажите Группу (СКУД система)</label>
+                            <select name="ckud_group_id" class="form-control select2bs4" style="width: 100%;">
+                                @foreach($ckud_groups->GetAcsEmployeeGroupsFull as $ckud_group)
+                                    <option value="{{ $ckud_group->AcsEmployeeGroupId }}">{{ $ckud_group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>ФИО</label>
+                            <label>ФИО</label><span style="color: red;">*</span>
                             <input type="text" class="form-control" name="full_name" required>
                         </div>
 
-                        <div class="form-group">
-                            <label>Телефон</label>
-                            <input type="text" class="form-control" name="phone">
-                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>ИИН</label><span style="color: red;">*</span>
+                                    <input type="text" required class="form-control" name="iin">
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" class="form-control" name="email">
-                        </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Телефон</label><span style="color: red;">*</span>
+                                    <input type="text" class="form-control" name="phone">
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Пароль</label>
-                            <input type="text" class="form-control" name="password">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" name="email">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Пароль</label>
+                                    <input type="text" class="form-control" name="password">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -157,7 +181,12 @@
 
                             <div class="form-group">
                                 <label>КПП</label>
-                                <input type="text" placeholder="kpp2" name="kpp_name" class="form-control">
+                                <select name="kpp_id" class="form-control">
+                                    <option value="0">Не выбрано</option>
+                                    @foreach($kpp as $item)
+                                        <option value="{{$item->id}}">{{$item->title}}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>

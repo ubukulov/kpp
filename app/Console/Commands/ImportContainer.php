@@ -42,7 +42,7 @@ class ImportContainer extends Command
      */
     public function handle()
     {
-        $path_to_file = 'files/9224693.xlsx';
+        $path_to_file = 'files/INV010723/17.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -51,28 +51,75 @@ class ImportContainer extends Command
         $cnt = 0;
         foreach ($sheetData as $key=>$arr) {
             if ($key == 1) continue;
-            $zone = $arr['A'];
-            if ($zone == 'Спредер') {
-                $kind = 'r';
-            }elseif ($zone == 'Спредер-консоль') {
-                $kind = 'k';
-            } else {
-                $kind = 'r';
+            $zone = trim($arr['A']);
+            $row = $arr['B'];
+            $place = $arr['C'];
+            $floor = $arr['D'];
+            $number = trim(strtoupper($arr['E']));
+            if($number == '') {
+                continue;
             }
 
-            if ($zone == 'Виртуальная') {
-                $row = 1;
-                $place = 1;
-                $floor = 1;
-            } else {
-                $row = $arr['B'];
-                $place = $arr['C'];
-                $floor = $arr['D'];
+            if(empty($arr['F']) || $arr['F'] == 40) {
+                $container_type = '40';
+            } elseif($arr['F'] == 45) {
+                $container_type = '45';
+            } elseif($arr['F'] == 20) {
+                $container_type = '20';
             }
 
-            $name = strtoupper(substr(Str::slug($zone), 0,2).$kind."-".$row."-".$place."-".$floor);
-            $number = strtoupper($arr['E']);
-            $container_type = ($arr['F'] == 45) ? '40' : $arr['F'];
+            switch ($zone) {
+                case "30-ка";
+                    $slag = '30R';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                break;
+
+                case "1 склад";
+                    $slag = '5-R';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "Ангар";
+                    $slag = 'ANR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "Поле";
+                    $slag = 'POPOLE';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "Ричстакер";
+                    $slag = 'RICH';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "Спр.конс.";
+                    $slag = 'SPK';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "Спредер";
+                    $slag = 'SPR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "ТС";
+                    $slag = 'TSR';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                case "ТАМОЖЕННЫЙ ДОСМОТР";
+                    $slag = 'ZTCIA';
+                    $name = $slag."-".$row."-".$place."-".$floor;
+                    break;
+
+                default:
+                    $name = 'damu_in';
+                    break;
+            }
+
+            //$state = (empty($arr['G'])) ? null : $arr['G'];
             $container = Container::whereNumber($number)->first();
             if (!$container){
                 $container = Container::create([
@@ -80,26 +127,30 @@ class ImportContainer extends Command
                 ]);
             }
 
-            if ($zone == 'Виртуальная') {
-                $container_address = ContainerAddress::findOrFail(1);
-            } else {
-                $container_address = ContainerAddress::whereName($name)->first();
-            }
+            $container_address = ContainerAddress::whereName($name)->first();
 
             if ($container_address) {
-                $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => $container_address->id])->first();
+                $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
                 if ($container_stock) {
-                    $this->info("The container: $number is not added. It is already in the stock with the same address $name.");
-                    $cnt++;
+//                    if($container_stock->container_address_id != $container_address->id) {
+//                        $container_stock->container_address_id = $container_address->id;
+//                        $container_stock->status = 'received';
+//                        $container_stock->note = 'Invent2022';
+//                        $container_stock->save();
+//                        $count++;
+//                    }
+                    continue;
                 } else {
                     ContainerStock::create([
-                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received'
+                        'container_id' => $container->id, 'container_address_id' => $container_address->id, 'status' => 'received',
+                        'note' => 'Invent '.date('d.m.Y')
                     ]);
                     ContainerLog::create([
-                        'user_id' => 140, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
-                        'address_from' => 'из файла', 'address_to' => $container_address->name
+                        'user_id' => 116, 'container_id' => $container->id, 'container_number' => $number, 'operation_type' => 'incoming',
+                        'address_from' => 'из файла', 'address_to' => $container_address->name,
+                        'note' => 'По инвенту '.date('d.m.Y')
                     ]);
-                    $this->info("The container: $number successfully added.");
+                    //$this->info("The container: $number successfully added.");
                     $count++;
                 }
             } else {
