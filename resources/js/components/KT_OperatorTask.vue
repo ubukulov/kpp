@@ -19,6 +19,11 @@
                         История
                         <v-icon>mdi-history</v-icon>
                     </v-tab>
+
+                    <v-tab href="#tab-3">
+                        Учет техники
+                        <v-icon>mdi-car-multiple</v-icon>
+                    </v-tab>
                 </v-tabs>
 
                 <v-tabs-items v-model="tab">
@@ -26,6 +31,7 @@
                         :value="'tab-1'"
                     >
                         <v-card flat>
+                            <a style="margin: 10px; color: white;" class="btn btn-success" href="/container-terminals/create-task">Создать заявку</a>
                             <v-card-title>
                                 Заявки
                                 <v-spacer></v-spacer>
@@ -239,6 +245,85 @@
                             </v-container>
                         </v-app>
                     </v-tab-item>
+
+                    <v-tab-item
+                        :value="'tab-3'"
+                    >
+                        <v-app>
+                            <v-container>
+                                <v-card flat>
+                                    <a style="margin: 10px; color: white;" class="btn btn-success" href="/container-terminals/technique-task-create">Создать заявку</a>
+                                    <v-card-title>
+                                        Заявки
+                                        <v-spacer></v-spacer>
+                                        <v-select
+                                            :items="filters"
+                                            :hint="`${filters.id}, ${filters.title}`"
+                                            item-value="id"
+                                            v-model="filter_id"
+                                            item-text="title"
+                                            @change="getContainerTasks()"
+                                        ></v-select>
+                                    </v-card-title>
+
+                                    <v-data-table
+                                        :headers="technique_headers"
+                                        :items="technique_tasks"
+                                        :items-per-page="20"
+                                        :search="search"
+                                        :loading="isLoaded"
+                                        class="elevation-1"
+                                        loading-text="Загружается... Пожалуйста подождите"
+                                    >
+                                        <template v-slot:item.id="{ item }">
+                                            {{ (item.task_type === 'receive') ? 'IN_'+ item.id : 'OUT_' + item.id }}
+                                        </template>
+
+                                        <template v-slot:item.task_type="{ item }">
+                                            {{ (item.task_type === 'receive') ? 'Прием' : 'Выдача' }}
+                                        </template>
+
+                                        <template v-slot:item.trans_type="{ item }">
+                                            {{ (item.trans_type === 'train') ? 'ЖД' : 'Авто' }}
+                                        </template>
+
+                                        <template v-slot:item.status="{ item }">
+                                            <div v-if="item.status === 'open'">
+                                                В работе <a :href="'/container-terminals/technique_task/'+item.id+'/show-details'">
+                                                <i :class="[{ allow: item.allow}]" style="font-size: 20px;" class="fa fa-history"></i></a>
+                                            </div>
+                                            <div v-else-if="item.status === 'failed'">
+                                                Ошибка при импорте
+                                            </div>
+                                            <div v-else-if="item.status === 'waiting'">
+                                                В ожидание
+                                            </div>
+                                            <div v-else>
+                                                Выполнен <a :href="'/container-terminals/technique_task/'+item.id+'/show-details'">
+                                                <i style="font-size: 20px;" class="fa fa-history"></i></a>
+                                            </div>
+                                        </template>
+
+                                        <template v-slot:item.upload_file="{ item }">
+                                            <div v-if="item.upload_file !== null">
+                                                <a :href="item.upload_file" target="_blank"><i class="fa fa-file-excel-o" aria-hidden="true"></i>&nbsp;Скачать</a>
+                                            </div>
+                                        </template>
+
+                                        <template v-slot:item.edit="{ item }">
+                                            <div v-if="item.status === 'failed'">
+                                                <a :href="'/container-terminals/task/'+item.id+'/edit'"><i style="font-size: 20px;" class="fa fa-edit"></i></a>
+                                            </div>
+                                        </template>
+
+                                        <template v-slot:item.created_at="{ item }">
+                                            {{ convertDateToOurFormat(item.created_at) }}
+                                        </template>
+                                    </v-data-table>
+                                </v-card>
+                            </v-container>
+                        </v-app>
+                    </v-tab-item>
                 </v-tabs-items>
             </v-card>
         </template>
@@ -256,6 +341,7 @@
         data(){
             return {
                 container_tasks: [],
+                technique_tasks: [],
                 search: '',
                 expanded: [],
                 singleExpand: false,
@@ -274,6 +360,20 @@
                     { text: 'Ред.', value: 'edit' },
                     { text: 'Дата', value: 'created_at' },
                     { text: '', value: 'data-table-expand' }
+                ],
+                technique_headers: [
+                    {
+                        text: '№ заявки',
+                        align: 'start',
+                        sortable: true,
+                        value: 'id',
+                    },
+                    { text: 'Тип', value: 'task_type'},
+                    { text: 'Тип авто', value: 'trans_type'},
+                    { text: 'Статус', value: 'status' },
+                    { text: 'Файл', value: 'upload_file' },
+                    { text: 'Ред.', value: 'edit' },
+                    { text: 'Дата', value: 'created_at' },
                 ],
                 isLoaded: true,
                 filters: [
@@ -331,6 +431,20 @@
                     console.log(err);
                 })
             },
+            getTechniqueTasks(){
+                this.technique_tasks = [];
+                this.isLoaded = true;
+
+                axios.get('/container-terminals/get-technique-tasks/')
+                    .then(res => {
+                        console.log(res);
+                        this.technique_tasks = res.data;
+                        this.isLoaded = false;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
+            },
             convertDateToOurFormat(dt){
                 return dateformat(dt, 'dd.mm.yyyy HH:MM');
             },
@@ -364,6 +478,7 @@
         },
         created(){
             this.getContainerTasks();
+            this.getTechniqueTasks();
             if(this.user.company_id === 2) {
                 this.filters = this.filters.filter(item  => {
                     if((item.id === 0) || (item.id === 2)) {

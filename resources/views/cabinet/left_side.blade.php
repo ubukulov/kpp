@@ -85,6 +85,7 @@
                 </li>
                 @endrole
 
+                @if(Auth::user()->company->ashana == 0)
                 <li class="nav-item has-treeview">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-copy"></i>
@@ -126,6 +127,7 @@
 
                     </ul>
                 </li>
+                @endif
 
                 @role('wms-barcode-location')
                 <li class="nav-item">
@@ -133,6 +135,17 @@
                         <i class="nav-icon fa fa-barcode"></i>
                         <p>
                             Barcode
+                        </p>
+                    </a>
+                </li>
+                @endrole
+
+                @role('bosch-operator')
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.barcode.bosch') }}" class="nav-link @if(request()->is('cabinet/bosch/barcode*')) active @endif">
+                        <i class="nav-icon fa fa-barcode"></i>
+                        <p>
+                            Штрих-код
                         </p>
                     </a>
                 </li>
@@ -246,7 +259,7 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
+                {{--<li class="nav-item">
                     <a href="{{ route('cabinet.position.index') }}" class="nav-link @if(request()->is('cabinet/position*')) active @endif">
                         <i class="far fa-circle nav-icon"></i>
                         <p>Список должностей</p>
@@ -258,22 +271,22 @@
                         <i class="far fa-circle nav-icon"></i>
                         <p>Подразделение</p>
                     </a>
-                </li>
+                </li>--}}
 
                 <li class="nav-item">
                     <a href="{{ route('cabinet.white-car-list.index') }}" class="nav-link @if(request()->is('cabinet/white-car-list*')) active @endif">
-                        <i class="nav-icon fas fa-car"></i>
+                        <i style="font-size: 25px; vertical-align: super;" class="nav-icon fas fa-car"></i>
                         <p>
-                            Машины (белый список)
+                            Постоянный пропуск <br> на автомашину
                         </p>
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
-                        <i class="nav-icon fas fa-align-justify"></i>
+                        <i style="font-size: 25px; vertical-align: super;" class="nav-icon fas fa-align-justify"></i>
                         <p>
-                            Оформление пропуска
+                            Разовый пропуск <br> на автомашину
                         </p>
                     </a>
                 </li>
@@ -304,6 +317,15 @@
                         </p>
                     </a>
                 </li>--}}
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.dispatcher.index') }}" class="nav-link  @if(request()->is('cabinet/dispatcher*')) active @endif">
+                        <i class="nav-icon fas fa-fax"></i>
+                        <p>
+                            Диспетчер
+                        </p>
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a href="{{ route('logout') }}" class="nav-link">

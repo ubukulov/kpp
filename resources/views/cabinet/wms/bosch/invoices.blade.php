@@ -12,6 +12,9 @@
             display: block !important;
             width: 100% !important;
         }
+        .hidden{
+            display: none;
+        }
     </style>
 @endpush
 @section('content')
@@ -50,34 +53,55 @@
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Артикул</th>
-                            <th>Кол-во стикеров</th>
                             <th>Номер инвойса</th>
-                            <th>Cert-nr</th>
-                            <th>Печать</th>
+                            <th>Дата</th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
-                            @foreach($boschs as $bosch)
+                            @foreach($arr as $item)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $bosch->article }}</td>
-                                    <td>{{ $bosch->count }}</td>
-                                    <td>{{ $bosch->invoice }}</td>
-                                    <td>{{ $bosch->cert }}</td>
+                                    <td>{{ $item['invoice'] }}</td>
+                                    <td>{{ $item['date'] }}</td>
+                                    <td>
+                                        <button @click="showTable({{$item['invoice']}})" id="btn{{$item['invoice']}}" type="button" class="btn btn-success">+</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    @foreach($arr as $item)
+                    @if(count($item['items'])  > 0)
+                        <table id="table{{$item['invoice']}}" class="table table-bordered table-striped hidden">
+                            <th></th>
+                            <th>№</th>
+                            <th>Артикуль</th>
+                            <th>Кол-во этикетов</th>
+                            <th>Cert</th>
+                            <th></th>
+                            @foreach($item['items'] as $ss)
+                                <tr>
+                                    <td></td>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $ss->article }}</td>
+                                    <td>{{ $ss->count }}</td>
+                                    <td>{{ $ss->cert }}</td>
                                     <td>
                                         <v-icon
                                             title="Распечатать стикер"
                                             middle
-                                            @click="printBosch({{$bosch->id}})"
+                                            @click="printBosch({{$ss->id}})"
                                         >
                                             mdi-printer
                                         </v-icon>
                                     </td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                    </table>
+                        </table>
+                    @endif
+                    @endforeach
                 </div>
                 <!-- /.card-body -->
             </div>
@@ -93,26 +117,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-print@0.3.0/dist/vueprint.min.js"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-
-    <script type="text/javascript">
-        jQuery(document).ready(function($){
-            $("#example1").DataTable({
-                "responsive": true,
-                "autoWidth": false,
-                "pageLength": 10,
-                "bLengthChange": false,
-                "bFilter": true,
-                "language": {
-                    "url": "/dist/Russian.json"
-                },
-                //dom: 'Bfrtip',
-                /*buttons: [
-                    /!*'copy', 'csv', *, 'pdf', 'print'*!/
-                    { extend: 'excel', text: 'Экспорт в эксель' }
-                ]*/
-            });
-        });
-    </script>
 
     <script>
         new Vue({
@@ -132,6 +136,15 @@
                         .catch(err => {
                             console.log(err)
                         })
+                },
+                showTable(id){
+                    if($('#table'+id).hasClass('hidden')) {
+                        $('#btn' + id).html('-');
+                        $('#table'+id).removeClass('hidden');
+                    } else {
+                        $('#btn' + id).html('+');
+                        $('#table'+id).addClass('hidden');
+                    }
                 }
             }
         })

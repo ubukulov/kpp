@@ -118,7 +118,18 @@
                                     </v-col>
 
                                     <v-col md="3">
-                                        <v-btn type="button" @click="getAshanaLogs()" class="primary">Показать</v-btn>
+                                        <v-btn type="button" @click="getAshanaLogs()" class="warning">Показать</v-btn>
+                                        <v-btn type="button" @click="generateAshanaLogs()" class="primary">Скачать отчет</v-btn>
+                                    </v-col>
+
+                                    <v-col md="12">
+                                        <div v-if="progress_circule" class="text-center">
+                                            <v-progress-circular
+                                                style="width: 100px; height: 100px;"
+                                                indeterminate
+                                                color="primary"
+                                            ></v-progress-circular>
+                                        </div>
                                     </v-col>
                                 </v-row>
 
@@ -211,7 +222,7 @@
                                             </template>
 
                                             <template v-slot:item.summ="{item}">
-                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) }}</td>
+                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) + parseInt(item.mob) }}</td>
                                             </template>
 
                                             <template v-slot:item.work_day="{item}">
@@ -219,7 +230,7 @@
                                             </template>
 
                                             <template v-slot:item.one_hundred="{item}">
-                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) > count_work_day ? (parseInt(item.abk) + parseInt(item.kpp3)) - count_work_day : 0 }}</td>
+                                                <td>@{{ parseInt(item.abk) + parseInt(item.kpp3) + parseInt(item.mob) > count_work_day ? (parseInt(item.abk) + parseInt(item.kpp3) + parseInt(item.mob)) - count_work_day : 0 }}</td>
                                             </template>
                                         </v-data-table>
 
@@ -291,6 +302,7 @@
                         { text: 'Должность', value: 'p_name' },
                         { text: 'АБК', value: 'abk' },
                         { text: 'КПП3', value: 'kpp3' },
+                        { text: 'Мобильная', value: 'mob' },
                         { text: 'Сумма', value: 'summ' },
                         { text: 'Рабочих дней', value: 'work_day' },
                         { text: 'Превышение, 100% оплата', value: 'one_hundred' },
@@ -306,8 +318,8 @@
                         { text: 'Заблокирован', value: 1}
                     ],
                     kitchens: [
-                        { text: 'ИП Акмуратов А.М', value: 1099 },
-                        { text: 'ИП Cargotraffic', value: 1097}
+                        //{ text: 'ИП Акмуратов А.М', value: 1099 },
+                        { text: 'ИП Cargotraffic(АБК + Мобильная + КПП3)', value: 1097}
                     ],
                     kitchen_id: 0,
                     kitchens_reports_type: [
@@ -316,6 +328,8 @@
                     ],
                     krt_id: 0,
                     count_work_day: 22,
+                    progress_circule: false,
+                    hide: true
                 }
             },
             methods: {
@@ -347,6 +361,24 @@
                     }
                     var workbook = XLSX.utils.table_to_book(document.getElementById('printTable'));
                     XLSX.writeFile(workbook, file_name);
+                },
+                generateAshanaLogs(){
+                    this.progress_circule = true;
+                    let formData = new FormData();
+                    formData.append('company_id', this.company_id);
+                    formData.append('cashier_id', this.kitchen_id);
+                    formData.append('from_date', this.from_date);
+                    formData.append('to_date', this.to_date);
+                    axios.post('/cabinet/ashana/generate-reports', formData)
+                        .then(res => {
+                            console.log(res.data)
+                            window.location.href = res.data;
+                            this.progress_circule = false;
+                        })
+                        .catch(err => {
+                            this.progress_circule = false;
+                            console.log(err);
+                        })
                 }
             }
         })

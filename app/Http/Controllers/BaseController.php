@@ -9,6 +9,7 @@ class BaseController extends Controller
     public function __construct()
     {
         View::share('companies', Company::all());
+        View::share('as_companies', Company::where('ashana', 0)->get());
     }
 
     public function switch_en($str)

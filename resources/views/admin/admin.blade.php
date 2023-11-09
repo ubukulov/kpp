@@ -46,9 +46,12 @@
             z-index: 10000;
             left: 50%;
         }
+        .form-check-label,.form-check-input {
+            cursor: pointer;
+        }
     </style>
 
-    <script lang="javascript">
+    {{--<script lang="javascript">
         let doc = window.document;
 
         window.onload = function(){
@@ -63,18 +66,18 @@
             }
         });
 
-    </script>
+    </script>--}}
 
     @stack('admin_styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
-    <div id="blackout" class="blackout">
+    {{--<div id="blackout" class="blackout">
         <div class="overlay">
             <i style="color: #605ca8;" class="fas fa-5x fa-sync-alt fa-spin"></i>
         </div>
-    </div>
+    </div>--}}
 
     @include('admin.left_side')
 
@@ -173,7 +176,7 @@
                 });
             }
         });
-		$('button[type="submit"]').click(function(){
+		$('button[type="submit"]').submit(function(){
             $("#blackout").css({
 				'display' : 'block'
 			});

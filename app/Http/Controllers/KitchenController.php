@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\AshanaLog;
+use App\Models\Company;
 use App\Models\User;
 use App\Traits\KitchenTraits;
 use Illuminate\Http\Request;
 use File;
 use Auth;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class KitchenController extends BaseController
 {
@@ -18,43 +22,23 @@ class KitchenController extends BaseController
         return view('ashana.index');
     }
 
-    public function getStatistics($option_id)
+    public function getStatistics()
     {
         $user = Auth::user();
-        $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date >= CURDATE()";
-        switch($option_id) {
-            case 1:
-                $result = $this->query($condition);
-                break;
+        $logs = AshanaLog::whereDate('ashana_logs.date', '=', date("Y-m-d"))
+            ->selectRaw('ashana_logs.id,users.full_name,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1773, 1, 0)) as kpp3,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob')
+            ->join('users', 'users.id', 'ashana_logs.user_id')
+            ->join('companies', 'companies.id', 'ashana_logs.company_id')
+            ->leftJoin('positions', 'positions.id', 'users.position_id')
+            ->groupBy('ashana_logs.user_id', 'ashana_logs.company_id');
 
-            case 2:
-                $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date = CURDATE() - INTERVAL 1 DAY";
-                $result = $this->query($condition);
-                break;
-
-            case 3:
-                $condition = "ashana_logs.cashier_id = $user->id AND ashana_logs.date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)";
-                $result = $this->query($condition);
-                break;
-
-            default:
-                abort(404, 'Не верная опция передано');
-                break;
+        if($user->company_id == 121) {
+            $logs = $logs->whereIn('ashana_logs.cashier_id', [1097,1238,1773]);
+        } else {
+            $logs = $logs->where('ashana_logs.cashier_id', '=', 1099);
         }
 
-        return $result;
-    }
-
-    public function query(string $condition): string
-    {
-        $logs = AshanaLog::whereRaw($condition)
-            ->selectRaw('companies.short_ru_name, SUM(case when ashana_logs.din_type = 1 then 1 else 0 end) as stan,
-                            SUM(case when ashana_logs.din_type = 2 then 1 else 0 end) as bul')
-            ->join('companies', 'companies.id', 'ashana_logs.company_id')
-            ->groupBy('ashana_logs.company_id')
-            ->get();
-
-        return json_encode($logs);
+        return response($logs->get());
     }
 
     public function getUserInfo(Request $request)
@@ -70,12 +54,6 @@ class KitchenController extends BaseController
         if($this->isRussian($username)) {
             $username = $this->switch_en($username);
         }
-
-        /*$user = User::where(['users.iin' => $username, 'users_histories.status' => 'works'])
-                    ->selectRaw('users.*')
-                    ->orWhere(['users.uuid' => $username])
-                    ->join('users_histories', 'users_histories.user_id', 'users.id')
-                    ->first();*/
 
         $users = User::where(['users.iin' => $username])->orWhere(['users.uuid' => $username])->get();
 
@@ -107,20 +85,6 @@ class KitchenController extends BaseController
         return response([
             'message' => 'СОТРУДНИК УВОЛЕН'
         ], 406);
-
-        /*if($user) {
-            $result = response([
-                'full_name' => $user->full_name,
-                'company_name' => $user->company->short_ru_name,
-                'count' => $user->countAshanaToday(),
-                'user_id' => $user->id,
-                'image' => (file_exists(public_path() . $user->image)) ? $user->image : null
-            ], 200);
-        } else {
-            $result = response('', 404);
-        }*/
-
-        //return $result;
     }
 
     public function fixChanges(Request $request)
@@ -135,7 +99,13 @@ class KitchenController extends BaseController
                 return response('В штрих-коде отсутствует компания, срочно обратитесь в ИТ', 406);
             }
 
-            if($user->countAshanaToday() > 1) {
+            $countAshanaToday = $user->countAshanaToday();
+
+            if($user->position_id == 188 && $countAshanaToday == 1) {
+                return response('Ваш лимит обедов за сегодня исчерпан', 406);
+            }
+
+            if($countAshanaToday > 1) {
                 return response('Ваш лимит обедов за сегодня исчерпан', 406);
             }
 
@@ -172,6 +142,213 @@ class KitchenController extends BaseController
             ], 200);
         } else {
             return response('Не найден пользватель, срочно обратитесь в ИТ', 404);
+        }
+    }
+
+    public function generateLogs(Request $request)
+    {
+        $data = $request->all();
+        return ($data['cashier_id'] == 1099) ? $this->akmuratov($data) : $this->cargoTraffic($data);
+    }
+
+    public function akmuratov($data)
+    {
+        $from_date = $data['from_date'];
+        $to_date = $data['to_date'];
+        $company_id = $data['company_id'];
+        $cashier_id = $data['cashier_id'];
+
+        $company = Company::findOrFail($company_id);
+        $logs = AshanaLog::whereDate('ashana_logs.date', '>=', $from_date)->whereDate('ashana_logs.date', '<=', $to_date)
+            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1099, 1, 0)) as akm')
+            ->join('users', 'users.id', 'ashana_logs.user_id')
+            ->join('companies', 'companies.id', 'ashana_logs.company_id')
+            ->leftJoin('positions', 'positions.id', 'users.position_id')
+            ->where('ashana_logs.company_id', $company_id)
+            ->where('ashana_logs.cashier_id', $cashier_id)
+            ->groupBy('ashana_logs.user_id', 'ashana_logs.company_id')
+            ->get();
+        $kitchen_company = "ИП Акмуратов А.М";
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Отчет по столовое');
+
+        $str = "Отчет по обедам за период: ".$from_date." - ".$to_date;
+        $sheet->mergeCells('A1:D1');
+        $sheet->setCellValue('A1', $str);
+        $sheet->getStyle("A1")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->mergeCells('A2:D2');
+        $sheet->setCellValue('A2', "Оператор столовой: ".$kitchen_company);
+        $sheet->getStyle("A2")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->mergeCells('A3:D3');
+        $sheet->setCellValue('A3', "Клиент: ".$company->short_ru_name);
+        $sheet->getStyle("A3")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->setCellValue('A5', 'Ф.И.О');
+        $sheet->setCellValue('B5', 'Должность');
+        $sheet->setCellValue('C5', 'Тип обеда');
+        $sheet->setCellValue('D5', 'Сумма');
+
+        // Вставляем авто размер для колонок
+        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D');
+
+        $itog = 0;
+
+        $row_start = 5;
+        $current_row = $row_start;
+        foreach($logs as $key=>$item){
+            $current_row++;
+            $sheet->insertNewRowBefore($row_start + $key+1, 1);
+            $sheet->setCellValue('A'.$current_row,$item->full_name);
+            $sheet->setCellValue('B'.$current_row,$item->p_name);
+            $din_type = ($item->din_type == 1) ? "Стандарт" : "Булочки";
+            $sheet->setCellValue('C'.$current_row,$din_type);
+            $sheet->setCellValue('D'.$current_row,$item->akm);
+            $itog += (int) $item->akm;
+        }
+
+        $current_row++;
+
+        $sheet->mergeCells('A'.$current_row.':C'.$current_row);
+        $sheet->setCellValue('A'.$current_row, "ИТОГО");
+        $sheet->setCellValue('D'.$current_row,$itog);
+
+        $sheet->getStyle("A".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("D".$current_row)->getFont()->setSize(12)->setBold(true);
+
+        // Выравниваем по левому краю
+        $this->setHorizontal($sheet, Alignment::HORIZONTAL_RIGHT, 'A'.$current_row);
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = "ashana_report_for_".date('d.m.Y_H_i_s_').$company_id.".xlsx";
+
+        // Подготовка папок для сохранение картинки
+        $dir = '/reports/ashana/'. $company_id . '/' . date('Y-m').'/';
+        if(!File::isDirectory(public_path(). $dir)){
+            File::makeDirectory(public_path(). $dir, 0777, true);
+        }
+
+        $path_to_file = $dir.$filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+    public function cargoTraffic($data)
+    {
+        $from_date = $data['from_date'];
+        $to_date = $data['to_date'];
+        $company_id = $data['company_id'];
+
+        $company = Company::findOrFail($company_id);
+        $logs = AshanaLog::whereDate('ashana_logs.date', '>=', $from_date)->whereDate('ashana_logs.date', '<=', $to_date)
+            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob')
+            ->join('users', 'users.id', 'ashana_logs.user_id')
+            ->join('companies', 'companies.id', 'ashana_logs.company_id')
+            ->leftJoin('positions', 'positions.id', 'users.position_id')
+            ->where('ashana_logs.company_id', $company_id)
+            ->whereIn('ashana_logs.cashier_id', [1097,1238])
+            ->groupBy('ashana_logs.user_id', 'ashana_logs.company_id')
+            ->get();
+        $kitchen_company = "ИП Cargotraffic(АБК + Мобильная)";
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Отчет по столовое');
+
+        $str = "Отчет по обедам за период: ".$from_date." - ".$to_date;
+        $sheet->mergeCells('A1:F1');
+        $sheet->setCellValue('A1', $str);
+        $sheet->getStyle("A1")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->mergeCells('A2:F2');
+        $sheet->setCellValue('A2', "Оператор столовой: ".$kitchen_company);
+        $sheet->getStyle("A2")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->mergeCells('A3:F3');
+        $sheet->setCellValue('A3', "Клиент: ".$company->short_ru_name);
+        $sheet->getStyle("A3")->getFont()->setSize(12)->setBold(true);
+
+        $sheet->setCellValue('A5', 'Ф.И.О');
+        $sheet->setCellValue('B5', 'Должность');
+        $sheet->setCellValue('C5', 'Тип обеда');
+        $sheet->setCellValue('D5', 'АБК');
+        $sheet->setCellValue('E5', 'Мобильная');
+        $sheet->setCellValue('F5', 'Сумма');
+
+        // Вставляем авто размер для колонок
+        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D', 'E', 'F');
+
+        $abk = 0;
+        $mob = 0;
+        $itog = 0;
+
+        $row_start = 5;
+        $current_row = $row_start;
+        foreach($logs as $key=>$item){
+            $current_row++;
+            $sheet->insertNewRowBefore($row_start + $key+1, 1);
+            $sheet->setCellValue('A'.$current_row,$item->full_name);
+            $sheet->setCellValue('B'.$current_row,$item->p_name);
+            $din_type = ($item->din_type == 1) ? "Стандарт" : "Булочки";
+            $sheet->setCellValue('C'.$current_row,$din_type);
+            $sheet->setCellValue('D'.$current_row,$item->abk);
+            $sheet->setCellValue('E'.$current_row,$item->mob);
+            $sum = (int) $item->abk + (int) $item->mob;
+            $sheet->setCellValue('F'.$current_row,$sum);
+            $abk += (int) $item->abk;
+            $mob += (int) $item->mob;
+            $itog += (int) $sum;
+        }
+
+        $current_row++;
+
+        $sheet->mergeCells('A'.$current_row.':C'.$current_row);
+        $sheet->setCellValue('A'.$current_row, "ИТОГО");
+        $sheet->setCellValue('D'.$current_row,$abk);
+        $sheet->setCellValue('E'.$current_row,$mob);
+        $sheet->setCellValue('F'.$current_row,$itog);
+
+        $sheet->getStyle("A".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("D".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("E".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("F".$current_row)->getFont()->setSize(12)->setBold(true);
+
+        // Выравниваем по левому краю
+        $this->setHorizontal($sheet, Alignment::HORIZONTAL_RIGHT, 'A'.$current_row);
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = "ashana_report_for_".date('d.m.Y_H_i_s_').$company_id.".xlsx";
+
+        // Подготовка папок для сохранение картинки
+        $dir = '/reports/ashana/'. $company_id . '/' . date('Y-m').'/';
+        if(!File::isDirectory(public_path(). $dir)){
+            File::makeDirectory(public_path(). $dir, 0777, true);
+        }
+
+        $path_to_file = $dir.$filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+
+    // метод установливает выравнение (горизантально) по ячейке в зависимости от заданного условия
+    public function setHorizontal($sheet, $position, ...$columns)
+    {
+        foreach($columns as $column) {
+            $sheet->getStyle($column)->getAlignment()->setHorizontal($position);
+        }
+    }
+
+    // метод установливает авто размер в зависимости от заданного условия
+    public function setAutoSizeColumn($sheet, $boolean = false, ...$columns)
+    {
+        foreach($columns as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize($boolean);
         }
     }
 }

@@ -42,7 +42,7 @@ class ImportContainer extends Command
      */
     public function handle()
     {
-        $path_to_file = 'files/INV021122/20.xlsx';
+        $path_to_file = 'files/INV010723/17.xlsx';
         $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
         $spreadsheet = $reader->load(public_path($path_to_file));
@@ -74,7 +74,7 @@ class ImportContainer extends Command
                     $name = $slag."-".$row."-".$place."-".$floor;
                 break;
 
-                case "5 скл";
+                case "1 склад";
                     $slag = '5-R';
                     $name = $slag."-".$row."-".$place."-".$floor;
                     break;

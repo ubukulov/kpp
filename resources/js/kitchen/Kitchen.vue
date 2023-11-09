@@ -11,7 +11,8 @@
                         </div>
 
                         <div class="form-group">
-                            <button type="button" @click="checkScanCode()" class="btn btn-success nicebtn2">Внести</button>
+                            <button ref="setChangeButton" style="width: 30%;" type="button" @click="checkScanCode()" class="btn btn-success nicebtn2">Внести</button>
+                            <button ref="reset" style="background: tomato; color: white; border-color: tomato;" type="button" @click="reset()" class="btn btn-success nicebtn2">Сброс</button>
                         </div>
                     </v-col>
 
@@ -32,18 +33,74 @@
 
                             <canvas v-show="isPhotoTaken" id="photoTaken" ref="canvas" :width="1280" :height="720"></canvas>
                         </div>
+                    </v-col>
 
-                        <!--<div v-if="isCameraOpen && !isLoading" class="camera-shoot">
-                            <button type="button" class="button" @click="takePhoto">
-                                <img src="https://img.icons8.com/material-outlined/50/000000/camera&#45;&#45;v2.png">
-                            </button>
-                        </div>-->
+                </v-row>
 
-                        <!--<div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
-                            <a id="downloadPhoto" download="my-photo.jpg" class="button" role="button" @click="downloadImage">
-                                Download
-                            </a>
-                        </div>-->
+                <v-row>
+                    <v-col cols="12">
+                        <v-card>
+                            <v-card-title>
+                                Отчет по обедам за сегодня
+                                <v-spacer></v-spacer>
+                                <v-text-field
+                                    v-model="search"
+                                    append-icon="mdi-magnify"
+                                    label="Поиск"
+                                    single-line
+                                    hide-details
+                                ></v-text-field>
+                                <v-spacer></v-spacer>
+                            </v-card-title>
+                            <v-data-table
+                                :headers="headers"
+                                :items="items"
+                                :search="search"
+                                id="printTable3"
+                                items-per-page="20"
+                                v-if="cashier.company_id === 121"
+                            >
+                                <template v-slot:item.id="{item}">
+                                    <td>{{items.indexOf(item)+1}}</td>
+                                </template>
+
+                                <template v-slot:item.summ="{item}">
+                                    <td>{{ parseInt(item.abk) + parseInt(item.mob) + parseInt(item.kpp3) }}</td>
+                                </template>
+
+                                <template slot="body.append">
+                                    <tr class="pink--text">
+                                        <th class="title" colspan="4">ИТОГО</th>
+                                        <th class="title">{{ sumField('abk') }}</th>
+                                        <th class="title">{{ sumField('kpp3') }}</th>
+                                        <th class="title">{{ sumField('mob') }}</th>
+                                        <th class="title">{{ sumField('abk') + sumField('mob') + sumField('kpp3') }}</th>
+                                    </tr>
+                                </template>
+                            </v-data-table>
+
+                            <v-data-table
+                                :headers="headers2"
+                                :items="items"
+                                :search="search"
+                                id="printTable2"
+                                items-per-page="20"
+                                v-if="cashier.company_id === 122"
+                            >
+                                <template v-slot:item.id="{index}">
+                                    <td>{{index+1}}</td>
+                                </template>
+
+                                <template slot="body.append">
+                                    <tr class="pink--text">
+                                        <th class="title" colspan="4">ИТОГО</th>
+                                        <th class="title">{{ sumField('kpp3') }}</th>
+                                    </tr>
+                                </template>
+
+                            </v-data-table>
+
+                        </v-card>
                     </v-col>
                 </v-row>
 
@@ -114,31 +171,32 @@
                 user: [],
                 headers: [
                     {
-                        text: 'Наименование',
+                        text: '№',
                         align: 'start',
-                        filterable: false,
-                        value: 'short_ru_name',
+                        sortable: false,
+                        value: 'id',
                     },
-                    { text: 'Стандарт', value: 'stan' },
-                    { text: 'Булочки', value: 'bul' },
-                    { text: 'Общий', value: 'sum' },
+                    { text: 'Компания', value: 'company_name' },
+                    { text: 'Ф.И.О', value: 'full_name' },
+                    { text: 'Должность', value: 'p_name' },
+                    { text: 'АБК', value: 'abk' },
+                    { text: 'КПП3', value: 'kpp3' },
+                    { text: 'Мобилька', value: 'mob' },
+                    { text: 'Сумма', value: 'summ' },
                 ],
-                items: {},
-                options: [
+                headers2: [
                     {
-                        id: 1,
-                        text: 'За сегодня'
+                        text: '№',
+                        align: 'start',
+                        sortable: false,
+                        value: 'id',
                     },
-                    {
-                        id: 2,
-                        text: 'За вчера'
-                    },
-                    {
-                        id: 3,
-                        text: 'За неделю'
-                    },
+                    { text: 'Компания', value: 'company_name' },
+                    { text: 'Ф.И.О', value: 'full_name' },
+                    { text: 'Должность', value: 'p_name' },
+                    { text: 'Кол-во', value: 'kpp3' },
                 ],
-                option_id: 1,
+                items: [],
                 isCameraOpen: false,
                 isPhotoTaken: false,
                 isShotPhoto: false,
@@ -184,7 +242,7 @@
                         this.dialog = false;
                         this.isDisable1 = false;
                         this.isDisable2 = false;
-                        this.getStatisticsForOption();
+                        this.getStatistics();
                         this.isCameraOpen = true;
                         this.isPhotoTaken = false;
                     })
@@ -196,15 +254,19 @@
                     document.getElementById("username").focus();
                 }, 0);
             },
-            getStatisticsForOption(){
-                axios.get(`ashana/get-statistics/${this.option_id}`)
+            getStatistics(){
+                axios.get(`ashana/get-statistics`)
                     .then(res => {
-                        console.log(res.data);
+                        console.log('ss', res.data);
                         this.items = res.data;
                     })
                     .catch(err => {
                         console.log(err)
                     })
+            },
+            sumField(key) {
+                // sum data in give key (property)
+                return this.items.reduce((a, b) => parseInt(a) + parseInt((b[key] || 0)), 0)
             },
             checkScanCode(){
                 let formData = new FormData();
@@ -281,6 +343,25 @@
                 context.drawImage(this.$refs.camera, 0, 0, 1280, 720);
                 this.userImage = this.$refs.canvas.toDataURL("image/jpeg");
             },
+            checkForHandEnter(){
+                console.log(this.username);
+                if(this.username.length === 1) {
+                    this.$refs.setChangeButton.disabled = true;
+                    this.$refs.username.disabled = true;
+                    this.info = true;
+                    this.infoHtml = '<h2 style="color: red; font-size: 30px;"><strong>РУЧНОЙ ВВОД ЗАПРЕЩЕН. ПОЖАЛУЙСТА, ОТСКАНИРУЙТЕ QR КОД</strong>';
+                } else {
+                    this.$refs.setChangeButton.disabled = false;
+                    this.$refs.username.disabled = false;
+                    this.info = false;
+                }
+            },
+            reset(){
+                this.$refs.setChangeButton.disabled = false;
+                this.$refs.username.value = '';
+                this.$refs.username.disabled = false;
+                this.info = false;
+            }
         },
         mounted(){
             this.$refs.username.focus();
@@ -288,7 +369,7 @@
             this.createCameraElement();
         },
         created(){
-            this.items = this.getStatisticsForOption();
+            this.items = this.getStatistics();
         }
     }
 </script>
@@ -343,11 +424,5 @@
         font-size: 30px;
         color: red;
     }
-    .theme--light.v-card {
-        position: absolute;
-        width: 700px;
-        max-width: 100%;
-        top: 50px;
-        left: 50px;
-    }
+
 </style>

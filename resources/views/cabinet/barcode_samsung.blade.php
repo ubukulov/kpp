@@ -102,6 +102,11 @@
                     let formData = new FormData();
                     formData.append('count', this.count);
                     formData.append('order_code', this.order_code);
+                    formData.append('_token', $('input[name="_token"]').val());
+                    const found = this.orders.find(element => element.ord_Code == this.order_code);
+                    formData.append('ord_CustomerOrderCode', found.ord_CustomerOrderCode);
+                    formData.append('KASPI_DO', found.KASPI_DO);
+                    formData.append('KASPI_URL', found.KASPI_URL);
                     let address = this.orders.filter(item => item.ord_Code === this.order_code);
                     let direction = '';
                     if(address.length > 0) {
@@ -113,7 +118,10 @@
 					if (this.order_code != '') {
 						axios.post('/cabinet/samsung/barcode/command-print', formData)
                         .then(res => {
-                            console.log(res)
+                            console.log(res);
+                            if(found.KASPI_DO != null) {
+                                window.open(found.KASPI_URL, '_blank');
+                            }
                         })
                         .catch(err => {
                             console.log(err)

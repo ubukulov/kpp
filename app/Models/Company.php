@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasKppOnCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
+    use HasKppOnCompany;
+
     protected $table = 'companies';
 
     /**
@@ -21,7 +24,7 @@ class Company extends Model
 
     protected $fillable = [
         'full_company_name', 'short_ru_name', 'short_en_name', 'address', 'kind_of_activity',
-        'type_company', 'ashana', 'created_at', 'updated_at'
+        'type_company', 'ashana', 'bin', 'created_at', 'updated_at'
     ];
 
     public function getTypeCompany()

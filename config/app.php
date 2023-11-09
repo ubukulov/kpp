@@ -181,6 +181,8 @@ return [
         Intervention\Image\ImageServiceProvider::class,
         App\Providers\SmsServiceProvider::class,
         App\Providers\RepositoryServiceProvider::class,
+        App\Providers\DPDServiceProvider::class,
+        App\Providers\RusGuardServiceProvider::class,
     ],
 
     /*
@@ -236,6 +238,8 @@ return [
         'Sms' => App\Facades\Sms::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
         'Image' => Intervention\Image\Facades\Image::class,
+        'DPD' => App\Facades\DPD::class,
+        'CKUD' => App\Facades\CKUD::class,
     ],
 
 ];

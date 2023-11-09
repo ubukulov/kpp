@@ -89,7 +89,8 @@
                 "autoWidth": false,
                 "language": {
                     "url": "/dist/Russian.json"
-                }
+                },
+                order: [[0, 'desc']],
             });
         });
     </script>

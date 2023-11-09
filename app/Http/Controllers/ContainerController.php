@@ -543,7 +543,7 @@ class ContainerController extends BaseController
         $arr = explode("-", $name);
         $floor = $container_address->floor;
 
-        if ($container_address->zone == 'SPR' || $container_address->zone == 'SPK') {
+        /*if ($container_address->zone == 'SPR' || $container_address->zone == 'SPK') {
             if ($floor == 4) {
                 return response('Можно перемещать контейнера', 200);
             } else {
@@ -576,7 +576,9 @@ class ContainerController extends BaseController
             }
         } else {
             return response('Можно перемещать контейнера', 200);
-        }
+        }*/
+
+        return response('Можно перемещать контейнера', 200);
     }
 
     public function updateContainerTask(Request $request, $container_task_id)
@@ -860,7 +862,7 @@ class ContainerController extends BaseController
             if ($floor == 4) {
                 return response('Контейнер готов к отбору', 200);
             } else {
-                $container_address = $container_stock->container_address;
+                /*$container_address = $container_stock->container_address;
                 if ($container_address->zone == 'SPR' || $container_address->zone == 'SPK') {
                     $containers_numbers = [];
                     $caIds = [];
@@ -890,7 +892,9 @@ class ContainerController extends BaseController
                     }
                 } else {
                     return response('Контейнер готов к отбору', 200);
-                }
+                }*/
+
+                return response('Контейнер готов к отбору', 200);
             }
         } else {
             return response([

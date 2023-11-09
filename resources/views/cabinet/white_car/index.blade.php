@@ -15,7 +15,12 @@
                             <h3 class="card-title">Перечень постоянных пропусков</h3>
                         </div>
 
-                        <div class="col-6 text-right">
+                        <div class="col-6 text-right" style="display: flex; justify-content: space-between;">
+                            <a href="{{ asset('files/instructions/Инструкция по оформлению постоянного пропуска ТС_КПП_ИЛЦ DAMU.pdf') }}" target="_blank">
+                                <p>
+                                    <i class="nav-icon fas fa-download"></i> Скачать инструкцию
+                                </p>
+                            </a>
                             <a href="{{ route('cabinet.white-car-list.create') }}" class="btn btn-dark">Добавить</a>
                         </div>
                     </div>
@@ -28,6 +33,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Гос.номер</th>
+                            <th>ФИО</th>
                             <th>Клиент</th>
                             <th>Статус</th>
                             <th>Дата</th>
@@ -40,6 +46,7 @@
                         <tr>
                             <td>{{ $wcl->id }}</td>
                             <td>{{ $wcl->gov_number }}</td>
+                            <td>{{ $wcl->full_name }}</td>
                             <td>{{ $wcl->short_ru_name }}</td>
                             <td>
                                 @if($wcl->status == 'ok')
@@ -66,6 +73,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Гос.номер</th>
+                            <th>ФИО</th>
                             <th>Клиент</th>
                             <th>Статус</th>
                             <th>Дата</th>
@@ -103,6 +111,7 @@
                 },
                 "columns": [
                     { "searchable": false },
+                    { "searchable": true },
                     { "searchable": true },
                     null,
                     null,

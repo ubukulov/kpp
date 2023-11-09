@@ -20,7 +20,7 @@
     </li>
     <li><a href="#">По сотрудникам</a>
         <ul>
-            <li><a href="#">Sales</a></li>
+            <li><a href="{{ route('admin.reports.download.users') }}">Скачать отчеть</a></li>
             <li><a href="#">Another Link</a></li>
             {{--<li><a href="#">Department</a>
                 <ul>

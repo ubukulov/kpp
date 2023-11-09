@@ -6,6 +6,7 @@
     <title>{{ Auth::user()->company->short_en_name }} | Личный кабинет</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @csrf
     <!-- Font Awesome -->
     <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
     <!-- Ionicons -->
@@ -26,6 +27,8 @@
     <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.css">
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- Custom All styles -->
+    <link rel="stylesheet" href="{{ asset('css/all.css') }}">
 
     <style>
         .blackout {
@@ -45,6 +48,9 @@
             position: absolute;
             z-index: 10000;
             left: 50%;
+        }
+        .form-check-label,.form-check-input {
+            cursor: pointer;
         }
     </style>
 

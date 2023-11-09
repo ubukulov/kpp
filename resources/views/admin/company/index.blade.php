@@ -28,7 +28,9 @@
                             <th>ID</th>
                             <th>Полное наименование</th>
                             <th>Наименование(на русском)</th>
+                            <th>БИН</th>
                             <th>Тип</th>
+                            <th>Столовая. Есть договор?</th>
                             <th>Действие</th>
                         </tr>
                         </thead>
@@ -38,9 +40,11 @@
                             <td>{{ $company->id }}</td>
                             <td>{{ $company->full_company_name }}</td>
                             <td>{{ $company->short_ru_name }}</td>
+                            <td>{{ $company->bin }}</td>
                             <td>
                                 {{ $company->getTypeCompany() }}
                             </td>
+                            <td>@if($company->ashana == 0) Да @else Нет @endif</td>
                             <td>
                                 <a href="{{ route('company.edit', ['company' => $company->id]) }}">Ред.</a>
                             </td>

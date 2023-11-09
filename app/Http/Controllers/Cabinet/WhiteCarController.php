@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Kpp;
 use App\Models\WclCompany;
 use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
@@ -22,7 +23,7 @@ class WhiteCarController extends Controller
     {
         $white_car_lists = WclCompany::orderBy('white_car_lists.id', 'DESC')
             //->with('company')
-            ->select('wcl_companies.*', 'companies.short_ru_name', 'white_car_lists.gov_number')
+            ->select('wcl_companies.*', 'companies.short_ru_name', 'white_car_lists.gov_number', 'white_car_lists.full_name')
             ->join('white_car_lists', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
             ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
             ->where(['wcl_companies.company_id' => Auth::user()->company_id])
@@ -37,7 +38,8 @@ class WhiteCarController extends Controller
      */
     public function create()
     {
-        return view('cabinet.white_car.create');
+        $kpps = Kpp::all();
+        return view('cabinet.white_car.create', compact('kpps'));
     }
 
     /**
@@ -50,6 +52,8 @@ class WhiteCarController extends Controller
     {
         $data = $request->except('_token');
         $data['company_id'] = Auth::user()->company_id;
+        $kpp = Kpp::findOrFail($data['kpp_id']);
+        $data['kpp_name'] = $kpp->name;
 
         /*$request->validate([
             'gov_number' => 'required|unique:white_car_lists|max:20',
@@ -113,8 +117,9 @@ class WhiteCarController extends Controller
     {
         $wcl_company = WclCompany::findOrFail($id);
         $white_car_list = $wcl_company->wcl;
+        $kpps = Kpp::all();
         //$wcl_company = WclCompany::where(['wcl_id' => $white_car_list->id, 'company_id' => Auth::user()->company_id])->first();
-        return view('cabinet.white_car.edit', compact('white_car_list', 'wcl_company'));
+        return view('cabinet.white_car.edit', compact('white_car_list', 'wcl_company', 'kpps'));
     }
 
     /**
@@ -129,6 +134,8 @@ class WhiteCarController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->except('_token');
+            $kpp = Kpp::findOrFail($data['kpp_id']);
+            $data['kpp_name'] = $kpp->name;
             $white_car_list = WhiteCarList::findOrFail($id);
             $white_car_list->update($data);
 

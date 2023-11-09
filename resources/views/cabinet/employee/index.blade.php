@@ -23,12 +23,16 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <table id="example1" class="table table-bordered table-striped">
+
+                    @include('partials.emp_filters')
+
+                    <table id="emp_table" class="table table-bordered table-striped">
                         <thead>
                         <tr>
                             <th><input type="checkbox" @change="selectAll($event)"></th>
                             <th>ID</th>
                             <th>ФИО</th>
+                            <th>Компания</th>
                             <th>Подразделение</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -38,19 +42,26 @@
                         <tbody>
                         @foreach($employees as $employee)
                         <tr>
-                            <td><input type="checkbox" class="chs" v-model="ids" data-id="{{ $employee->id }}" value="{{ $employee->id }}"></td>
+                            <td>
+                                @if($employee->status == 'works')
+                                <input type="checkbox" class="chs" v-model="ids" data-id="{{ $employee->id }}" value="{{ $employee->id }}">
+                                @endif
+                            </td>
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->full_name }}</td>
+                            <td>{{ $employee->short_en_name }}</td>
+                            <td>{{ $employee->dep_name }}</td>
+                            <td>{{ trans("words.".$employee->status) }}</td>
                             <td>
-								@if($employee->department)
-                                {{ $employee->department->title }}
-								@endif
-                            </td>
-                            <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
-                            <td>
+                                @if(strlen($employee->uuid) == 7)
+                                    <i title="Новый бейджик" style="font-size: 20px; color: green;" class="fa fa-id-card" aria-hidden="true"></i> &nbsp;
+                                @endif
+
+                                @if($employee->status == 'works')
                                 <a target="_blank" href="{{ route('employee.badge', ['id' => $employee->id]) }}">
                                     <i class="fa fa-print"></i>
                                 </a>
+                                @endif
                             </td>
                             <td>
                                 <a href="{{ route('cabinet.employees.edit', ['employee' => $employee->id]) }}">Ред.</a>
@@ -63,6 +74,7 @@
                             <th></th>
                             <th>ID</th>
                             <th>ФИО</th>
+                            <th>Компания</th>
                             <th>Подразделение</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -89,12 +101,38 @@
 
     <script>
         $(function () {
-            $("#example1").DataTable({
+            $("#emp_table").DataTable({
                 "responsive": true,
                 "autoWidth": false,
                 "language": {
                     "url": "/dist/Russian.json"
                 },
+            });
+
+            $.fn.dataTable.ext.search.push(
+                function( settings, searchData, index, rowData, counter ) {
+
+                    var offices = $('input:checkbox[name="emp_status"]:checked').map(function() {
+                        return this.value;
+                    }).get();
+
+
+                    if (offices.length === 0) {
+                        return true;
+                    }
+
+                    if (offices.indexOf(searchData[5]) !== -1) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            );
+
+            var table = $('#emp_table').DataTable();
+
+            $('input:checkbox').on('change', function () {
+                table.draw();
             });
         });
     </script>

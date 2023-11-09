@@ -5,7 +5,7 @@
                 <template>
                     <v-container>
                         <v-row>
-                            <v-col md="4">
+                            <v-col md="3">
                                 <v-menu
                                     v-model="menu2"
                                     :close-on-content-click="false"
@@ -28,7 +28,7 @@
                                 </v-menu>
                             </v-col>
 
-                            <v-col md="4">
+                            <v-col md="3">
                                 <v-menu
                                     v-model="menu3"
                                     :close-on-content-click="false"
@@ -51,7 +51,7 @@
                                 </v-menu>
                             </v-col>
 
-                            <v-col md="4">
+                            <v-col md="3">
                                 <v-autocomplete
                                     :search-input.sync="searchInput"
                                     :hint="`${companies.id}, ${companies.short_ru_name}`"
@@ -64,33 +64,26 @@
                                 ></v-autocomplete>
                             </v-col>
 
-                            <v-col md="4">
-                                <v-text-field
-                                    v-model="standart"
-                                    type="number"
-                                    label="Стандарт"
-                                    required
-                                ></v-text-field>
+                            <v-col md="3">
+                                <!--<v-btn type="button" @click="getKitchenLogs()" class="primary">Показать</v-btn>-->
+                                <v-btn type="button" @click="generateKitchenLogs()" class="primary">Скачать отчет</v-btn>
+                                <!--<a style="display:none" v-if="link_excel" :href="href_excel" target="_blank">Выгрузить в Excel</a>-->
                             </v-col>
 
-                            <v-col md="4">
-                                <v-text-field
-                                    v-model="bulochki"
-                                    type="number"
-                                    label="Булочки"
-                                    required
-                                ></v-text-field>
-                            </v-col>
-
-                            <v-col md="4">
-                                <v-btn type="button" @click="getKitchenLogs()" class="primary">Показать</v-btn>
-                                <a style="display:none" v-if="link_excel" :href="href_excel" target="_blank">Выгрузить в Excel</a>
+                            <v-col md="12">
+                                <div v-if="progress_circule" class="text-center">
+                                    <v-progress-circular
+                                        style="width: 100px; height: 100px;"
+                                        indeterminate
+                                        color="primary"
+                                    ></v-progress-circular>
+                                </div>
                             </v-col>
                         </v-row>
                     </v-container>
                 </template>
 
-                <template>
+                <!--<template>
                     <v-card>
                         <v-card-title>
                             Список пользователей
@@ -126,13 +119,13 @@
                             </template>
 
                             <template v-slot:item.din_type="{item}">
-                                <span v-if="item.din_type == 1">Стандарт</span>
+                                <span v-if="item.din_type === 1">Стандарт</span>
                                 <span v-else>Булочки</span>
                             </template>
                         </v-data-table>
 
                     </v-card>
-                </template>
+                </template>-->
             </v-container>
         </v-main>
     </v-app>
@@ -146,8 +139,6 @@
             return {
                 menu2: false,
                 menu3: false,
-                standart: 500,
-                bulochki: 500,
                 link_excel: false,
                 href_excel: "",
                 from_date: new Date().toISOString().substr(0, 10),
@@ -163,6 +154,7 @@
                     { text: 'Тип обеда', value: 'din_type' },
                     { text: 'Талонов', value: 'cnt' },
                 ],
+                progress_circule: false,
             }
         },
         props: [
@@ -190,6 +182,19 @@
                 }
                 var workbook = XLSX.utils.table_to_book(document.getElementById('printTable'));
                 XLSX.writeFile(workbook, file_name);
+            },
+            generateKitchenLogs(){
+                let formData = new FormData();
+                formData.append('company_id', this.company_id);
+                formData.append('cashier_id', this.cashier.id);
+                formData.append('from_date', this.from_date);
+                formData.append('to_date', this.to_date);
+                axios.post('ashana/generate-logs', formData)
+                    .then(res => {
+                        window.location.href = res.data;
+                        this.progress_circule = false;
+                    })
+                    .catch(err => console.log(err))
             }
         }
     }

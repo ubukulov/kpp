@@ -84,7 +84,7 @@ class DriverController extends Controller
 
     public function sendMail($permit)
     {
-        $to      = 'Alexandr.Konovalov@htl.kz';
+        $to      = 'nadamu.drivers@dlg.kz';
         $subject = 'Водитель хочет получить заказы!';
         $fio = $permit->last_name;
         $phone = $permit->phone;
@@ -141,9 +141,9 @@ class DriverController extends Controller
 
         $headers  = 'MIME-Version: 1.0' . "\r\n";
         $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
-        $headers .= 'To: Alexandr Konovalov <Alexandr.Konovalov@htl.kz>';
-        $headers .= 'From: KPP <info@htl.kz>' . "\r\n";
-        $headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz, bekzhan.salibayev@ailp.kz, Nurken.Ramankul@htl.kz';
+        $headers .= 'To: Nadamu Drivers <nadamu.drivers@dlg.kz>';
+        $headers .= 'From: KPP <nadamu@dlg.kz>' . "\r\n";
+        //$headers .= 'Cc: vladimir.yemelyanov@htl.kz, kairat.ubukulov@htl.kz, bekzhan.salibayev@ailp.kz, Nurken.Ramankul@htl.kz';
 
         mail($to, $subject, $message, $headers);
     }

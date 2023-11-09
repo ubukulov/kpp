@@ -28,6 +28,12 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('/samsung/barcode/get-orders', 'CabinetController@getOrders');
     Route::post('/samsung/barcode/command-print', 'CabinetController@printOrders');
 
+    # Штрих-код для Bosch
+    Route::get('/bosch/barcode', 'CabinetController@getBarcodeForBosch')->name('cabinet.barcode.bosch');
+    Route::get('/bosch/barcode/get-orders', 'CabinetController@getOrdersForBosch');
+    Route::post('/bosch/barcode/command-print', 'CabinetController@printOrdersBosch');
+    Route::post('/bosch/barcode/get-sscc', 'CabinetController@getSSCC');
+
     # Растаможка Самсунг
     Route::get('customs', 'CabinetController@customs')->name('cabinet.customs.index');
     Route::post('/get/permits-customs', 'PermitController@getPermitsCustoms');
@@ -61,7 +67,6 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
         Route::get('/pallet-sscc', 'WmsController@palletSSCC')->name('cabinet.wms.palletSSCC');
         Route::get('/pallet-sscc/generate', 'WmsController@generatePalletSSCC')->name('cabinet.wms.generatePalletSSCC');
         Route::post('/pallet-sscc/{code}/print', 'WmsController@printPalletSSCC')->name('cabinet.wms.printPalletSSCC');
-        Route::get('/sss', 'WmsController@sss');
 
         # Bosch
         Route::get('bosch/invoices', 'WmsController@boschInvoices')->name('cabinet.wms.boschInvoices');
@@ -74,10 +79,16 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('/talon', 'KitchenController@talon')->name('cabinet.ashana.talon');
     Route::get('/ashana/reports', 'KitchenController@reports')->name('cabinet.ashana.reports');
     Route::post('ashana/get-logs', 'KitchenController@getLogs');
+    Route::post('ashana/generate-reports', 'KitchenController@generateReports');
 
     # Ячейки
     Route::get('/barcode-for-wms-boxes', 'WmsController@barcodeForWmsBoxes')->name('cabinet.barcodeForWmsBoxes');
     Route::post('/barcode-for-wms-boxes', 'WmsController@barcodeForWmsBoxes2');
     Route::get('/barcode-get-client-boxes/{depID}', 'WmsController@getClientBoxes');
     Route::get('/jti/barcode-command-print', 'WmsController@jtiCommandPrint');
+
+    # Диспетчер (оповещение)
+    Route::group(['prefix' => 'dispatcher'], function(){
+        Route::get('/', 'DispatcherController@index')->name('cabinet.dispatcher.index');
+    });
 });

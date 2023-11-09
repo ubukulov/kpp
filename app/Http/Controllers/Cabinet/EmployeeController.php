@@ -21,9 +21,31 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $company = Auth::user()->company;
-        if(Auth::user()->hasRole('otdel-kadrov')) {
-            $employees = User::orderBy('id', 'DESC')->get();
+        $user = Auth::user();
+        $company = $user->company;
+        if($user->hasRole('otdel-kadrov')) {
+            //$employees = User::orderBy('id', 'DESC')->get();
+            $settings = json_decode($user->settings, true);
+            if(!empty($settings) && isset($settings['human_resources_departments'])) {
+                $query = User::orderBy('id', 'DESC')
+                    ->selectRaw('users.*, companies.short_en_name, departments.title as dep_name')
+                    ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                    ->join('companies', 'companies.id', 'users.company_id')
+                    ->leftJoin('departments', 'departments.id', 'users.department_id');
+                if(!is_null($settings['human_resources_departments']['companies'])) {
+                    $companyIds = explode(',', $settings['human_resources_departments']['companies']);
+                    $query = $query->whereIn('users.company_id', $companyIds);
+                }
+
+                if(!is_null($settings['human_resources_departments']['departments'])) {
+                    $departmentIds = explode(',', $settings['human_resources_departments']['departments']);
+                    $query = $query->whereIn('users.department_id', $departmentIds);
+                }
+
+                $employees = $query->get();
+            } else {
+                $employees = [];
+            }
         } else {
             $employees = User::where(['company_id' => $company->id])->get();
         }
@@ -64,7 +86,7 @@ class EmployeeController extends Controller
         // если у пользователя не задан uuid, то его генерируем и сохраняем
         if(empty($user->uuid)){
             //$str = $user->id."-".$user->full_name;
-            $user->uuid = base64_encode($user->iin);
+            $user->uuid = $user->generateUniqueRandomNumber();
             $user->save();
         }
 
@@ -120,8 +142,7 @@ class EmployeeController extends Controller
 
         // если у пользователя не задан uuid, то его генерируем и сохраняем
         if(empty($user->uuid)) {
-            //$str = $user->id."-".$user->full_name;
-            $data['uuid'] = base64_encode($user->iin);
+            $data['uuid'] = $user->generateUniqueRandomNumber();
         }
 
         // Зафиксируем статусы
@@ -209,6 +230,10 @@ class EmployeeController extends Controller
     public function badge($id)
     {
         $user = User::findOrFail($id);
+        if(strlen($user->uuid) != 7) {
+            $user->uuid = $user->generateUniqueRandomNumber();
+            $user->save();
+        }
         return view('cabinet.employee.badge', compact('user'));
     }
 
@@ -216,6 +241,12 @@ class EmployeeController extends Controller
     {
         $ids = explode(",", $ids);
         $users = User::whereIn('id', $ids)->get();
+        foreach($users as $user) {
+            if(strlen($user->uuid) != 7) {
+                $user->uuid = $user->generateUniqueRandomNumber();
+                $user->save();
+            }
+        }
         return view('cabinet.employee.badges', compact('users'));
     }
 }

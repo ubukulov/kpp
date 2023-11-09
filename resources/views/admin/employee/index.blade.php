@@ -24,7 +24,10 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    <table id="example1" class="table table-bordered table-striped">
+
+                    @include('partials.emp_filters')
+
+                    <table id="emp_table" class="table table-bordered table-striped">
                         <thead>
                         <tr>
                             <th></th>
@@ -46,24 +49,24 @@
                             <td>{{ $employee->id }}</td>
                             <td>{{ $employee->full_name }}</td>
                             <td>
-                                {{ $employee->company->short_ru_name }}
+                                {{ $employee->short_ru_name }}
                             </td>
                             <td>
-                                @if($employee->department_id == 0)
-                                    Не указано
-                                @else
-                                    {{ $employee->department->title }}
-                                @endif
+                                {{ $employee->department_name }}
                             </td>
                             <td>
                                 {{ $employee->iin }}
                             </td>
                             <td>
-                                {{ $employee->position->title }}
+                                {{ $employee->position_name }}
                             </td>
-                            <td>{{ trans("words.".$employee->getWorkingStatus()->status) }}</td>
-{{--                            <td>{{ $employee->email }}</td>--}}
                             <td>
+                                    {{ trans("words.".$employee->status) }}
+                            </td>
+                            <td>
+                                @if(strlen($employee->uuid) == 7)
+                                    <i title="Новый бейджик" style="font-size: 20px; color: green;" class="fa fa-id-card" aria-hidden="true"></i> &nbsp;
+                                @endif
                                 <a target="_blank" href="{{ route('admin.employee.badge', ['id' => $employee->id]) }}">
                                     <i class="fa fa-print"></i>
                                 </a>
@@ -115,12 +118,38 @@
 
     <script>
         $(function () {
-            $("#example1").DataTable({
+            $("#emp_table").DataTable({
                 "responsive": true,
                 "autoWidth": false,
                 "language": {
                     "url": "/dist/Russian.json"
                 }
+            });
+
+            $.fn.dataTable.ext.search.push(
+                function( settings, searchData, index, rowData, counter ) {
+
+                    var offices = $('input:checkbox[name="emp_status"]:checked').map(function() {
+                        return this.value;
+                    }).get();
+
+
+                    if (offices.length === 0) {
+                        return true;
+                    }
+
+                    if (offices.indexOf(searchData[7]) !== -1) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            );
+
+            var table = $('#emp_table').DataTable();
+
+            $('input:checkbox').on('change', function () {
+                table.draw();
             });
         });
     </script>

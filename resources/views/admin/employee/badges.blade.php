@@ -27,7 +27,7 @@ use chillerlan\QRCode\QRCode;
             max-width: 100%;
         }
         .contact-info {
-            padding: 0px 0px 0px 10px;
+            padding: 0px 0px 0px 5px;
             font-size: 14px;
         }
         .contact-info p {
@@ -35,11 +35,11 @@ use chillerlan\QRCode\QRCode;
         }
         .user_img {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .user_img img {
             max-width: 100%;
-            height: 40mm;
+            /*height: 40mm;*/
         }
         @page {
             size: A4;
@@ -69,25 +69,27 @@ use chillerlan\QRCode\QRCode;
         @foreach($users as $user)
             <div class="col-sm-4" style="margin-bottom: 10px">
                 <div class="badge" id="printSelection2">
+                    <div style="font-size: 30px;margin-bottom: 5px">
+                        <span>ПРОПУСК</span>
+                    </div>
                     <div class="user_img">
                         @if(empty($user->image))
-                            <img src="/img/default-user-image.png" alt="">
+                            <img width="200" height="150" src="/img/default-user-image.png" alt="">
                         @else
                             <img src="{{ $user->image }}" alt="">
                         @endif
                     </div>
                     <div class="contact-info">
                         <p style="font-weight: bold;text-align: center;font-size: 18px; margin-bottom: 5px !important;white-space: normal;">{{ $user->full_name }}</p>
-                        <p style="font-weight: bold;text-align: center;font-size: 16px; margin-bottom: 5px !important;white-space: normal;">{{ $user->position->title }}</p>
+                        <p style="font-weight: bold;text-align: center;font-size: 14px; margin-bottom: 5px !important;white-space: normal;">{{ $user->position->title }}</p>
                         <p style="font-weight: normal;text-align: center;font-size: 16px; margin-bottom: 5px !important;white-space: normal;">{{ $user->company->short_ru_name }}</p>
                     </div>
                     <div class="qr-code">
                         <?php
                         // quick and simple:
-                        echo '<img width="150" height="150" src="'.(new QRCode)->render($user->getUuid()).'" alt="QR Code" />';
+                        echo '<img width="120" height="120" src="'.(new QRCode)->render($user->getUuid()).'" alt="QR Code" />';
                         ?>
                     </div>
-
                 </div>
             </div>
         @endforeach

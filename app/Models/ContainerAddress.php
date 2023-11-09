@@ -13,20 +13,11 @@ class ContainerAddress extends Model
         'id', 'title', 'zone', 'kind', 'row', 'place', 'floor', 'name'
     ];
 
-    /*
-    public static function boot()
-    {
-        parent::boot();
-        self::creating(function ($model){
-            $model->name = substr(Str::slug('Спредер'), 0, 2)."-".$this->row."-".$this->place."-".$this->floor;;
-        });
-    }*/
-
     public static function getFreeRows($data)
     {
         $zone = $data['zone'];
         $container_id = $data['container_id'];
-		
+
         if (isset($_SESSION['not_place'])) {
             unset($_SESSION['not_place']);
         }
@@ -35,7 +26,7 @@ class ContainerAddress extends Model
                 ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
                 ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
                 ->get();
-				
+
 		if ($zone == 'SPR' || $zone == 'SPK') {
 			$arr = [];
 			foreach($container_address as $address) {
@@ -72,8 +63,8 @@ class ContainerAddress extends Model
 				->select('row')
                 ->leftJoin('container_stocks', 'container_stocks.container_address_id', '=', 'container_address.id')
                 ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
-                ->get();	
-			return $container_address;	
+                ->get();
+			return $container_address;
 		}
     }
 
@@ -236,4 +227,6 @@ class ContainerAddress extends Model
             return $container_address;
         }
     }
+
+
 }

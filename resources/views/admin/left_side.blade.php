@@ -33,7 +33,10 @@
                         </p>
                     </a>
                 </li>
-                <li class="nav-item has-treeview">
+
+                @if(Auth::guard('admin')->user()->type != 'it')
+
+                <li class="nav-item has-treeview @if(request()->is('admin/catalog/*')) menu-open @endif">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-copy"></i>
                         <p>
@@ -42,59 +45,71 @@
                             <span class="badge badge-info right">9</span>
                         </p>
                     </a>
-                    <ul class="nav nav-treeview" style="margin-left: 15px;">
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/catalog/*')) display: block; @else display: none; @endif">
                         <li class="nav-item">
-                            <a href="{{ route('position.index') }}" class="nav-link @if(request()->is('admin/position*')) active @endif">
+                            <a href="{{ route('position.index') }}" class="nav-link @if(request()->is('admin/catalog/position*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список должностей</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('company.index') }}" class="nav-link @if(request()->is('admin/company*')) active @endif">
+                            <a href="{{ route('company.index') }}" class="nav-link @if(request()->is('admin/catalog/company*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список компании</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('department.index') }}" class="nav-link @if(request()->is('admin/department*')) active @endif">
+                            <a href="{{ route('department.index') }}" class="nav-link @if(request()->is('admin/catalog/department*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Подразделение</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('role.index') }}" class="nav-link @if(request()->is('admin/role*')) active @endif">
+                            <a href="{{ route('role.index') }}" class="nav-link @if(request()->is('admin/catalog/role*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Роль</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('permission.index') }}" class="nav-link @if(request()->is('admin/permission*')) active @endif">
+                            <a href="{{ route('permission.index') }}" class="nav-link @if(request()->is('admin/catalog/permission*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Разрешение</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.containers.index') }}" class="nav-link @if(request()->is('admin/containers*')) active @endif">
+                            <a href="{{ route('admin.containers.index') }}" class="nav-link @if(request()->is('admin/catalog/containers*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список контейнеров</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.container-address.index') }}" class="nav-link @if(request()->is('admin/container-address*')) active @endif">
+                            <a href="{{ route('admin.container-address.index') }}" class="nav-link @if(request()->is('admin/catalog/container-address*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Контейнер: Адресы</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.technique.index') }}" class="nav-link @if(request()->is('admin/technique*')) active @endif">
+                            <a href="{{ route('admin.technique.index') }}" class="nav-link @if(request()->is('admin/catalog/technique*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список техников</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.printer.index') }}" class="nav-link @if(request()->is('admin/printer*')) active @endif">
+                            <a href="{{ route('admin.printer.index') }}" class="nav-link @if(request()->is('admin/catalog/printer*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список принтеров</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.tech-type.index') }}" class="nav-link @if(request()->is('admin/catalog/tech-type*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Техника: типы</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.tech-place.index') }}" class="nav-link @if(request()->is('admin/catalog/tech-place*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Техника: зоны</p>
                             </a>
                         </li>
                     </ul>
@@ -179,6 +194,85 @@
                         </li>
                     </ul>
                 </li>
+
+                <li class="nav-item has-treeview @if(request()->is('admin/dispatcher/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-fax"></i>
+                        <p>
+                            Диспетчер
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">2</span>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/dispatcher/*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dispatcher.list') }}" class="nav-link @if(request()->is('admin/dispatcher/list*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Список оповещения</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dispatcher.alerts.index') }}" class="nav-link @if(request()->is('admin/dispatcher/alerts*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Типы оповещения</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item has-treeview @if(request()->is('admin/ashana/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-birthday-cake"></i>
+                        <p>
+                            Асхана
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">1</span>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/ashana/*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.ashana.index') }}" class="nav-link @if(request()->is('admin/ashana/form*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Форма</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                @endif
+
+                @if(Auth::guard('admin')->user()->type == 'it' || Auth::guard('admin')->user()->type == 'superadmin')
+
+                <li class="nav-item">
+                    <a href="{{ route('employee.index') }}" class="nav-link @if(request()->is('admin/employee*')) active @endif">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>
+                            Список пользователей
+                        </p>
+                    </a>
+                </li>
+
+                <li class="nav-item has-treeview @if(request()->is('admin/ckud/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-fax"></i>
+                        <p>
+                            CKUD
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">1</span>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/dispatcher/*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.ckud.index') }}" class="nav-link @if(request()->is('admin/ckud/form*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Форма</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                @endif
+
                 {{--<li class="nav-item">
                     <a href="{{ route('admin.whatsapp.index') }}" class="nav-link @if(request()->is('admin/sending*')) active @endif">
                         <i class="nav-icon fab fa-whatsapp"></i>

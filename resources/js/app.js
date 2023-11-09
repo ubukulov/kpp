@@ -45,6 +45,8 @@ Vue.component('kitchen-report', require('./kitchen/Report').default);
 Vue.component('crane-services', require('./crane/Services').default);
 Vue.component('crane', require('./crane/Crane').default);
 Vue.component('mark-manager', require('./mark/Manager').default);
+Vue.component('technique-create-task', require('./technique/CreateTaskTechnique.vue').default);
+Vue.component('technique-controller', require('./technique/TechniqueComponent.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

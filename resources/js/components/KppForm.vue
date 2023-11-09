@@ -1,7 +1,44 @@
 <template>
     <div class="row">
         <div class="col-md-12 left_content">
-            <div class="row">
+            <div v-if="user.kpp_name == 'kpp4'" class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Вид операции</label>
+                        <select @change="selectedOperationType($event)" v-model="operation_type" tabindex="10" name="operation_type" id="type3" class="form-control">
+                            <option value="1">Погрузка</option>
+                            <option value="2">Разгрузка</option>
+                            <option value="3">Другие действия</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div v-show="parseInt(operation_type) !== 3" class="col-md-3">
+                    <div class="form-group">
+                        <label style="color: red;">Номер контейнера (новые)</label>
+                        <input placeholder="ABCD1234567, ASCF7654321" onkeyup="return no_cirilic(this);" min="11" max="23" maxlength="23" style="text-transform: uppercase;" v-model="incoming_container_number" type="text" class="form-control">
+                    </div>
+                </div>
+
+
+
+                <div v-show="parseInt(operation_type) !== 3" class="col-md-5" style="padding-top: 52px;">
+                    <button type="button" @click="checkContainer()" class="btn btn-warning">Проверить!!!</button>
+                </div>
+
+                <div v-if="!isRequiredForVerification && operation_type !== 3" class="col-md-12">
+                    <v-alert
+                        dense
+                        border="left"
+                        type="warning"
+                        v-html="info"
+                    >
+
+                    </v-alert>
+                </div>
+            </div>
+
+            <div v-show="isRequiredForVerification" class="row">
                 <div class="col-md-6">
                     <h4 style="font-style: italic;">Данные о машине</h4>
                     <div class="row">
@@ -326,7 +363,9 @@
                 foreign_car: 0,
                 active_btn: false,
                 filteredCompanies: [],
-                invoice_cmr_number: null
+                invoice_cmr_number: null,
+                isRequiredForVerification: false,
+                info: 'Перед выдачой пропуска нужно проверить контейнер на заявку!!!'
             }
         },
         props: [
@@ -338,6 +377,13 @@
             'user'
         ],
         methods: {
+            selectedOperationType(event){
+                if(parseInt(event.target.value) === 3) {
+                    this.isRequiredForVerification = true;
+                } else {
+                    this.isRequiredForVerification = false;
+                }
+            },
             checkCar(){
                 axios.get('/get-car-info/'+this.tex_number)
                     .then(res => {
@@ -364,6 +410,26 @@
                         this.phone = res.data.phone;
                     })
                     .catch(err => {
+                        if(err.response.status === 401) {
+                            window.location.href = '/login';
+                        } else {
+                            console.log(err)
+                        }
+                    })
+            },
+            checkContainer(){
+                let formData = new FormData();
+                formData.append('containers', this.incoming_container_number);
+                formData.append('operation_type', this.operation_type);
+                axios.post('/checking-container-for-application', formData)
+                    .then(res => {
+                        console.log(res);
+                        this.info = res.data;
+                        this.isRequiredForVerification = true;
+                    })
+                    .catch(err => {
+                        this.isRequiredForVerification = false;
+                        this.info = err.response.data;
                         if(err.response.status === 401) {
                             window.location.href = '/login';
                         } else {
@@ -567,9 +633,11 @@
         },
         created(){
             this.getPermits();
-            /*if(this.user.id === 29) {
-                this.company_id = 31;
-            }*/
+            if(this.user.kpp_name === 'kpp4') {
+                this.isRequiredForVerification = false;
+            } else {
+                this.isRequiredForVerification = true;
+            }
             let ss = this.user;
 
             this.filteredCompanies = this.companies.filter(function(item){

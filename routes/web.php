@@ -21,6 +21,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('/get-user-info/{id}', 'IndexController@getUserInfo');
     Route::get('/get-car-info/{nm}', 'IndexController@getCarInfo');
     Route::get('/get-driver-info/{nm}', 'IndexController@getDriverInfo');
+    Route::post('/checking-container-for-application', 'IndexController@checkingContainerForApplication');
     Route::post('/order-permit-by-kpp', 'KppController@orderPermitByKpp');
     Route::post('/fix-date-out-for-current-permit', 'IndexController@fixDateOutForCurrentPermit');
     Route::get('/get-permits-list', 'IndexController@getPermits');
@@ -64,6 +65,12 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('task/position/cancel', 'KTController@taskPositionCancel')->name('task.position.cancel');
         Route::post('/task/position/edit', 'KTController@taskPositionEdit')->name('task.position.edit');
         Route::get('/container/{number}/get-logs', 'KTController@getContainerLogs');
+
+        # Technique - учет техники
+        Route::get('/technique-task-create', 'TechniqueController@taskCreate');
+        Route::post('/technique/create-task-by-file', 'TechniqueController@createTaskByFile');
+        Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
+        Route::get('/technique_task/{id}/show-details', 'TechniqueController@showDetails');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -100,15 +107,25 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('task/confirm-cancel-position', 'KTController@confirmCancelPosition');
         Route::post('task/reject-edit-position', 'KTController@rejectEditPosition');
         Route::post('task/confirm-edit-position', 'KTController@confirmEditPosition');
+
+        # Учет техники
+        Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
+    });
+
+    # Учет техники: контроллер
+    Route::group(['prefix' => 'technique-controller', 'middleware' => 'role:technique-controller'], function(){
+        Route::get('/', 'TechniqueController@techniqueController');
+        Route::post('/get-information-by-qr-code', 'TechniqueController@getInformationByQRCode');
     });
 
     # Столовая
     Route::group(['prefix' => 'ashana', 'middleware' => 'role:ashana'], function(){
         Route::get('/', 'KitchenController@index')->name('kitchen.index');
-        Route::get('/get-statistics/{id}', 'KitchenController@getStatistics');
+        Route::get('/get-statistics', 'KitchenController@getStatistics');
         Route::post('/get-user-info', 'KitchenController@getUserInfo');
         Route::post('/fix-changes', 'KitchenController@fixChanges');
         Route::post('/get-logs', 'KitchenController@getLogs');
+        Route::post('/generate-logs', 'KitchenController@generateLogs');
     });
 
     # Маркировка: Менеджер
@@ -127,7 +144,16 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/get-printers', 'MarkController@getPrinters');
         Route::get('/{mark_id}/get-containers', 'MarkController@getContainers');
         Route::post('/command-print', 'MarkController@commandPrint');
+        Route::get('/print-using-codes/{printer_id}', 'MarkController@printByUsingCodes'); // только для программиста :)
     });
+
+    # Список белых машинов которые без пропусков заежает и выезжает
+    Route::group(['prefix' => 'white-car-lists', 'middleware' => 'role:kpp-security'], function(){
+        Route::get('/', 'ViewController@whiteCarLists')->name('white.car.lists');
+        Route::post('/search-by-number', 'ViewController@searchByNumberInWCL');
+        Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
+    });
+
 });
 
 
@@ -142,9 +168,7 @@ Route::get('/view-detail-info-permit/get-car-info/{nm}', 'ViewController@getCarI
 Route::get('/view-detail-info-permit/get-driver-info/{nm}', 'ViewController@getDriverInfo');
 Route::post('/view-detail-info-permit/download-permits-for-selected-time', 'ViewController@getPermitsForSelectedTime')->name('download.permits');
 
-# Список белых машинов которые без пропусков заежает и выезжает
-Route::get('/white-car-lists', 'ViewController@whiteCarLists')->name('white.car.lists');
-Route::get('/white-car-lists-for-kpp7', 'ViewController@whiteCarListsForKpp7')->name('white.car.list.for.kpp7');
+
 
 Route::get('/form4', 'IndexController@form4');
 Route::get('/form4/create', 'IndexController@form4Create')->name('form4.create');
@@ -152,3 +176,6 @@ Route::get('/form4/{id}/show', 'IndexController@form4Show')->name('form4.show');
 
 # For the Screen
 Route::get('/lv-order-screen', 'LVController@lvOrderScreen')->name('lv.order.screen');
+
+Route::get('/scan-qr-code', 'IndexController@scanQR');
+Route::post('/avigilon', 'IndexController@avigilon');

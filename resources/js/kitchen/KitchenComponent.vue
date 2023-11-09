@@ -32,7 +32,7 @@
                     <v-icon>mdi-room-service</v-icon>
                 </v-tab>
 
-                <v-tab href="#tab-2">
+                <v-tab v-if="user.id !== 1238" href="#tab-2">
                     Отчеты
                     <v-icon>mdi-check-box-multiple-outline</v-icon>
                 </v-tab>

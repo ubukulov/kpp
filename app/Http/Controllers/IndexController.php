@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Container;
+use App\Models\ContainerStock;
 use App\Models\Driver;
 use App\Models\Permit;
 use App\Models\User;
@@ -13,11 +15,34 @@ use Auth;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use DPD;
+use CKUD;
+
 
 class IndexController extends BaseController
 {
     public function welcome()
     {
+//        $user = User::with('company', 'position')->find(1);
+//        $data = [
+//            'Comment' => $user->position->title,
+//            'employeeGroupID' => 'f6e6250b-69f4-4f4a-9c4b-2bc357645d6b',
+//            'Number' => $user->id,
+//            'KeyNumber' => 54585655,
+//            'ResidentialAddress' => $user->company->full_company_name,
+//            'photo_http' => 'https://kpp.dlg.kz:8900/users_photos/d3/c8/1400_l_1682571448.jpeg',
+//        ];
+//
+//        $arr = explode(" ", $user->full_name);
+//        $LastName = (array_key_exists(0, $arr)) ? $arr[0] : '';
+//        $FirstName = (array_key_exists(1, $arr)) ? $arr[1] : '';
+//        $SecondName = (array_key_exists(2, $arr)) ? $arr[2] : '';
+//        $data['LastName'] = $LastName;
+//        $data['FirstName'] = $FirstName;
+//        $data['SecondName'] = $SecondName;
+        //dd(json_encode($data, JSON_UNESCAPED_SLASHES));
+        //dd(CKUD::addEmployee($data));
+        //dd(CKUD::getEmployees());
         return view('welcome');
     }
 
@@ -181,5 +206,62 @@ class IndexController extends BaseController
     public function form4Show($id)
     {
         return view('form4Show', compact('id'));
+    }
+
+    public function scanQR()
+    {
+        return view('scan-qr');
+    }
+
+    public function avigilon(Request $request)
+    {
+        $f = fopen(public_path() . '/avigilon.txt', 'a');
+        fwrite($f, $request);
+    }
+
+    public function checkingContainerForApplication(Request $request)
+    {
+        $containers = $request->input('containers');
+        $operation_type = $request->input('operation_type');
+        $arr = explode(',', $containers);
+        if(count($arr) == 1) {
+            $container = Container::whereNumber($arr[0])->first();
+            if($container) {
+                if($operation_type == 1) {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id, 'status' => 'in_order'])->first();
+                    if($container_stock) {
+                        return response('На контейнер есть заявка на выдачу');
+                    } else {
+                        return response('Не найден заявка на выдачу контейнера', 403);
+                    }
+                }
+
+                if($operation_type == 2) {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id, 'status' => 'incoming'])->first();
+                    if($container_stock) {
+                        return response('На контейнер есть заявка на прием');
+                    } else {
+                        return response('Не найден заявка на прием контейнера', 403);
+                    }
+                }
+
+
+
+                if ($operation_type == 3) {
+                    return response('Не нужно проверять');
+                }
+            } else {
+                return response('Контейнер не найдено', 403);
+            }
+        } else {
+            foreach ($arr as $item) {
+                $this->checkContainer($item, $operation_type);
+            }
+        }
+    }
+
+    public function checkContainer($container_number, $operation_type)
+    {
+
     }
 }

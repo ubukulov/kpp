@@ -14,7 +14,12 @@
                             <h3 class="card-title">Список пропусков</h3>
                         </div>
 
-                        <div class="col-6 text-right">
+                        <div class="col-6 text-right" style="display: flex; justify-content: space-between;">
+                            <a href="{{ asset('files/instructions/ЛК.Инструкция по заказу пропуска на территорию ИЛЦ DAMU.pdf') }}" target="_blank">
+                                <p>
+                                    <i class="nav-icon fas fa-download"></i> Скачать инструкцию
+                                </p>
+                            </a>
                             <a href="{{ route('cabinet.permits.create') }}" class="btn btn-dark">Добавить</a>
                         </div>
                     </div>
