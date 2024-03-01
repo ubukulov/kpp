@@ -19,7 +19,7 @@ class PersonalController extends BaseController
         $permits = Permit::orderBy('id', 'DESC')->take(20)->get();
         $lift_capacity = LiftCapacity::all();
         $body_type = BT::all();
-        $companies = Company::where(['type_company' => 'resident'])->orderBy('short_en_name')->get();
+        $companies = Company::where('type_company', '!=', 'technique')->orderBy('short_en_name')->get();
         return view('kpp-personal', compact('permits', 'lift_capacity', 'body_type', 'companies'));
     }
 

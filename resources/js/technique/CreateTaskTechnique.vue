@@ -24,6 +24,20 @@
                     </div>
 
                     <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Укажите компанию</label>
+                            <v-select
+                                :items="companies"
+                                class="form-control"
+                                :hint="`${companies.id}, ${companies.short_en_name}`"
+                                item-value="id"
+                                v-model="company_id"
+                                item-text="short_en_name"
+                            ></v-select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
                         <v-card>
                             <v-tabs
                                 v-model="tab"
@@ -112,6 +126,20 @@
 
                                             <v-col cols="4">
                                                 <div class="form-group">
+                                                    <v-select
+                                                        label="Укажите компанию"
+                                                        :items="companies"
+                                                        v-model="company_id"
+                                                        :hint="`${companies.id}, ${companies.short_en_name}`"
+                                                        item-value="id"
+                                                        item-text="short_en_name"
+                                                        class="form-control"
+                                                    ></v-select>
+                                                </div>
+                                            </v-col>
+
+                                            <v-col cols="4">
+                                                <div class="form-group">
                                                     <v-text-field
                                                         label="VIN код"
                                                         v-model="vin_code"
@@ -180,6 +208,8 @@
                 owner: null,
                 mark: null,
                 vin_code: null,
+                companies: [],
+                company_id: null
             }
         },
         methods: {
@@ -201,6 +231,9 @@
                     if (!this.vin_code) {
                         this.errors.push('Укажите VIN код');
                     }
+                    if (!this.companies) {
+                        this.errors.push('Укажите компанию');
+                    }
 
                     if (this.errors.length === 0) {
                         this.overlay = true;
@@ -213,6 +246,7 @@
                         formData.append('mark', this.mark);
                         formData.append('vin_code', this.vin_code);
                         formData.append('technique_type_id', this.technique_type_id);
+                        formData.append('company_id', this.company_id);
 
                         axios.post('/container-terminals/technique/create-task-by-keyboard', formData)
                             .then(res => {
@@ -231,6 +265,10 @@
                         this.errors.push('Укажите файл');
                     }
 
+                    if (!this.company_id) {
+                        this.errors.push('Укажите компанию');
+                    }
+
                     if (this.errors.length === 0) {
                         this.overlay = true;
                         this.disabled = true;
@@ -241,6 +279,7 @@
                         let formData = new FormData();
                         formData.append('task_type', this.task_type);
                         formData.append('trans_type', this.trans_type);
+                        formData.append('company_id', this.company_id);
                         formData.append('upload_file', this.$refs.upload_file.files[0]);
 
                         axios.post('/container-terminals/technique/create-task-by-file', formData, config)
@@ -260,8 +299,21 @@
                 if (t === 1) {
                     this.upload_file = this.$refs.upload_file.files[0];
                 }
+            },
+            getTechniqueCompanies(){
+                axios.get('/container-terminals/get-technique-companies')
+                    .then(res => {
+                        console.log(res);
+                        this.companies = res.data;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
             }
         },
+        created() {
+            this.getTechniqueCompanies();
+        }
     }
 </script>
 

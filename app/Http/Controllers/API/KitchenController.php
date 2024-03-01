@@ -123,4 +123,38 @@ class KitchenController extends BaseApiController
     {
         return preg_match('/[ҚқҰұҮүҒғҢңІіӘәӨөҺһ]/u', $str);
     }
+
+    public function fixChanges(Request $request)
+    {
+        $user_id     = (int) $request->input('user_id');
+        $user = User::findOrFail($user_id);
+        if($user) {
+            if($user->company_id == 0) {
+                return response('В штрих-коде отсутствует компания, срочно обратитесь в ИТ', 406);
+            }
+
+            $countAshanaToday = $user->countAshanaToday();
+
+            if($user->position_id == 188 && $countAshanaToday == 1) {
+                return response('Ваш лимит обедов за сегодня исчерпан', 406);
+            }
+
+            if($countAshanaToday > 1) {
+                return response('Ваш лимит обедов за сегодня исчерпан', 406);
+            }
+
+            AshanaLog::create([
+                'user_id' => $user->id, 'company_id' => $user->company_id, 'din_type' => 1,
+                'cashier_id' => $this->user->id
+            ]);
+
+            return response([
+                'din_type' => 1,
+                'full_name' => $user->full_name,
+                'count' => $user->countAshanaToday()
+            ], 200);
+        } else {
+            return response('Не найден пользватель, срочно обратитесь в ИТ', 404);
+        }
+    }
 }

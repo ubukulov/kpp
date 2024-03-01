@@ -16,17 +16,16 @@
                     <th>Тип</th>
                     <th>Место</th>
                     <th>Статус</th>
-                    <th>Фото</th>
                     <th>Дата</th>
                     </thead>
                     @foreach($stocks as $stock)
                         <tr>
-                            <td>{{ $stock->iteration }}</td>
+                            <td>{{ $loop->iteration }}</td>
                             <td>
                                 {{ $stock->vin_code }}
                             </td>
                             <td>
-                                {{ $stock->owner }}
+                                {{ $stock->short_en_name }}
                             </td>
                             <td>
                                 {{ $stock->mark }}
@@ -50,11 +49,6 @@
                                     Необходимо выдать
                                 @else
                                     Выдано
-                                @endif
-                            </td>
-                            <td>
-                                @if($stock->image)
-                                    <img src="{{ $stock->image }}" alt="">
                                 @endif
                             </td>
                             <td>

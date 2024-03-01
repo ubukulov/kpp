@@ -45,4 +45,32 @@ class WebcontController extends Controller
 
         return view('cabinet.webcont.show', compact('container_task', 'import_logs'));
     }
+
+    public function aftosWebcont()
+    {
+        return view('cabinet.webcont.aftos');
+    }
+
+    public function aftosWebcontSearch(Request $request)
+    {
+        $container_number = $request->input('container_number');
+        $container = Container::where('number', 'like', '%'.$container_number)->first();
+        if($container){
+            $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+            if ($container_stock) {
+                $container_address = $container_stock->container_address;
+                return response([
+                    'text' => "Контейнер: <span style='color: white;'>".$container->number."<br> (Владелец: $container->company, $container->container_type футовый)</span> <br>Адрес: $container_address->name ($container_address->title)",
+                ], 200);
+            } else {
+                return response([
+                    'text' => "Контейнер №".$container->number." отсутствует в остатке. <br> (Владелец: $container->company, $container->container_type футовый)</span>",
+                ], 200);
+            }
+        } else {
+            return response([
+                'text' => "Контейнер №".$container_number." не найден"
+            ], 404);
+        }
+    }
 }

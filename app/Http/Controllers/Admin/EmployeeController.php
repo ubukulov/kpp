@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Image;
 use Auth;
 use CKUD;
+use Cache;
 
 class EmployeeController extends Controller
 {
@@ -26,6 +27,25 @@ class EmployeeController extends Controller
      */
     public function index()
     {
+        //Cache::forget('ckud_users');
+        if(Cache::has('ckud_users')) {
+            $ckud_users_numbers = Cache::get('ckud_users');
+        } else {
+            $ckud_users_numbers = [];
+            for($i=0; $i<10; $i++) {
+                $ckud_users = CKUD::getEmployees($i, 100);
+                if($ckud_users->result == 0) {
+                    foreach($ckud_users->data as $datum) {
+                        if(!array_key_exists($datum->Number, $ckud_users_numbers)) {
+                            $ckud_users_numbers[$datum->Number] = $datum->ID;
+                        }
+                    }
+                }
+            }
+
+            Cache::put('ckud_users', $ckud_users_numbers, 18000);
+        }
+
         $employees = User::orderBy('id', 'DESC')
             ->selectRaw('users.*, companies.short_ru_name, positions.title as position_name, departments.title as department_name')
             ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
@@ -34,7 +54,7 @@ class EmployeeController extends Controller
             ->leftJoin('departments', 'departments.id', 'users.department_id')
             ->get();
 
-        return view('admin.employee.index', compact('employees'));
+        return view('admin.employee.index', compact('employees', 'ckud_users_numbers'));
     }
 
     /**
@@ -97,24 +117,26 @@ class EmployeeController extends Controller
             }
         }
 
-        $data = [
-            'Comment' => $user->position->title,
-            'employeeGroupID' => $data['ckud_group_id'],
-            'Number' => $user->id,
-            'KeyNumber' => $user->uuid,
-            'ResidentialAddress' => $user->company->full_company_name,
-            'photo_http' => $user->photo_http,
-        ];
+        if($data['ckud_group_id'] != 0){
+            $data = [
+                'Comment' => $user->position->title,
+                'employeeGroupID' => $data['ckud_group_id'],
+                'Number' => $user->id,
+                'KeyNumber' => $user->uuid,
+                'ResidentialAddress' => $user->company->full_company_name,
+                'photo_http' => $user->photo_http,
+            ];
 
-        $arr = explode(" ", $user->full_name);
-        $LastName = (array_key_exists(0, $arr)) ? $arr[0] : '';
-        $FirstName = (array_key_exists(1, $arr)) ? $arr[1] : '';
-        $SecondName = (array_key_exists(2, $arr)) ? $arr[2] : '';
-        $data['LastName'] = $LastName;
-        $data['FirstName'] = $FirstName;
-        $data['SecondName'] = $SecondName;
+            $arr = explode(" ", $user->full_name);
+            $LastName = (array_key_exists(0, $arr)) ? $arr[0] : '';
+            $FirstName = (array_key_exists(1, $arr)) ? $arr[1] : '';
+            $SecondName = (array_key_exists(2, $arr)) ? $arr[2] : '';
+            $data['LastName'] = $LastName;
+            $data['FirstName'] = $FirstName;
+            $data['SecondName'] = $SecondName;
 
-        CKUD::addEmployee($data);
+            CKUD::addEmployee($data);
+        }
 
         return redirect()->route('employee.index');
     }
@@ -179,6 +201,13 @@ class EmployeeController extends Controller
             if ($user->hasWorkingStatus()) {
                 if ($user->getWorkingStatus()->status != $data['status']) {
                     $user->createUserHistory($user, $data);
+                }
+                // Если сотрудник уволень, то удаляем запись в СКУДе
+                if($data['status'] == 'fired' && Cache::has('ckud_users')) {
+                    $ckud_users = Cache::get('ckud_users');
+                    if(array_key_exists($user->id, $ckud_users)) {
+                        CKUD::removeEmployee($ckud_users[$user->id]);
+                    }
                 }
             } else {
                 $user->createUserHistory($user, $data);

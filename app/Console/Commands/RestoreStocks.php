@@ -41,9 +41,27 @@ class RestoreStocks extends Command
     public function handle()
     {
         try {
+            /*$arrQ = [68355
+                ,68356
+                ,68357
+                ,68358
+                ,68359
+                ,68360
+                ,68361
+                ,68362
+                ,68451
+                ,68452
+                ,68453
+                ,68454
+                ,68494
+                ,68679];
             // По стоку
-            /*ContainerStock::chunk(100, function($container_stocks){
+            ContainerStock::chunk(100, function($container_stocks) use ($arrQ){
                 foreach($container_stocks as $container_stock) {
+                    if(in_array($container_stock->id, $arrQ)) {
+                        continue;
+                    }
+
                     $data = $container_stock->attributesToArray();
                     $data['user_id'] = 116;
                     $data['container_number'] = ($container_stock->container) ? $container_stock->container->number : null;
@@ -55,11 +73,11 @@ class RestoreStocks extends Command
 
                     ContainerLog::create($data);
 
-                    $container_task = $container_stock->container_task;
-                    if($container_task && $container_task->status == 'open') {
-                        $container_task->status = 'closed';
-                        $container_task->save();
-                    }
+//                    $container_task = $container_stock->container_task;
+//                    if($container_task && $container_task->status == 'open') {
+//                        $container_task->status = 'closed';
+//                        $container_task->save();
+//                    }
 
                     $this->info("Stock $container_stock->id has been ignored.");
 

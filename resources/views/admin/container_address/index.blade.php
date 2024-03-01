@@ -11,7 +11,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-6">
-                            <h3 class="card-title">Список должностей</h3>
+                            <h3 class="card-title">Список адресов для контейнеров</h3>
                         </div>
 
                         <div class="col-6 text-right">
@@ -89,8 +89,8 @@
             $("#example1").DataTable({
                 "responsive": true,
                 "autoWidth": false,
-                "bPaginate": false,
-                "info": false,
+                // "bPaginate": false,
+                // "info": false,
                 "language": {
                     "url": "/dist/Russian.json"
                 },

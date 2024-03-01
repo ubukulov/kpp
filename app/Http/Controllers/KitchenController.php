@@ -72,6 +72,12 @@ class KitchenController extends BaseController
                     ], 406);
                 }
 
+                if($user->position_id === 224) {
+                    return response([
+                        'message' => 'Для гостей запрещено использовать бейджик в столовое'
+                    ], 406);
+                }
+
                 return response([
                     'full_name' => $user->full_name,
                     'company_name' => $user->company->short_ru_name,
@@ -245,30 +251,30 @@ class KitchenController extends BaseController
 
         $company = Company::findOrFail($company_id);
         $logs = AshanaLog::whereDate('ashana_logs.date', '>=', $from_date)->whereDate('ashana_logs.date', '<=', $to_date)
-            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob')
+            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob, SUM(IF(ashana_logs.cashier_id = 1773, 1, 0)) as kpp3')
             ->join('users', 'users.id', 'ashana_logs.user_id')
             ->join('companies', 'companies.id', 'ashana_logs.company_id')
             ->leftJoin('positions', 'positions.id', 'users.position_id')
             ->where('ashana_logs.company_id', $company_id)
-            ->whereIn('ashana_logs.cashier_id', [1097,1238])
+            ->whereIn('ashana_logs.cashier_id', [1097,1238,1773])
             ->groupBy('ashana_logs.user_id', 'ashana_logs.company_id')
             ->get();
-        $kitchen_company = "ИП Cargotraffic(АБК + Мобильная)";
+        $kitchen_company = "ИП Cargotraffic(АБК + Мобильная + КПП3)";
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Отчет по столовое');
 
         $str = "Отчет по обедам за период: ".$from_date." - ".$to_date;
-        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A1:G1');
         $sheet->setCellValue('A1', $str);
         $sheet->getStyle("A1")->getFont()->setSize(12)->setBold(true);
 
-        $sheet->mergeCells('A2:F2');
+        $sheet->mergeCells('A2:G2');
         $sheet->setCellValue('A2', "Оператор столовой: ".$kitchen_company);
         $sheet->getStyle("A2")->getFont()->setSize(12)->setBold(true);
 
-        $sheet->mergeCells('A3:F3');
+        $sheet->mergeCells('A3:G3');
         $sheet->setCellValue('A3', "Клиент: ".$company->short_ru_name);
         $sheet->getStyle("A3")->getFont()->setSize(12)->setBold(true);
 
@@ -277,13 +283,15 @@ class KitchenController extends BaseController
         $sheet->setCellValue('C5', 'Тип обеда');
         $sheet->setCellValue('D5', 'АБК');
         $sheet->setCellValue('E5', 'Мобильная');
-        $sheet->setCellValue('F5', 'Сумма');
+        $sheet->setCellValue('F5', 'КПП3');
+        $sheet->setCellValue('G5', 'Сумма');
 
         // Вставляем авто размер для колонок
-        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D', 'E', 'F');
+        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D', 'E', 'F', 'G');
 
         $abk = 0;
         $mob = 0;
+        $kpp3 = 0;
         $itog = 0;
 
         $row_start = 5;
@@ -297,10 +305,12 @@ class KitchenController extends BaseController
             $sheet->setCellValue('C'.$current_row,$din_type);
             $sheet->setCellValue('D'.$current_row,$item->abk);
             $sheet->setCellValue('E'.$current_row,$item->mob);
-            $sum = (int) $item->abk + (int) $item->mob;
-            $sheet->setCellValue('F'.$current_row,$sum);
+            $sheet->setCellValue('F'.$current_row,$item->kpp3);
+            $sum = (int) $item->abk + (int) $item->mob+ (int) $item->kpp3;
+            $sheet->setCellValue('G'.$current_row,$sum);
             $abk += (int) $item->abk;
             $mob += (int) $item->mob;
+            $kpp3 += (int) $item->kpp3;
             $itog += (int) $sum;
         }
 
@@ -310,12 +320,14 @@ class KitchenController extends BaseController
         $sheet->setCellValue('A'.$current_row, "ИТОГО");
         $sheet->setCellValue('D'.$current_row,$abk);
         $sheet->setCellValue('E'.$current_row,$mob);
-        $sheet->setCellValue('F'.$current_row,$itog);
+        $sheet->setCellValue('F'.$current_row,$kpp3);
+        $sheet->setCellValue('G'.$current_row,$itog);
 
         $sheet->getStyle("A".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("D".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("E".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("F".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("G".$current_row)->getFont()->setSize(12)->setBold(true);
 
         // Выравниваем по левому краю
         $this->setHorizontal($sheet, Alignment::HORIZONTAL_RIGHT, 'A'.$current_row);

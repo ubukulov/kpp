@@ -103,7 +103,7 @@
 
                     <div class="form-group">
                         <label>Компания</label>
-                        <v-select
+                        <v-autocomplete
                             :items="companies"
                             class="form-control"
                             :hint="`${companies.id}, ${companies.short_en_name}`"
@@ -111,7 +111,7 @@
                             item-value="id"
                             v-model="company_id"
                             item-text="short_en_name"
-                        ></v-select>
+                        ></v-autocomplete>
                     </div>
                 </div>
 

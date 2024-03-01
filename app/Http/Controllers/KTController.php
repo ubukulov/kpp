@@ -9,6 +9,8 @@ use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
 use App\Models\ImportLog;
+use App\Models\TechniqueStock;
+use App\Models\TechniqueTask;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -189,6 +191,18 @@ class KTController extends Controller
         $container_task->save();
         $container_stocks = $container_task->container_stocks();
         return view('kt.print_task', compact('container_task', 'container_stocks'));
+    }
+
+    public function printTechniqueTask($technique_task_id)
+    {
+        $technique_task = TechniqueTask::findOrFail($technique_task_id);
+        $technique_stocks = TechniqueStock::where(['technique_task_id' => $technique_task->id])
+            ->selectRaw('technique_stocks.*, technique_types.name as type_name, technique_places.name as place_name, companies.full_company_name')
+            ->join('technique_types', 'technique_types.id', 'technique_stocks.technique_type_id')
+            ->leftJoin('technique_places', 'technique_places.id', 'technique_stocks.technique_place_id')
+            ->leftJoin('companies', 'companies.id', 'technique_stocks.company_id')
+            ->get();
+        return view('kt.print_technique_task', compact('technique_task', 'technique_stocks'));
     }
 
     public function controller()

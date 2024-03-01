@@ -35,6 +35,7 @@
                             <table id="example1" class="table table-bordered table-striped">
                                 <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>Номер контейнера</th>
                                     <th>GTIN</th>
                                     <th>Статус</th>
@@ -45,6 +46,7 @@
                                 <tbody>
                                     @foreach($marking_codes as $mark_code)
                                     <tr>
+                                        <td>{{ $loop->iteration }}</td>
                                         <td>{{ $mark_code->container_number }}</td>
                                         <td>{{ $mark_code->gtin }}</td>
                                         <td>
@@ -63,6 +65,7 @@
                                 </tbody>
                                 <tfoot>
                                 <tr>
+                                    <th>#</th>
                                     <th>Номер контейнера</th>
                                     <th>GTIN</th>
                                     <th>Статус</th>

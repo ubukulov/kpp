@@ -19,4 +19,10 @@ return [
     'ship' => 'Выдача',
     'auto' => 'Авто',
     'train' => 'ЖД',
+    'technique_status' => [
+        'incoming' => 'Готов к размещение',
+        'received' => 'Размещен',
+        'in_order' => 'Готов к выдаче',
+        'shipped' => 'Выдан',
+    ]
 ];

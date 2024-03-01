@@ -19,7 +19,7 @@ class MarkController extends BaseController
 {
     public function index()
     {
-        $marking = Mark::orderBy('id', 'DESC')->get();
+        $marking = Mark::whereIn('status', ['new', 'processing'])->orderBy('id', 'DESC')->get();
         return view('mark.index', compact('marking'));
     }
 
@@ -135,16 +135,10 @@ class MarkController extends BaseController
                     $line9 = (empty($arr['K'])) ? null : $arr['K'];
                     $line10 = (empty($arr['L'])) ? null : $arr['L'];
                     $line11 = (empty($arr['M'])) ? null : $arr['M'];
-                    $eac = $arr['N'];
-                    $mc = $arr['O'];
+                    $eac = 'Y';//$arr['N'];
+                    $mc = 'Y';//$arr['O'];
 
-                    $mark_detail = MarkDetail::where(['gtin' => $gtin])->first();
-                    /*if($mark_detail) {
-                        //throw new \Exception("В файле присутствует ");
-                        abort(406, "В файле присутствует записи которые были ранее добавлены в систему в других заявках!");
-                    } else {
-
-                    }*/
+                    $mark_detail = MarkDetail::where(['marking_id' => $marking->id, 'gtin' => $gtin])->first();
 
                     if(!$mark_detail) {
                         $mark_detail = new MarkDetail();
@@ -220,26 +214,14 @@ class MarkController extends BaseController
     public function printByUsingCodes($printer_id)
     {
         $codes = [
-            "0104871227005613213H%_9EGLOS5bN91KZF092hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxf",
-            "0104871227005248213w)WiboxtIRch91KZF0927dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2",
-            "0104871227005705213NU3<5L)dcSgx91KZF092RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ79",
-            "0104871227005705213p:sfiKnGfIUy91KZF092zTwBxKII5292B8qFa7wh2tI0r6c=zTwBxKII5292B8qFa7wh2tI0r6c=zTwBxKII5292B8qFa7wh2tI0r6c=zTwB",
-            "0104871227005408213Xxx'wgQ49fHM91KZF092/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5",
-            "0104871227005408213vddRP*f?MJj991KZF092k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg",
-            "0104871227006115213&DrjyqM&_ZLB91KZF092VfVNZOtuHEu+MybB1gSceOdp334=VfVNZOtuHEu+MybB1gSceOdp334=VfVNZOtuHEu+MybB1gSceOdp334=VfVN",
-            "0104871227006115213GeeYkqJsPkgi91KZF092qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO",
-            "0104871227005941213VPRcarpt9Kzi91KZF092vF6Kl65CtXLBkUodXIshTvka/8k=vF6Kl65CtXLBkUodXIshTvka/8k=vF6Kl65CtXLBkUodXIshTvka/8k=vF6K",
-            "01048712270054152138Sk'uUTDX,DX91KZF092Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2",
-            //"0104871227006245213hWvHHLRM)ObY91KZF092rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqj",
-            //'0104871227006245213poaXoOmB"NwE91KZF092mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/N',
-            //'0104871227006245213umh"FX!H-IQb91KZF092leBp5asJFQyHPlgYR7guONeHJ5I=leBp5asJFQyHPlgYR7guONeHJ5I=leBp5asJFQyHPlgYR7guONeHJ5I=leBp',
-            //'0104871227006245213bkX!QBt!fzCM91KZF0920pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSq',
-            //'01048712270062452137RN_iCCFOtUC91KZF0923LSGcnTpazc/ZgxzotvQJl+5kxI=3LSGcnTpazc/ZgxzotvQJl+5kxI=3LSGcnTpazc/ZgxzotvQJl+5kxI=3LSG',
-            //'0104871227006245213ur<s<iaKTZoc91KZF092VILsIyDzuv90rRhYbNs9GQbeg44=VILsIyDzuv90rRhYbNs9GQbeg44=VILsIyDzuv90rRhYbNs9GQbeg44=VILs',
-            //'0104871227005569213k2nOH9At"b5891KZF092YMABJGpRhmfkyShNa9FInnPShLA=YMABJGpRhmfkyShNa9FInnPShLA=YMABJGpRhmfkyShNa9FInnPShLA=YMAB',
-            "0104871227000410213qTqqT3NwGHFd91KZF092Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3",
-            "0104871227000410213t=JFnPnAgSb+91KZF092dBmKpg5kzIHnjt2wz2uqOnJyink=dBmKpg5kzIHnjt2wz2uqOnJyink=dBmKpg5kzIHnjt2wz2uqOnJyink=dBmK",
-            "0104871227000441213CeTUK)DSQUHo91KZF092R38/58IqCCQjeeLGkiOHc0tSUDs=R38/58IqCCQjeeLGkiOHc0tSUDs=R38/58IqCCQjeeLGkiOHc0tSUDs=R38/",
+            "0105021466516770213sqlo>GHTDmYd 91KZF092bhOyYR3bICIrKYo6+hR/Hblaepg=bhOyYR3bICIrKYo6+hR/Hblaepg=bhOyYR3bICIrKYo6+hR/Hblaepg=bhOy",
+            "0105021466516770213OOXiaqjTuNj3 91KZF092IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW",
+            "0105021466516770213*F.,IitN2HmD 91KZF092KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoE",
+            "0105021466516770213z6<I<tS+Jlej 91KZF092sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiL",
+            "0105021466516770213tj%KMo)W_q: 91KZF092wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6Z",
+            "0105021466520326213yYvfqdiQtotF 91KZF092WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMt",
+            "01050214665203262134VP_t1t'9QaL 91KZF092YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUM",
+            "0105021466520852213d:VvY6BUXrdg 91KZF092kG+olNNesc7mjb/zn5QVP4lKAvM=kG+olNNesc7mjb/zn5QVP4lKAvM=kG+olNNesc7mjb/zn5QVP4lKAvM=kG+o"
         ];
 
         foreach($codes as $index=>$code) {
@@ -387,7 +369,7 @@ HERE;
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDProduction Date: $line7^FS
+^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDBrand: $line7^FS
 HERE;
 
                     $val += 20;
@@ -470,7 +452,16 @@ HERE;
     {
         $data = $request->all();
         $marking = Mark::findOrFail($data['mark_id']);
-        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        //$mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        if($data['mark_id'] >= 161 AND $data['mark_id'] <= 164) {
+            $mark_detail = MarkDetail::where(['gtin' => $data['gtin_number']])->whereIn('marking_id', [161,162,163,164])->first();
+        } else {
+            $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        }
+
+//        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+
+        //$mark_detail = MarkDetail::find(3992);
         if($mark_detail) {
             $mark_code = MarkCode::where(['marking_details_id' => $mark_detail->id, 'status' => 'not_marked'])->first();
             if($mark_code) {
@@ -503,7 +494,8 @@ HERE;
                 $line6 = Str::limit($mark_detail->line6, 45, '');
                 $line7 = Str::limit($mark_detail->line7, 45, '');
                 $line8 = Str::limit($mark_detail->line8, 45, '');
-                $line9 = Str::limit($mark_detail->line9, 45, '');
+                //$line9 = Str::limit($mark_detail->line9, 45, '');
+                $line9 = Str::limit($mark_detail->line9, 110, '');
                 if($marking->type == 1) {
                     $line10 = Str::limit($mark_detail->line10, 45, '');
                     $line11 = Str::limit($mark_detail->line11, 45, '');
@@ -540,7 +532,7 @@ HERE;
                 }
 
                 if($mark_detail->mc == 'Y') {
-                    $mc = "^BY20,20^FT400,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
+                    $mc = "^BY20,20^FT380,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
                     $mc .= ($marking->type == 2) ? "^FT20,295^AZN,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^AZN,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
                 } else {
                     $mc = '';
@@ -631,9 +623,15 @@ HERE;
 HERE;
                     $val += 20;
 
-                    $data .= <<<HERE
+                    if(($mark->id >= 154 AND $mark->id <= 158) || ($mark->id >= 161 AND $mark->id <= 164)) {
+                        $data .= <<<HERE
+^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDBrand: $line7^FS
+HERE;
+                    } else {
+                        $data .= <<<HERE
 ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDProduction Date: $line7^FS
 HERE;
+                    }
 
                     $val += 20;
 
@@ -652,7 +650,7 @@ HERE;
                             $all = mb_strlen($txt);
                             $sizeItem = mb_strlen($item);
                             $sum = $all + $sizeItem;
-                            if($all < 48 && $sum < 48) {
+                            if($all < 45 && $sum < 45) {
                                 $txt .= " ".$item;
                             } else {
                                 $arr[] = $txt;

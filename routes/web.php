@@ -71,6 +71,8 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/technique/create-task-by-file', 'TechniqueController@createTaskByFile');
         Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
         Route::get('/technique_task/{id}/show-details', 'TechniqueController@showDetails');
+        Route::get('/technique-task/{id}/print', 'KTController@printTechniqueTask');
+        Route::get('/get-technique-companies', 'TechniqueController@getTechniqueCompanies');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -95,6 +97,8 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('container/getting-containers-in-row', 'ContainerController@getListContainersInRow');
         Route::get('stats/getting-stats-for-me', 'StatController@getStatsForMe');
         Route::post('technique', 'ContainerController@noticeAboutTechnique');
+        Route::get('/get-slingers', 'ContainerController@getSlingers');
+        Route::post('/send-my-settings-to-session', 'ContainerController@sendMySettingsToSession');
     });
 
     # Контейнерный терминал - контролировщики
@@ -114,7 +118,7 @@ Route::group(['middleware' => ['auth']], function() {
 
     # Учет техники: контроллер
     Route::group(['prefix' => 'technique-controller', 'middleware' => 'role:technique-controller'], function(){
-        Route::get('/', 'TechniqueController@techniqueController');
+        Route::get('/', 'TechniqueController@techniqueController')->name('technique.controller');
         Route::post('/get-information-by-qr-code', 'TechniqueController@getInformationByQRCode');
     });
 
@@ -154,6 +158,11 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
     });
 
+    # Учет запчастей
+    Route::group(['prefix' => 'technique-parts'], function(){
+        Route::get('/create', 'TechniquePartController@create');
+    });
+
 });
 
 
@@ -167,6 +176,9 @@ Route::get('/view-detail-info-permit', 'ViewController@index');
 Route::get('/view-detail-info-permit/get-car-info/{nm}', 'ViewController@getCarInfo');
 Route::get('/view-detail-info-permit/get-driver-info/{nm}', 'ViewController@getDriverInfo');
 Route::post('/view-detail-info-permit/download-permits-for-selected-time', 'ViewController@getPermitsForSelectedTime')->name('download.permits');
+
+Route::get('/view-detail-info-ckud', 'ViewController@ckud');
+Route::post('/view-detail-info-ckud-logs', 'ViewController@showCKUDLogs');
 
 
 

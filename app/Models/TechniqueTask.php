@@ -54,4 +54,29 @@ class TechniqueTask extends Model
 
         return ($countOfUnClosedPositions == 0) ? true : false;
     }
+
+    public function completeTask()
+    {
+        $count = 0;
+        foreach ($this->stocks as $technique_stock) {
+            if ($this->task_type == 'receive') {
+                if ($technique_stock->status != 'received') {
+                    $count++;
+                }
+            }
+
+            /*if ($this->task_type == 'ship') {
+                if ($container_stock->status != 'shipped') {
+                    $count++;
+                }
+            }*/
+        }
+
+        return ($count == 0) ? true : false;
+    }
+
+    public function technique_stocks()
+    {
+        return $this->hasMany(TechniqueStock::class);
+    }
 }

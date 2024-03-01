@@ -21,7 +21,7 @@
                         <br>
                         <div class="form-group">
                             <v-select
-                                :items="zones"
+                                :items="getNeedZone(zones)"
                                 :hint="`${zones.zone}, ${zones.title}`"
                                 item-value="zone"
                                 v-model="current_zone_id"
@@ -43,7 +43,37 @@
                             ></v-select>
                         </div>
 
+                        <div v-if="current_zone_id !== 'RICH'" class="form-group">
+                            <v-autocomplete
+                                :items="slingers"
+                                label="Выберите стропальщиков"
+                                class="form-control"
+                                :hint="`${slingers.id}, ${slingers.full_name}`"
+                                :search-input.sync="searchInput"
+                                item-value="id"
+                                v-model="slinger_ids"
+                                item-text="full_name"
+                                color="blue-grey lighten-2"
+                                :multiple="current_zone_id !== 'SPR'"
+                                box
+                                chips
+                                hide-details
+                                clearable
+                                autocomplete="off"
+                                :menu-props="{closeOnContentClick:true}"
+                            ></v-autocomplete>
+                        </div>
+
                         <v-divider></v-divider>
+
+                        <div class="col-md-12">
+                            <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                                <b>Пожалуйста исправьте указанные ошибки:</b>
+                            <ul style="color: #cc0000; padding-left: 15px; list-style: circle; text-align: left;">
+                                <li v-for="error in errors">{{error}}</li>
+                            </ul>
+                            </p>
+                        </div>
 
                         <v-card-actions>
                             <v-spacer></v-spacer>
@@ -659,7 +689,10 @@
                 other_container_ship: '',
                 start_date: '',
                 bottom_nav: 'operation_cont',
-                containersInRow: []
+                containersInRow: [],
+                slingers: [],
+                slinger_ids: [],
+                errors: [],
             }
         },
         methods: {
@@ -781,6 +814,7 @@
                 formData.append('container_id', this.container_id);
                 formData.append('technique_id', this.technique_id);
                 formData.append('start_date', this.start_date);
+                formData.append('slinger_ids', this.slinger_ids);
                 axios.post('/container-crane/container/receive-container-change', formData)
                 .then(res => {
                     this.overlay = false;
@@ -855,6 +889,7 @@
                 formData.append('container_id', this.container_id);
                 formData.append('technique_id', this.technique_id);
                 formData.append('start_date', this.start_date);
+                formData.append('slinger_ids', this.slinger_ids);
                 axios.post('/container-crane/container/moving-container-change', formData)
                     .then(res => {
                         console.log(res);
@@ -883,6 +918,7 @@
                 formData.append('container_id', this.container_id);
                 formData.append('technique_id', this.technique_id);
                 formData.append('start_date', this.start_date);
+                formData.append('slinger_ids', this.slinger_ids);
                 axios.post('/container-crane/container/moving-container-to-another-zone', formData)
                     .then(res => {
                         console.log(res);
@@ -913,7 +949,7 @@
                         this.start_date = Date.now();
                         this.getFreeRows();
                         console.log(res);
-                        this.step = 9;
+                        this.step = 8;
                     })
                     .catch(err => {
                         if(err.response.status === 403) {
@@ -958,6 +994,7 @@
                 formData.append('container_id', this.container_id);
                 formData.append('technique_id', this.technique_id);
                 formData.append('start_date', this.start_date);
+                formData.append('slinger_ids', this.slinger_ids);
                 axios.post('/container-crane/container/shipping-container-change', formData)
                     .then(res => {
                         console.log(res);
@@ -994,8 +1031,15 @@
                             return item.zone === current_zone;
                         }
                     } else {
-                        return item.zone !== current_zone && item.zone !== 'ZTCIA' && item.zone !== 'SPK' && item.zone !== 'BUFFER';
+                        //return item.zone !== current_zone && item.zone !== 'ZTCIA' && item.zone !== 'SPK' && item.zone !== 'BUFFER';
+                        return item.zone === 'BUFFER';
                     }
+                });
+                return z;
+            },
+            getNeedZone(){
+                let z = this.zones.filter(item => {
+                    return item.zone !== 'BUFFER';
                 });
                 return z;
             },
@@ -1043,18 +1087,52 @@
                     })
             },
             nextStep(){
+                this.errors = [];
                 let crane = this.techniques.find(item => item.id === this.technique_id);
+                if(this.current_zone_id !== 'RICH' || this.current_zone_id !== 'SPR' || this.current_zone_id !== 'SPK') {
+                    if(this.slinger_ids.length > 2) {
+                        this.errors.push('Допустимое количество стропальщиков 2');
+                    }
+                }
                 if(crane.status === 'not_works') {
                     this.craneDialog = true;
                 } else {
-                    this.step++;
+                    if(this.errors.length === 0) {
+                        this.overlay = true;
+                        let formData = new FormData();
+                        formData.append('zone_id', this.current_zone_id);
+                        formData.append('technique_id', this.technique_id);
+                        formData.append('slinger_ids', this.slinger_ids);
+                        axios.post('/container-crane/send-my-settings-to-session', formData)
+                        .then(res => {
+                            console.log(res);
+                            this.overlay = false;
+                            this.step++;
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            this.overlay = false;
+                        })
+                    }
                 }
+            },
+            getSlingers(){
+                this.overlay = true;
+                axios.get('/container-crane/get-slingers')
+                .then(res => {
+                    this.slingers = res.data;
+                    console.log(res);
+                })
+                .catch(err => {
+                    console.log(err);
+                })
             }
         },
         created() {
             this.getTechniques();
             this.getZones();
             this.getContainerShips();
+            this.getSlingers();
         },
     }
 </script>
@@ -1079,5 +1157,9 @@
     .v-dialog__content {
         top: 30% !important;
         position: absolute !important;
+    }
+    .v-autocomplete-content .v-select-list .v-subheader {
+        color: blue;
+        font-size: 14px;
     }
 </style>

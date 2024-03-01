@@ -316,6 +316,20 @@
                                             </div>
                                         </template>
 
+                                        <template v-slot:item.print="{ item }">
+                                            <div v-if="item.status === 'open'">
+                                                <a :href="'/container-terminals/technique-task/'+item.id+'/print'" target="_blank">
+                                                    <v-icon
+                                                        title="Распечатать заявку"
+                                                        :color="(item.print_count === 0) ? '#000000' : '#006600'"
+                                                        middle
+                                                    >
+                                                        mdi-printer
+                                                    </v-icon>
+                                                </a>
+                                            </div>
+                                        </template>
+
                                         <template v-slot:item.created_at="{ item }">
                                             {{ convertDateToOurFormat(item.created_at) }}
                                         </template>
@@ -373,6 +387,7 @@
                     { text: 'Статус', value: 'status' },
                     { text: 'Файл', value: 'upload_file' },
                     { text: 'Ред.', value: 'edit' },
+                    { text: 'Печать', value: 'print' },
                     { text: 'Дата', value: 'created_at' },
                 ],
                 isLoaded: true,

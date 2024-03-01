@@ -51,6 +51,8 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     # WEBCONT
     Route::get('webcont', 'WebcontController@index')->name('cabinet.webcont.index');
     Route::get('webcont/{id}/show', 'WebcontController@show')->name('cabinet.webcont.show');
+    Route::get('webcont/aftos', 'WebcontController@aftosWebcont')->name('cabinet.webcont.aftos');
+    Route::post('webcont/aftos/search', 'WebcontController@aftosWebcontSearch');
 
     # WMS
     Route::group(['prefix' => 'wms'], function(){
@@ -90,5 +92,10 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     # Диспетчер (оповещение)
     Route::group(['prefix' => 'dispatcher'], function(){
         Route::get('/', 'DispatcherController@index')->name('cabinet.dispatcher.index');
+    });
+
+    # Техники
+    Route::group(['prefix' => 'technique'], function(){
+        Route::get('/', 'TechniqueController@technique')->name('cabinet.technique.index');
     });
 });

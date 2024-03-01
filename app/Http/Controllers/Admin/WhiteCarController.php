@@ -62,10 +62,10 @@ class WhiteCarController extends BaseController
         try {
             $gov_number = trim($data['gov_number']);
             $company_id = trim($data['company_id']);
-            $kpp_id = trim($data['kpp_id']);
+            //$kpp_id = trim($data['kpp_id']);
             $data['gov_number'] = $gov_number;
-            $kpp = Kpp::findOrFail($kpp_id);
-            $data['kpp_name'] = $kpp->name;
+            //$kpp = Kpp::findOrFail($kpp_id);
+            //$data['kpp_name'] = $kpp->name;
 
             if(WhiteCarList::exists($gov_number)) {
                 $white_car_list = WhiteCarList::where(['gov_number' => $gov_number])->first();
@@ -92,7 +92,7 @@ class WhiteCarController extends BaseController
             return redirect()->route('admin.white-car-list.index');
         } catch (\Exception $exception) {
             DB::rollBack();
-            abort(500, 'Произошло ошибка на стороне сервера. Попробуйте позже'. $exception);
+            dd("Ошибка: ".$exception->getMessage());
         }
     }
 

@@ -33,6 +33,8 @@ class Company extends Model
         if($this->type_company == 'outsourcing') return 'Аутсорсинг';
         if($this->type_company == 'rent') return 'Аренда';
         if($this->type_company == 'resident') return 'Резидент';
+        if($this->type_company == 'technique') return 'Авто-техника';
+        if($this->type_company == 'damu_group') return 'Damu Group';
     }
 
     public function wcl_cars()

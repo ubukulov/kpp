@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\TechniqueLog;
 use App\Models\TechniqueStock;
 use App\Models\TechniqueTask;
@@ -53,23 +54,24 @@ class TechniqueController extends Controller
 
                 foreach ($sheetData as $key=>$arr) {
                     if ($key == 1) continue;
-                    $owner = $arr['A'];
+                    $color = $arr['A'];
                     $technique_type = $arr['B'];
                     $mark = $arr['C'];
                     $vin_code = $arr['D'];
 
                     $technique_type = TechniqueType::where(['name' => $technique_type])->first();
                     if(!$technique_type) {
-                        dd("Тип техники не найдено в справочнике: " . $technique_type);
+                        $technique_type = TechniqueType::findOrFail(1);
+                        //dd("Тип техники не найдено в справочнике: " . $technique_type);
                     }
 
                     TechniqueStock::create([
-                        'technique_task_id' => $technique_task->id, 'technique_type_id' => $technique_type->id, 'owner' => $owner, 'mark' => $mark,
-                        'vin_code' => $vin_code, 'status' => 'incoming'
+                        'technique_task_id' => $technique_task->id, 'technique_type_id' => $technique_type->id, 'owner' => $color, 'mark' => $mark,
+                        'vin_code' => $vin_code, 'status' => 'incoming', 'company_id' => $data['company_id']
                     ]);
 
                     TechniqueLog::create([
-                        'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'owner' => $owner, 'mark' => $mark,
+                        'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'owner' => $color, 'mark' => $mark,
                         'vin_code' => $vin_code, 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud'
                     ]);
                 }
@@ -129,7 +131,16 @@ class TechniqueController extends Controller
     public function showDetails($id)
     {
         $technique_task = TechniqueTask::findOrFail($id);
-        $stocks = $technique_task->stocks;
+        $stocks = TechniqueStock::where(['technique_stocks.technique_task_id' => $technique_task->id])
+                ->selectRaw('technique_stocks.*, companies.short_en_name')
+                ->leftJoin('companies', 'companies.id', 'technique_stocks.company_id')
+                ->get();
         return view('technique.details', compact('stocks'));
+    }
+
+    public function getTechniqueCompanies()
+    {
+        $companies = Company::where(['type_company' => 'technique'])->get();
+        return response()->json($companies);
     }
 }

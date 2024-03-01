@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Artisan;
 use Auth;
+use MARK;
 
 class AdminController extends Controller
 {
@@ -35,5 +36,10 @@ class AdminController extends Controller
         $user = User::findOrFail($employee_id);
         Auth::login($user);
         return redirect()->route('cabinet');
+    }
+
+    public function mark()
+    {
+        MARK::getKMForProducts();
     }
 }

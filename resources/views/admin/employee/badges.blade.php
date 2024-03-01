@@ -67,7 +67,7 @@ use chillerlan\QRCode\QRCode;
 <div class="container">
     <div class="row">
         @foreach($users as $user)
-            <div class="col-sm-4" style="margin-bottom: 10px">
+            <div class="col-sm-4" style="margin-bottom: 10px;margin-top: 10px;">
                 <div class="badge" id="printSelection2">
                     <div style="font-size: 30px;margin-bottom: 5px">
                         <span>ПРОПУСК</span>

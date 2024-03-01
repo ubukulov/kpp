@@ -35,7 +35,8 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            <th>ИИН</th>
+                            {{--<th>ИИН</th>--}}
+                            <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -54,8 +55,15 @@
                             <td>
                                 {{ $employee->department_name }}
                             </td>
-                            <td>
+                            {{--<td>
                                 {{ $employee->iin }}
+                            </td>--}}
+                            <td>
+                                @if(array_key_exists($employee->id, $ckud_users_numbers))
+                                    <i title="В СКУД есть" style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i> &nbsp;
+                                @else
+                                    <i title="В СКУД нет" style="font-size: 20px; color: red;" class="fa fa-minus" aria-hidden="true"></i>
+                                @endif
                             </td>
                             <td>
                                 {{ $employee->position_name }}
@@ -91,7 +99,8 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            <th>ИИН</th>
+                            {{--<th>ИИН</th>--}}
+                            <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>

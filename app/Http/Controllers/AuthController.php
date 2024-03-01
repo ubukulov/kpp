@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Session;
+use CKUD;
+use App\Models\CKUDLogs;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +16,33 @@ class AuthController
 {
     public function loginForm()
     {
+        /*$lastEvent = CKUDLogs::orderBy('id', 'DESC')->first();
+        $events = CKUD::getEvents($lastEvent->ckud_id);
+        $events = str_replace('Биометрический считыватель "Выход"', "Биометрический считыватель Выход", $events);
+        $events = str_replace('Биометрический считыватель "Вход"', "Биометрический считыватель Вход", $events);
+        dd(json_decode($events, true));*/
+//        dd(json_decode($events, true, 1024,JSON_OBJECT_AS_ARRAY));
+        /*if($events AND count($events['Events']) != 0) {
+            foreach($events['Events'] as $event) {
+                $data = $event;
+                $data['ckud_id'] = $event['Id'];
+                CKUDLogs::create($data);
+            }
+        }*/
+        /*$file = fopen(public_path() . '/1.txt', 'r');
+        $count_file_lines = count(file(public_path() . '/1.txt'));
+        $file2 = public_path() . "/2.txt";
+        if (!$fp = fopen($file2, 'a')) {
+            echo "Не могу открыть файл ($file2)";
+            exit;
+        }
+        for ($i = 0; $i < $count_file_lines; $i++) {
+            $ss = explode("91KZF0", fgets($file));
+            file_put_contents($file2, "$ss[0] \n", FILE_APPEND);
+        }
+
+        fclose($file);
+        fclose($fp);*/
     	return view('login');
     }
 
@@ -71,6 +101,8 @@ class AuthController
                     return redirect()->route('mark.manager');
                 } elseif($user->hasRole('kpp-security')) {
                     return redirect()->route('white.car.lists');
+                } elseif($user->hasRole('technique-controller')) {
+                    return redirect()->route('technique.controller');
                 } else {
                     return redirect()->route('cabinet');
                 }
@@ -82,6 +114,10 @@ class AuthController
 
     public function logout()
     {
+        $session = Session::where(['user_id' => Auth::id()])->first();
+        if($session) {
+            $session->delete();
+        }
         Auth::logout();
         return redirect()->route('login');
     }

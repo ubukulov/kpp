@@ -48,6 +48,7 @@
                         <div class="form-group">
                             <label>Укажите Группу (СКУД система)</label>
                             <select name="ckud_group_id" class="form-control select2bs4" style="width: 100%;">
+                                <option value="0">Не нужно</option>
                                 @foreach($ckud_groups->GetAcsEmployeeGroupsFull as $ckud_group)
                                     <option value="{{ $ckud_group->AcsEmployeeGroupId }}">{{ $ckud_group->name }}</option>
                                 @endforeach
@@ -62,12 +63,6 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>ИИН</label><span style="color: red;">*</span>
-                                    <input type="text" required class="form-control" name="iin">
-                                </div>
-                            </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">

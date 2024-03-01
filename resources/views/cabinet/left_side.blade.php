@@ -176,6 +176,15 @@
                     </li>
                     @endrole
 
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.dispatcher.index') }}" class="nav-link  @if(request()->is('cabinet/dispatcher*')) active @endif">
+                            <i class="nav-icon fas fa-fax"></i>
+                            <p>
+                                Диспетчер
+                            </p>
+                        </a>
+                    </li>
+
                     @role('rezidenty-webcont')
                     <li class="nav-item">
                         <a href="{{ route('cabinet.customs.index') }}" class="nav-link @if(request()->is('cabinet/customs*')) active @endif">
@@ -317,15 +326,27 @@
                         </p>
                     </a>
                 </li>--}}
+                @if(Auth::user()->company->type_company == 'technique')
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.technique.index') }}" class="nav-link">
+                            <i class="nav-icon fas fa-car"></i>
+                            <p>
+                                Список машин
+                            </p>
+                        </a>
+                    </li>
+                @endif
 
-                <li class="nav-item">
-                    <a href="{{ route('cabinet.dispatcher.index') }}" class="nav-link  @if(request()->is('cabinet/dispatcher*')) active @endif">
-                        <i class="nav-icon fas fa-fax"></i>
-                        <p>
-                            Диспетчер
-                        </p>
-                    </a>
-                </li>
+                @if(Auth::user()->company_id = 63)
+                    <li class="nav-item">
+                        <a href="{{ route('cabinet.webcont.aftos') }}" class="nav-link @if(request()->is('cabinet/webcont/aftos*')) active @endif">
+                            <i class="nav-icon fas fa-align-justify"></i>
+                            <p>
+                                Поиск контейнера
+                            </p>
+                        </a>
+                    </li>
+                @endif
 
                 <li class="nav-item">
                     <a href="{{ route('logout') }}" class="nav-link">

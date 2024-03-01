@@ -47,7 +47,12 @@ class EmployeeController extends Controller
                 $employees = [];
             }
         } else {
-            $employees = User::where(['company_id' => $company->id])->get();
+            $employees = User::where(['users.company_id' => $company->id])
+                ->selectRaw('users.*, companies.short_en_name, departments.title as dep_name')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                ->join('companies', 'companies.id', 'users.company_id')
+                ->leftJoin('departments', 'departments.id', 'users.department_id')
+                ->get();
         }
 
         return view('cabinet.employee.index', compact('employees'));

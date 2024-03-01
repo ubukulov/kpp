@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'Asia/Almaty',
+    'timezone' => 'Asia/Aqtobe',
 
     /*
     |--------------------------------------------------------------------------
@@ -183,6 +183,7 @@ return [
         App\Providers\RepositoryServiceProvider::class,
         App\Providers\DPDServiceProvider::class,
         App\Providers\RusGuardServiceProvider::class,
+        App\Providers\MarkServiceProvider::class,
     ],
 
     /*
@@ -240,6 +241,7 @@ return [
         'Image' => Intervention\Image\Facades\Image::class,
         'DPD' => App\Facades\DPD::class,
         'CKUD' => App\Facades\CKUD::class,
+        'MARK' => App\Facades\Mark::class,
     ],
 
 ];

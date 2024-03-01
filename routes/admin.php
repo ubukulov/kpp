@@ -83,6 +83,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
             Route::get('/logs', 'WebcontController@logs')->name('admin.webcont.logs');
             Route::get('/get/logs', 'WebcontController@getLogsForAdmin');
             Route::post('/search', 'WebcontController@search');
+            Route::get('reports', 'WebcontController@reports')->name('admin.webcont.reports');
+            Route::post('get-reports', 'WebcontController@getReports');
         });
 
         # Авторизация по ид пользователя
@@ -108,5 +110,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
             Route::get('/{company_id}/get-employees', 'KitchenController@getEmployees');
             Route::post('change-ashana-logs', 'KitchenController@changeAshanaLogs');
         });
+
+        # Mark
+        Route::get('/mark/info', 'AdminController@mark');
     });
 });

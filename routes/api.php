@@ -49,5 +49,14 @@ Route::group(['namespace' => 'API', 'middleware' => 'auth:sanctum'], function(){
         Route::get('/get-items', 'KitchenController@getItems');
         Route::post('/get-items-by-filter', 'KitchenController@getItemsByFilter');
         Route::post('get-user-by-uuid', 'KitchenController@getUserByUuid');
+        Route::post('fix-changes', 'KitchenController@fixChanges');
+    });
+
+    # Webcont
+    Route::prefix('webcont')->group(function(){
+        Route::get('get-webcont-containers-zones', 'WebcontController@getContainersZones');
+        Route::get('get-webcont-techniques', 'WebcontController@getTechniques');
+        Route::post('get-container-info', 'WebcontController@getContainerInfo');
+        Route::get('get-free-rows', 'WebcontController@getFreeRows');
     });
 });

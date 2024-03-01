@@ -38,6 +38,7 @@
                                         v-model="vin_code"
                                         label="Введите VIN код"
                                         hide-details="auto"
+                                        class="vin_code_input"
                                     ></v-text-field>
                                 </v-col>
 
@@ -52,11 +53,7 @@
                                 </v-col>
 
                                 <v-col cols="12" v-if="scan_qr">
-                                    <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
-                                        <div v-show="showScanConfirmation" class="scan-confirmation">
-
-                                        </div>
-                                    </qrcode-stream>
+                                    <StreamBarcodeReader @decode="onDecode" @loaded="onLoaded"></StreamBarcodeReader>
                                 </v-col>
 
                                 <v-divider></v-divider>
@@ -96,30 +93,6 @@
                                                 v-model="technique_place_id"
                                                 item-text="name"
                                             ></v-select>
-                                        </v-col>
-
-                                        <v-col cols="12">
-                                            <p>Сделаете фото</p>
-                                            <div v-if="isCameraOpen" v-show="!isLoading" class="camera-box" :class="{ 'flash' : isShotPhoto }">
-
-                                                <div class="camera-shutter" :class="{'flash' : isShotPhoto}"></div>
-
-                                                <video v-show="!isPhotoTaken" ref="camera" style="width: 100%;" :height="337.5" autoplay></video>
-
-                                                <canvas v-show="isPhotoTaken" id="photoTaken" ref="canvas" style="width: 100%;" :height="337.5"></canvas>
-                                            </div>
-
-                                            <div style="text-align: center;" v-if="isCameraOpen && !isLoading" class="camera-shoot">
-                                                <button type="button" class="button" @click="takePhoto">
-                                                    <img src="https://img.icons8.com/material-outlined/50/000000/camera--v2.png">
-                                                </button>
-                                            </div>
-
-                                            <!--<div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
-                                                <a id="downloadPhoto" download="my-photo.jpg" class="button" role="button" @click="downloadImage">
-                                                    Download
-                                                </a>
-                                            </div>-->
                                         </v-col>
 
                                         <v-col cols="4">
@@ -210,11 +183,12 @@
 
 <script>
     import axios from "axios";
-    import dateformat from "dateformat";
-    import {QrcodeStream} from "vue-qrcode-reader";
+    import { StreamBarcodeReader } from "vue-barcode-reader";
 
     export default {
-        components: { QrcodeStream },
+        components: {
+            StreamBarcodeReader
+        },
         data: () => ({
             overlay: false,
             bottom_nav: 'tasks',
@@ -241,7 +215,7 @@
             isPhotoTaken: false,
             isShotPhoto: false,
             isLoading: false,
-            link: '#'
+            link: '#',
         }),
         props: ['name', 'token'],
         methods: {
@@ -265,6 +239,7 @@
                 .then(res => {
                     console.log(res);
                     this.info_container = res.data.message;
+                    this.vin_code = res.data.vin_code;
                     if (res.data.event === 1) {
                         this.is_receive = false;
                         this.is_shipping = true;
@@ -290,34 +265,6 @@
                         this.is_moving = true;
                         this.overlay = false;
                     }
-                })
-            },
-            async onInit (promise) {
-                try {
-                    await promise
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    this.showScanConfirmation = this.camera === "off"
-                }
-            },
-            async onDecode (content) {
-                this.vin_code = content;
-                this.getInformationByQRCode();
-                this.scan_qr = false;
-                this.pause();
-                await this.timeout(500);
-                this.unpause();
-            },
-            unpause () {
-                this.camera = 'auto'
-            },
-            pause () {
-                this.camera = 'off'
-            },
-            timeout (ms) {
-                return new Promise(resolve => {
-                    window.setTimeout(resolve, ms)
                 })
             },
             getTechniquePlaces(){
@@ -349,9 +296,9 @@
 
                 formData.append('technique_place_id', this.technique_place_id);
                 formData.append('vin_code', this.vin_code);
-                const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
-                    .replace("image/jpeg", "image/octet-stream");
-                formData.append('image64', canvas);
+                // const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
+                //     .replace("image/jpeg", "image/octet-stream");
+                // formData.append('image64', canvas);
                 axios.post('/api/technique/receive-technique-to-place', formData, config)
                 .then(res => {
                     console.log(res);
@@ -373,11 +320,9 @@
                 if(this.receive_step > 1) {
                     this.buttons = true;
                     this.receive_step = 1;
-                    this.toggleCamera();
                 } else {
                     this.buttons = false;
                     this.receive_step++;
-                    this.toggleCamera();
                 }
             },
             moveStep() {
@@ -438,70 +383,15 @@
                         this.overlay = false;
                     })
             },
-            toggleCamera() {
-                if(this.isCameraOpen) {
-                    this.isCameraOpen = false;
-                    this.isPhotoTaken = false;
-                    this.isShotPhoto = false;
-                    this.stopCameraStream();
-                } else {
-                    this.isCameraOpen = true;
-                    this.createCameraElement();
-                }
+            onDecode(text) {
+                console.log(`Decode text from QR code is ${text}`);
+                this.vin_code = text;
+                this.getInformationByQRCode();
+                this.scan_qr = false;
             },
-
-            createCameraElement() {
-                this.overlay = true;
-
-                const constraints = (window.constraints = {
-                    audio: false,
-                    video: true
-                });
-
-
-                navigator.mediaDevices
-                    .getUserMedia(constraints)
-                    .then(stream => {
-                        this.overlay = false;
-                        this.$refs.camera.srcObject = stream;
-                    })
-                    .catch(error => {
-                        this.overlay = false;
-                        alert("May the browser didn't support or there is some errors.");
-                    });
+            onLoaded() {
+                console.log(`Ready to start scanning barcodes`)
             },
-
-            stopCameraStream() {
-                let tracks = this.$refs.camera.srcObject.getTracks();
-
-                tracks.forEach(track => {
-                    track.stop();
-                });
-            },
-
-            takePhoto() {
-                if(!this.isPhotoTaken) {
-                    this.isShotPhoto = true;
-
-                    const FLASH_TIMEOUT = 50;
-
-                    setTimeout(() => {
-                        this.isShotPhoto = false;
-                    }, FLASH_TIMEOUT);
-                }
-
-                this.isPhotoTaken = !this.isPhotoTaken;
-
-                const context = this.$refs.canvas.getContext('2d');
-                context.drawImage(this.$refs.camera, 0, 0, 450, 337.5);
-            },
-
-            downloadImage() {
-                const download = document.getElementById("downloadPhoto");
-                const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
-                    .replace("image/jpeg", "image/octet-stream");
-                download.setAttribute("href", canvas);
-            }
         },
         created(){
             this.getTechniquePlaces();
@@ -513,7 +403,7 @@
     .scan-confirmation {
         position: absolute;
         width: 100%;
-        height: 100%;
+        height: 250px;
 
         background-color: rgba(255, 255, 255, .8);
 
@@ -542,6 +432,9 @@
         position: absolute !important;
     }
     .text-field {
+        font-size: 20px !important;
+    }
+    #input-5 {
         font-size: 20px !important;
     }
 </style>
