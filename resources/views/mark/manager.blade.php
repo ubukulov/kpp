@@ -1,4 +1,11 @@
 @extends('layouts.app')
+@push('styles')
+    <style>
+        .kt_header {
+            height: 120px;
+        }
+    </style>
+@endpush
 @section('content')
     <div class="row">
         <div class="col-md-12">

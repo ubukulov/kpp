@@ -4,12 +4,21 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Container;
+use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
+use App\Models\User;
+use App\Traits\WebcontReports;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class WebcontController extends Controller
 {
+    use WebcontReports;
+
     public function index()
     {
         $container_tasks = ContainerTask::where(['status' => 'open'])
@@ -72,5 +81,15 @@ class WebcontController extends Controller
                 'text' => "Контейнер №".$container_number." не найден"
             ], 404);
         }
+    }
+
+    public function reports()
+    {
+        $users = User::whereIn('users.position_id', [91,92,93,153])
+            ->selectRaw('users.*')
+            //->join('users_roles', 'users_roles.user_id', 'users.id')
+            ->orderBy('users.full_name')
+            ->get();
+        return view('cabinet.webcont.reports', compact('users'));
     }
 }

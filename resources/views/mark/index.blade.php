@@ -3,6 +3,11 @@
     <!-- DataTables -->
     <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <style>
+        .kt_header {
+            height: 120px;
+        }
+    </style>
 @endpush
 @section('content')
     <div class="container">

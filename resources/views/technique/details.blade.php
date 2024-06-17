@@ -25,13 +25,17 @@
                                 {{ $stock->vin_code }}
                             </td>
                             <td>
-                                {{ $stock->short_en_name }}
+                                @if($technique_task->status == 'closed' && $technique_task->task_type == 'ship')
+                                    {{ $stock->owner }}
+                                @else
+                                    {{ $stock->short_en_name }}
+                                @endif
                             </td>
                             <td>
                                 {{ $stock->mark }}
                             </td>
                             <td>
-                                {{ $stock->technique_type->name }}
+                                {{ $stock->technique_type }}
                             </td>
                             <td>
                                 @if(is_null($stock->technique_place_id))

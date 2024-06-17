@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Container;
+use App\Models\ContainerStock;
 use App\Models\Session;
 use CKUD;
 use App\Models\CKUDLogs;
@@ -29,6 +31,7 @@ class AuthController
                 CKUDLogs::create($data);
             }
         }*/
+
         /*$file = fopen(public_path() . '/1.txt', 'r');
         $count_file_lines = count(file(public_path() . '/1.txt'));
         $file2 = public_path() . "/2.txt";
@@ -39,6 +42,31 @@ class AuthController
         for ($i = 0; $i < $count_file_lines; $i++) {
             $ss = explode("91KZF0", fgets($file));
             file_put_contents($file2, "$ss[0] \n", FILE_APPEND);
+        }
+
+        fclose($file);
+        fclose($fp);*/
+        /*$file = fopen(public_path() . '/1.txt', 'r');
+        $count_file_lines = count(file(public_path() . '/1.txt'));
+        $file2 = public_path() . "/2.txt";
+        if (!$fp = fopen($file2, 'a')) {
+            echo "Не могу открыть файл ($file2)";
+            exit;
+        }
+        for ($i = 0; $i < $count_file_lines; $i++) {
+            $container_number = str_replace("\n", '', fgets($file));
+            $container = Container::whereNumber($container_number)->first();
+            if($container)  {
+                $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+                if($container_stock) {
+                    $container_address = $container_stock->container_address;
+                    file_put_contents($file2, "$container_number - " . $container_address->name . " \n", FILE_APPEND);
+                } else {
+                    file_put_contents($file2, "$container_number - нет в стоке \n", FILE_APPEND);
+                }
+            } else {
+                file_put_contents($file2, "$container_number - нет в справочнике \n", FILE_APPEND);
+            }
         }
 
         fclose($file);
@@ -72,9 +100,15 @@ class AuthController
                 ]);
             }
 
-            //dd($user->tokens);
+            $user->tokens()->delete();
 
             $token = $user->createToken('API TOKEN')->plainTextToken;
+
+            /*if(!$user->tokens) {
+                $token = $user->createToken('API TOKEN')->plainTextToken;
+                session()->put('token', $token);
+            }*/
+
             session()->put('token', $token);
 
             Auth::login($user);
@@ -103,7 +137,12 @@ class AuthController
                     return redirect()->route('white.car.lists');
                 } elseif($user->hasRole('technique-controller')) {
                     return redirect()->route('technique.controller');
-                } else {
+                } elseif($user->hasRole('cargo-dispatcher')) {
+                    return redirect()->route('cargo.index');
+                } elseif($user->hasRole('cargo-controller')) {
+                    return redirect()->route('cargo.controller');
+                }
+                else {
                     return redirect()->route('cabinet');
                 }
             /*} else {

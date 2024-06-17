@@ -348,6 +348,29 @@
                     </li>
                 @endif
 
+                @role('kt-settlement')
+
+                <li class="nav-item has-treeview @if(request()->is('cabinet/webcont/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p>
+                            WEBCONT
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">1</span>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/webcont/*')) display: block; @else display: none; @endif">
+
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.webcont.reports') }}" class="nav-link @if(request()->is('cabinet/webcont/reports*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Отчеты</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                @endrole
+
                 <li class="nav-item">
                     <a href="{{ route('logout') }}" class="nav-link">
                         <i class="nav-icon fas fa-sign-out-alt"></i>

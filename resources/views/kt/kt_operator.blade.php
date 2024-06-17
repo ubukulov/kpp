@@ -12,7 +12,7 @@
 
                 <div class="row">
                     <div class="col-md-3">
-
+                        <p style="margin-bottom: 0px;"><strong>{{ Auth::user()->full_name }}</strong></p>
                     </div>
 
                     <div class="col-md-6">
@@ -20,8 +20,9 @@
                     </div>
 
                     <div class="col-md-3 text-right">
-                        <p style="margin-bottom: 0px;"><strong>{{ Auth::user()->full_name }}</strong></p>
-                        <p style="margin-bottom: 0px;"><a href="{{ route('logout') }}">Выйти</a></p>
+
+                        <p style="margin-bottom: 0px;"><a class="btn btn-success" href="{{ route('logout') }}">Выйти</a></p>
+                        <br>
                     </div>
                 </div>
 

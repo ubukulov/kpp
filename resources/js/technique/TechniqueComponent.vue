@@ -95,10 +95,42 @@
                                             ></v-select>
                                         </v-col>
 
-                                        <v-col cols="4">
-                                            <button @click="receiveStep()" type="button" class="btn btn-light">Назад</button>
+                                        <v-col cols="12">
+                                            <v-checkbox @click="toggleCamera" label="дефекты" v-model="defect"></v-checkbox>
                                         </v-col>
-                                        <v-col cols="6">
+
+                                        <v-col v-if="defect" cols="12">
+                                            <v-textarea v-model="defect_note" label="Описание дефекта" variant="solo"></v-textarea>
+                                        </v-col>
+
+
+
+                                        <v-col v-if="defect" cols="12">
+                                            <p>Сделаете фото</p>
+                                            <div v-if="isCameraOpen" v-show="!isLoading" class="camera-box" :class="{ 'flash' : isShotPhoto }">
+
+                                                <div class="camera-shutter" :class="{'flash' : isShotPhoto}"></div>
+
+                                                <video v-show="!isPhotoTaken" ref="camera" style="width: 100%;" :height="337.5" autoplay></video>
+
+                                                <canvas v-show="isPhotoTaken" id="photoTaken" ref="canvas" style="width: 100%;" :height="337.5"></canvas>
+                                            </div>
+
+                                            <div style="text-align: center;" v-if="isCameraOpen && !isLoading" class="camera-shoot">
+                                                <button type="button" class="button" @click="takePhoto">
+                                                    <img src="https://img.icons8.com/material-outlined/50/000000/camera--v2.png">
+                                                </button>
+                                            </div>
+
+                                            <div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
+                                                <a id="downloadPhoto" download="my-photo.jpg" class="button" role="button" @click="downloadImage">
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </v-col>
+
+                                        <v-col cols="12" class="div-buttons">
+                                            <button @click="receiveStep()" type="button" class="btn btn-light">Назад</button>
                                             <button @click="receiveTechnique()" type="button" class="btn btn-success">Разместить</button>
                                         </v-col>
                                     </v-row>
@@ -216,6 +248,8 @@
             isShotPhoto: false,
             isLoading: false,
             link: '#',
+            defect: false,
+            defect_note: ''
         }),
         props: ['name', 'token'],
         methods: {
@@ -296,9 +330,14 @@
 
                 formData.append('technique_place_id', this.technique_place_id);
                 formData.append('vin_code', this.vin_code);
-                // const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
-                //     .replace("image/jpeg", "image/octet-stream");
-                // formData.append('image64', canvas);
+                if(this.defect) {
+                    const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
+                        .replace("image/jpeg", "image/octet-stream");
+                    formData.append('image64', canvas);
+                    formData.append('defect', this.defect);
+                    formData.append('defect_note', this.defect_note);
+                }
+
                 axios.post('/api/technique/receive-technique-to-place', formData, config)
                 .then(res => {
                     console.log(res);
@@ -392,6 +431,70 @@
             onLoaded() {
                 console.log(`Ready to start scanning barcodes`)
             },
+            toggleCamera() {
+                if(this.isCameraOpen) {
+                    this.isCameraOpen = false;
+                    this.isPhotoTaken = false;
+                    this.isShotPhoto = false;
+                    this.stopCameraStream();
+                } else {
+                    this.isCameraOpen = true;
+                    this.createCameraElement();
+                }
+            },
+
+            createCameraElement() {
+                this.overlay = true;
+
+                const constraints = (window.constraints = {
+                    audio: false,
+                    video: true
+                });
+
+
+                navigator.mediaDevices
+                    .getUserMedia(constraints)
+                    .then(stream => {
+                        this.overlay = false;
+                        this.$refs.camera.srcObject = stream;
+                    })
+                    .catch(error => {
+                        this.overlay = false;
+                        alert("May the browser didn't support or there is some errors.");
+                    });
+            },
+
+            stopCameraStream() {
+                let tracks = this.$refs.camera.srcObject.getTracks();
+
+                tracks.forEach(track => {
+                    track.stop();
+                });
+            },
+
+            takePhoto() {
+                if(!this.isPhotoTaken) {
+                    this.isShotPhoto = true;
+
+                    const FLASH_TIMEOUT = 50;
+
+                    setTimeout(() => {
+                        this.isShotPhoto = false;
+                    }, FLASH_TIMEOUT);
+                }
+
+                this.isPhotoTaken = !this.isPhotoTaken;
+
+                const context = this.$refs.canvas.getContext('2d');
+                context.drawImage(this.$refs.camera, 0, 0, 450, 337.5);
+            },
+
+            downloadImage() {
+                const download = document.getElementById("downloadPhoto");
+                const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
+                    .replace("image/jpeg", "image/octet-stream");
+                download.setAttribute("href", canvas);
+            }
         },
         created(){
             this.getTechniquePlaces();
@@ -436,5 +539,12 @@
     }
     #input-5 {
         font-size: 20px !important;
+    }
+    .btn{
+        font-size: 20px !important;
+    }
+    .div-buttons {
+        display: flex;
+        justify-content: space-between;
     }
 </style>

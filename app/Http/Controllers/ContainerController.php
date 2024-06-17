@@ -492,6 +492,7 @@ class ContainerController extends BaseController
     {
         $session = Session::where(['user_id' => Auth::id()])->first();
         $container_number = $request->input('container_number');
+        $technique_id = $request->input('technique_id');
         $container = Container::where('number', 'like', '%'.$container_number)->first();
         if ($container) {
             $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
@@ -499,11 +500,22 @@ class ContainerController extends BaseController
                 $container_address = $container_stock->container_address;
                 $isCustoms = ($container_stock->customs == 'yes') ? 'Да' : 'Нет';
 
-                if($container_address->zone != $session->zone_id AND $container_address->zone != 'BUFFER' AND $container_address->zone != 'DAMU_IN' AND $container_address->zone != 'DAMU_OUT') {
+                if($technique_id != 4 AND $session->ids == null) {
                     return response(
-                        "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> находиться не вашем зоне.  <br>Адрес: $container_address->name",
+                        "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> <br>Адрес: $container_address->name <br><span style='color:red'>Выберите стропальщика</span>",
                         404
                     );
+                }
+
+                if(($session->zone_id == 'SPR' || $session->zone_id == 'SPK') AND ($container_address->zone == 'SPR' || $container_address->zone == 'SPK')) {
+
+                } else {
+                    if($container_address->zone != $session->zone_id AND $container_address->zone != 'BUFFER' AND $container_address->zone != 'DAMU_IN' AND $container_address->zone != 'DAMU_OUT' AND $container_address->zone != 'ZTCIA') {
+                        return response(
+                            "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> находиться не вашем зоне.  <br>Адрес: $container_address->name",
+                            404
+                        );
+                    }
                 }
 
                 if ($container_address->name == 'damu_in' && $container_stock->status == 'incoming') {
@@ -1282,19 +1294,21 @@ class ContainerController extends BaseController
     {
         $result = User::where(['company_id' => 31])
                 ->selectRaw('id, full_name')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
                 ->whereIn('position_id', [91,92,93,153,174])
                 ->whereNotIn('id', Session::getIds())
+                ->orderBy('full_name')
                 ->get();
         $users = [];
 
         foreach($result as $item) {
+            if($item->status != 'works') continue;
             $arr =explode(' ', $item->full_name);
             $users[] = [
                 'id' => $item->id,
                 'full_name' => $arr[0]. " " . mb_substr($arr[1],0,1) . "."
             ];
         }
-
         return response()->json($users);
     }
 
@@ -1308,12 +1322,24 @@ class ContainerController extends BaseController
         if($session) {
             $session->zone_id = $zone_id;
             $session->technique_ids = $technique_id;
-            $session->ids = $slinger_ids;
+            $session->ids = ($zone_id == 'RICH') ? null : $slinger_ids;
             $session->save();
 
             return response('success');
         }
 
         return response('unknown session', 403);
+    }
+
+    public function cancelMySettingsToSession(Request $request) {
+        $session = Session::where(['user_id' => Auth::id()])->first();
+        if($session) {
+            $session->zone_id = null;
+            $session->technique_ids = null;
+            $session->ids = null;
+            $session->save();
+
+            return response('success');
+        }
     }
 }

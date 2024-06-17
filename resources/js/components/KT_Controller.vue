@@ -52,18 +52,14 @@
                                         <v-card-title
                                             class="text-h5"
                                         >
-                                            <v-container>
-                                                <v-row>
-                                                    <div style="width: 50%">
-                                                        {{ item.number }}
-                                                    </div>
-                                                    <div style="width: 50%;">
-                                        <span style="float: right; font-size: 14px;">
-                                            Выполнено: {{ item.stat }}
-                                        </span>
-                                                    </div>
-                                                </v-row>
-                                            </v-container>
+                                            <div style="font-size: 18px;">
+                                                {{ item.number }}
+                                            </div>
+                                            <div>
+                                                <span style="float: right; font-size: 14px;">
+                                                    Выполнено: {{ item.stat }}
+                                                </span>
+                                            </div>
 
                                         </v-card-title>
 
@@ -324,5 +320,7 @@
 </script>
 
 <style scoped>
-
+    .v-card__title {
+        justify-content: space-between;
+    }
 </style>

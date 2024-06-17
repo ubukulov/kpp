@@ -85,6 +85,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
             Route::post('/search', 'WebcontController@search');
             Route::get('reports', 'WebcontController@reports')->name('admin.webcont.reports');
             Route::post('get-reports', 'WebcontController@getReports');
+            Route::post('get-detail', 'WebcontController@getDetail');
+            Route::post('get-stats-today', 'WebcontController@getStatsToday');
         });
 
         # Авторизация по ид пользователя

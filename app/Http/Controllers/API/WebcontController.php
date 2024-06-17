@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Container;
 use App\Models\ContainerAddress;
 use App\Models\ContainerStock;
+use App\Models\Session;
 use App\Models\Technique;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class WebcontController extends BaseApiController
@@ -28,12 +30,43 @@ class WebcontController extends BaseApiController
     public function getContainerInfo(Request $request)
     {
         $container_number = $request->input('container_number');
+        $zone = $request->input('zone');
+        $technique_id = $request->input('technique_id');
         $container = Container::where('number', 'like', '%'.$container_number)->first();
         if ($container) {
             $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
             if ($container_stock) {
                 $container_address = $container_stock->container_address;
                 $isCustoms = ($container_stock->customs == 'yes') ? 'Да' : 'Нет';
+
+                if($zone != $container_address->zone) {
+                    return response([
+                        'text1' => "Контейнер: ",
+                        'text2' => $container->number." ($container->company, $container_stock->state, $container->container_type, $isCustoms)",
+                        'text3' => "находиться не вашем зоне. Адрес: $container_address->name",
+                        'text4' => '',
+                        'event' => 4,
+                        'container_id' => $container->id,
+                        'container_number' => $container->number,
+                        'current_container_address' => $container_address->name,
+                        'isCustoms' => $container_stock->customs
+                    ], 200);
+                }
+
+                if($technique_id != 4) {
+                    return response([
+                        'text1' => "Контейнер: ",
+                        'text2' => $container->number." ($container->company, $container_stock->state, $container->container_type, $isCustoms)",
+                        'text3' => "Адрес: $container_address->name",
+                        'text4' => 'Выберите стропальщика',
+                        'event' => 4,
+                        'container_id' => $container->id,
+                        'container_number' => $container->number,
+                        'current_container_address' => $container_address->name,
+                        'isCustoms' => $container_stock->customs
+                    ], 200);
+                }
+
                 if ($container_address->name == 'damu_in' && $container_stock->status == 'incoming') {
                     return response([
                         'text1' => "Контейнер: ",
@@ -142,6 +175,27 @@ class WebcontController extends BaseApiController
                 ->leftJoin('containers', 'containers.id', '=', 'container_stocks.container_id')
                 ->get();
             return $container_address;
+        }
+    }
+
+    public function getFreeSlingers()
+    {
+        $result = User::where(['company_id' => 31])
+            ->selectRaw('id, full_name')
+            ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+            ->whereIn('position_id', [91,92,93,153,174])
+            ->whereNotIn('id', Session::getIds())
+            ->orderBy('full_name')
+            ->get();
+        $users = [];
+
+        foreach($result as $item) {
+            if($item->status != 'works') continue;
+            $arr =explode(' ', $item->full_name);
+            $users[] = [
+                'id' => $item->id,
+                'full_name' => $arr[0]. " " . mb_substr($arr[1],0,1) . "."
+            ];
         }
     }
 }

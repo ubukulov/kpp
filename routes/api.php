@@ -28,6 +28,9 @@ Route::group(['namespace' => 'API'], function(){
 });*/
 
 Route::post('/auth/login', 'API\ApiController@loginUser');
+Route::group(['prefix' => 'v2'], function (){
+    Route::get('get-companies', 'API\ApiController@getCompanies');
+});
 Route::group(['namespace' => 'API', 'middleware' => 'auth:sanctum'], function(){
     Route::get('/get-companies-info', 'ApiController@getCompaniesInfo');
     Route::get('/get-roles', 'UserController@getUserRoles');
@@ -58,5 +61,6 @@ Route::group(['namespace' => 'API', 'middleware' => 'auth:sanctum'], function(){
         Route::get('get-webcont-techniques', 'WebcontController@getTechniques');
         Route::post('get-container-info', 'WebcontController@getContainerInfo');
         Route::get('get-free-rows', 'WebcontController@getFreeRows');
+        Route::get('get-free-slingers', 'WebcontController@getFreeSlingers');
     });
 });

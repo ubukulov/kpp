@@ -38,9 +38,9 @@
                 <strong>РАСХОДНАЯ НАКЛАДНАЯ №{{ $technique_task->getNumber() }} от {{ date('d.m.Y') }} г.</strong>
             </p>
             <p>Отправитель: <strong><i><u>ТОО "International Logistics Corporation"</u></i></strong></p>
-            <p>Грузополучатель: _________________________________________</p>
-            <p>По доверенности: ________________________________________</p>
-            <p>Через кого: ________________________________________________</p>
+            <p>Грузополучатель: {{ $technique_task->company->full_company_name }}</p>
+            <p>По доверенности: {{ $technique_task->agreement->name }}</p>
+            <p>Через кого: {{ $technique_task->agreement->full_name }}</p>
         </div>
     </div>
     <table border="1" cellpadding="5" cellspacing="2">
@@ -66,7 +66,7 @@
                 <td>{{ $stock->full_company_name }}</td>
                 <td>{{ $stock->vin_code }}</td>
                 <td>{{ $stock->mark }}</td>
-                <td>{{ $stock->owner }}</td>
+                <td>{{ $stock->color }}</td>
                 <td>{{ $stock->type_name }}</td>
                 <td>{{ $stock->place_name }}</td>
             </tr>

@@ -4,12 +4,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\TechniqueLog;
 use App\Models\TechniquePlace;
 use App\Models\TechniqueStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use File;
+use Auth;
 
 class TechniqueController extends BaseApiController
 {
@@ -22,7 +24,8 @@ class TechniqueController extends BaseApiController
     {
         $technique_place_id = $request->input('technique_place_id');
         $vin_code = $request->input('vin_code');
-        //$image64 = $request->input('image64');
+        $image64 = $request->input('image64');
+        $defect = $request->input('defect');
         $user = $request->user();
         DB::beginTransaction();
         try {
@@ -34,7 +37,7 @@ class TechniqueController extends BaseApiController
 
                 $technique_task = $technique_stock->technique_task;
 
-                /*if($image64) {
+                if($image64) {
                     $dir = '/technique_files/'. substr(md5(microtime()), mt_rand(0, 30), 2);
                     if(!File::isDirectory(public_path(). $dir)){
                         File::makeDirectory(public_path(). $dir, 0777, true);
@@ -46,16 +49,25 @@ class TechniqueController extends BaseApiController
                     $imageName = $technique_stock->id.'_f_'.time() . '.' . '.jpeg'; //generating unique file name;
                     File::put(public_path(). $dir.'/'.$imageName,base64_decode($image));
 
-                    $technique_stock->image = $dir.'/'.$imageName;
+                    $technique_stock->defect_image = $dir.'/'.$imageName;
                     $technique_stock->save();
-                }*/
+                }
+
+                if($defect) {
+                    $defect_note = $request->input('defect_note');
+                    $technique_stock->defect = 'yes';
+                    $technique_stock->defect_note = $defect_note;
+                    $technique_stock->save();
+                }
 
                 $data = $technique_stock->attributesToArray();
+                $company = Company::findOrFail($data['company_id']);
                 $data['user_id'] = $user->id;
                 $data['technique_type'] = $technique_stock->technique_type->name;
                 $data['operation_type'] = 'received';
                 $data['address_from'] = 'cloud';
                 $data['address_to'] = $technique_stock->technique_place->name;
+                $data['owner'] = $company->full_company_name;
 
                 TechniqueLog::create($data);
 
@@ -162,8 +174,10 @@ class TechniqueController extends BaseApiController
                 $technique_stock->technique_place_id = $technique_place_id;
                 $technique_stock->save();
 
+                $company = Company::findOrFail($technique_stock->company_id);
+
                 TechniqueLog::create([
-                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $technique_stock->owner,
+                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
                     'operation_type' => 'moved', 'address_from' => $technique_place->name, 'address_to' => $technique_stock->technique_place->name
                 ]);
@@ -185,6 +199,7 @@ class TechniqueController extends BaseApiController
     {
         $vin_code = $request->input('vin_code');
         $user = $request->user();
+        $user = Auth::user();
         DB::beginTransaction();
         try {
             $technique_stock = TechniqueStock::where(['vin_code' => $vin_code])->first();
@@ -194,23 +209,26 @@ class TechniqueController extends BaseApiController
 
                 $technique_place = $technique_stock->technique_place;
 
+                $company = Company::findOrFail($technique_stock->company_id);
+
                 TechniqueLog::create([
-                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $technique_stock->owner,
+                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
                     'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name
                 ]);
 
                 DB::commit();
 
-                $technique_task = $technique_stock->technique_task;
+                /*$technique_task = $technique_stock->technique_task;
 
                 if($technique_task->canClose()) {
 
                     $technique_stocks = $technique_task->stocks;
                     foreach($technique_stocks as $stock) {
                         $tech_place = $stock->technique_place;
+                        $company = Company::findOrFail($technique_stock->company_id);
                         TechniqueLog::create([
-                            'user_id' => $user->id, 'technique_task_id' => $technique_task->id, 'owner' => $stock->owner,
+                            'user_id' => $user->id, 'technique_task_id' => $technique_task->id, 'owner' => $company->full_company_name,
                             'technique_type' => $stock->technique_type->name, 'mark' => $stock->mark, 'vin_code' => $stock->vin_code,
                             'operation_type' => 'completed', 'address_from' => $tech_place->name, 'address_to' => 'completed'
                         ]);
@@ -220,7 +238,7 @@ class TechniqueController extends BaseApiController
 
                     $technique_task->status = 'closed';
                     $technique_task->save();
-                }
+                }*/
             }
 
             return response([
@@ -247,16 +265,16 @@ class TechniqueController extends BaseApiController
                 $technique_stock->save();
 
                 $technique_place = $technique_stock->technique_place;
-
+                $company = Company::findOrFail($technique_stock->company_id);
                 TechniqueLog::create([
-                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $technique_stock->owner,
+                    'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
                     'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name
                 ]);
 
                 if($technique_task->canClose()) {
                     TechniqueLog::create([
-                        'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $technique_stock->owner,
+                        'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                         'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
                         'operation_type' => 'completed', 'address_from' => $technique_place->name, 'address_to' => 'completed'
                     ]);

@@ -15,7 +15,7 @@
 
         <div v-if="bottom_nav ==='operation_cont'" class="col-md-12">
             <template>
-                <v-window v-model="step">
+                <v-window v-model="step" touchless>
                     <v-window-item :value="1">
 
                         <br>
@@ -43,7 +43,7 @@
                             ></v-select>
                         </div>
 
-                        <div v-if="current_zone_id !== 'RICH'" class="form-group">
+                        <div v-if="technique_id !== 4" class="form-group">
                             <v-autocomplete
                                 :items="slingers"
                                 label="Выберите стропальщиков"
@@ -60,8 +60,22 @@
                                 hide-details
                                 clearable
                                 autocomplete="off"
+                                :readonly="slinger_ids.length > 1"
                                 :menu-props="{closeOnContentClick:true}"
-                            ></v-autocomplete>
+                            >
+                                <template v-slot:item="{ item, on, attrs }">
+                                    <v-list-item v-on="on" v-bind="attrs" #default="{ active }">
+                                        <v-list-item-action>
+                                            <v-checkbox :input-value="active"></v-checkbox>
+                                        </v-list-item-action>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                <v-chip color="blue-grey lighten-2"> {{ item.full_name }} </v-chip>
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </template>
+                            </v-autocomplete>
                         </div>
 
                         <v-divider></v-divider>
@@ -140,7 +154,7 @@
                             <v-btn
                                 :disabled="step === 1"
                                 text
-                                @click="step--"
+                                @click="backStep"
                             >
                                 Назад
                             </v-btn>
@@ -313,7 +327,7 @@
                                 <v-col cols="12">
                                     <button @click="step=9" style="font-size: 24px !important;" type="button" class="btn is_moving">Внутри</button>
                                 </v-col>
-                                <v-col cols="12" style="margin-top: 20px;">
+                                <v-col v-if="current_container_address !== 'buffer'" cols="12" style="margin-top: 20px;">
                                     <button @click="step=12" style="font-size: 24px !important; width: 100%; color: #fff;" type="button" class="btn btn-dark">В другую зону</button>
                                 </v-col>
                             </v-row>
@@ -840,6 +854,7 @@
                 this.floor_id = 0;
                 let formData = new FormData();
                 formData.append('container_number', this.container_number);
+                formData.append('technique_id', this.technique_id);
                 axios.post('/container-crane/get-info-for-container', formData)
                 .then(res => {
                     this.overlay = false;
@@ -1089,16 +1104,24 @@
             nextStep(){
                 this.errors = [];
                 let crane = this.techniques.find(item => item.id === this.technique_id);
-                if(this.current_zone_id !== 'RICH' || this.current_zone_id !== 'SPR' || this.current_zone_id !== 'SPK') {
+                if(this.current_zone_id !== 'SPR' || this.current_zone_id !== 'SPK' || this.current_zone_id !== 'ZTCIA') {
                     if(this.slinger_ids.length > 2) {
                         this.errors.push('Допустимое количество стропальщиков 2');
                     }
                 }
+
+                if(this.slinger_ids.length === 0 && this.technique_id !== 4) {
+                    this.errors.push('Выберите стропальщика');
+                }
+
                 if(crane.status === 'not_works') {
                     this.craneDialog = true;
                 } else {
                     if(this.errors.length === 0) {
                         this.overlay = true;
+                        if(this.technique_id === 4) {
+                            this.slinger_ids = [];
+                        }
                         let formData = new FormData();
                         formData.append('zone_id', this.current_zone_id);
                         formData.append('technique_id', this.technique_id);
@@ -1115,6 +1138,22 @@
                         })
                     }
                 }
+            },
+            backStep() {
+                this.overlay = true;
+                let formData = new FormData();
+                formData.append('zone_id', this.current_zone_id);
+                axios.post('/container-crane/cancel-my-settings-to-session', formData)
+                    .then(res => {
+                        console.log(res);
+                        this.overlay = false;
+                        this.info_container = '';
+                        this.step = 1;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        this.overlay = false;
+                    })
             },
             getSlingers(){
                 this.overlay = true;

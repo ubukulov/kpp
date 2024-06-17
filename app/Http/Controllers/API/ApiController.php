@@ -80,4 +80,10 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+    public function getCompanies()
+    {
+        $companies = Company::selectRaw('id, short_en_name')->get();
+        return response()->json($companies);
+    }
 }

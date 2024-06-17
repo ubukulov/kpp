@@ -8,9 +8,14 @@ require('./bootstrap');
 
 import Vuetify from "vuetify";
 import 'vuetify/dist/vuetify.min.css'
+import Vuex from 'vuex';
 
 window.Vue = require('vue');
 Vue.use(Vuetify);
+Vue.use(Vuex);
+
+import store from "./store/store";
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -47,6 +52,8 @@ Vue.component('crane', require('./crane/Crane').default);
 Vue.component('mark-manager', require('./mark/Manager').default);
 Vue.component('technique-create-task', require('./technique/CreateTaskTechnique.vue').default);
 Vue.component('technique-controller', require('./technique/TechniqueComponent.vue').default);
+Vue.component('technique-medicine', require('./mark/Medicine.vue').default);
+Vue.component('mark-aggregation', require('./mark/Aggregation.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -57,4 +64,5 @@ Vue.component('technique-controller', require('./technique/TechniqueComponent.vu
 const app = new Vue({
     el: '#app',
     vuetify: new Vuetify(),
+    store,
 });

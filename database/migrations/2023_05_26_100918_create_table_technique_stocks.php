@@ -23,6 +23,9 @@ class CreateTableTechniqueStocks extends Migration
             $table->string('vin_code')->unique();
             $table->enum('status', ['incoming', 'received', 'in_order', 'shipped']);
             $table->string('image')->nullable();
+            $table->enum('defect', ['no', 'yes']);
+            $table->string('defect_note')->nullable();
+            $table->string('defect_image')->nullable();
             $table->timestamps();
 
             $table->foreign('technique_task_id')

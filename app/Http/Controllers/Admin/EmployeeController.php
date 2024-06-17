@@ -27,23 +27,26 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        //Cache::forget('ckud_users');
-        if(Cache::has('ckud_users')) {
-            $ckud_users_numbers = Cache::get('ckud_users');
-        } else {
-            $ckud_users_numbers = [];
-            for($i=0; $i<10; $i++) {
-                $ckud_users = CKUD::getEmployees($i, 100);
-                if($ckud_users->result == 0) {
-                    foreach($ckud_users->data as $datum) {
-                        if(!array_key_exists($datum->Number, $ckud_users_numbers)) {
-                            $ckud_users_numbers[$datum->Number] = $datum->ID;
+        if(env('APP_ENV') == 'production') {
+            if(Cache::has('ckud_users')) {
+                $ckud_users_numbers = Cache::get('ckud_users');
+            } else {
+                $ckud_users_numbers = [];
+                for($i=0; $i<10; $i++) {
+                    $ckud_users = CKUD::getEmployees($i, 100);
+                    if($ckud_users->result == 0) {
+                        foreach($ckud_users->data as $datum) {
+                            if(!array_key_exists($datum->Number, $ckud_users_numbers)) {
+                                $ckud_users_numbers[$datum->Number] = $datum->ID;
+                            }
                         }
                     }
                 }
-            }
 
-            Cache::put('ckud_users', $ckud_users_numbers, 18000);
+                Cache::put('ckud_users', $ckud_users_numbers, 18000);
+            }
+        } else {
+            $ckud_users_numbers = [];
         }
 
         $employees = User::orderBy('id', 'DESC')

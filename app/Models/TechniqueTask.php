@@ -12,12 +12,22 @@ class TechniqueTask extends Model
     protected $table = 'technique_tasks';
 
     protected $fillable = [
-        'user_id', 'task_type', 'trans_type', 'status', 'upload_file', 'created_at', 'updated_at'
+        'user_id', 'company_id', 'task_type', 'trans_type', 'status', 'upload_file', 'agreement_id', 'created_at', 'updated_at'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function agreement()
+    {
+        return $this->belongsTo(Agreement::class);
     }
 
     public function stocks()

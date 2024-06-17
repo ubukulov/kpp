@@ -54,6 +54,13 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::get('webcont/aftos', 'WebcontController@aftosWebcont')->name('cabinet.webcont.aftos');
     Route::post('webcont/aftos/search', 'WebcontController@aftosWebcontSearch');
 
+    Route::group(['prefix' => 'webcont'], function(){
+        Route::get('/reports', 'WebcontController@reports')->name('cabinet.webcont.reports');
+        Route::post('/get-reports', 'WebcontController@getReports');
+        Route::post('get-detail', 'WebcontController@getDetail');
+        Route::post('get-stats-today', 'WebcontController@getStatsToday');
+    });
+
     # WMS
     Route::group(['prefix' => 'wms'], function(){
         Route::get('orders', 'WmsController@orders')->name('cabinet.wms.orders');

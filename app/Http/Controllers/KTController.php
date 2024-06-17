@@ -9,6 +9,7 @@ use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
 use App\Models\ImportLog;
+use App\Models\TechniqueLog;
 use App\Models\TechniqueStock;
 use App\Models\TechniqueTask;
 use Carbon\Carbon;
@@ -115,7 +116,8 @@ class KTController extends Controller
             case 0:
                 $container_tasks = ContainerTask::with('user')
                     ->where(['user_id' => Auth::id()])
-                    ->whereRaw("status != 'closed'")
+//                    ->whereNotIn("status", ['closed', 'ignore', 'failed'])
+                    ->whereIn("status", ['open', 'failed', 'waiting'])
 //                    ->orderByRaw("CASE status
 //                                            WHEN 'open' THEN 1
 //                                            WHEN 'waiting' THEN 1
@@ -195,7 +197,7 @@ class KTController extends Controller
 
     public function printTechniqueTask($technique_task_id)
     {
-        $technique_task = TechniqueTask::findOrFail($technique_task_id);
+        $technique_task = TechniqueTask::with('company', 'agreement')->findOrFail($technique_task_id);
         $technique_stocks = TechniqueStock::where(['technique_task_id' => $technique_task->id])
             ->selectRaw('technique_stocks.*, technique_types.name as type_name, technique_places.name as place_name, companies.full_company_name')
             ->join('technique_types', 'technique_types.id', 'technique_stocks.technique_type_id')
@@ -417,5 +419,19 @@ class KTController extends Controller
         } else {
             return response()->json('Не найден контейнер', 404);
         }
+    }
+
+    public function getTechniqueLogs($vincode)
+    {
+        $technique_logs = TechniqueLog::where('vin_code', 'like', '%'.$vincode)
+            ->selectRaw('technique_logs.*, users.full_name, users.phone')
+            ->join('users', 'users.id', 'technique_logs.user_id')
+            ->orderBy('technique_logs.id', 'DESC')
+            ->get();
+        if($technique_logs) {
+            return response()->json($technique_logs);
+        }
+
+        return response()->json('Не найден контейнер', 404);
     }
 }
