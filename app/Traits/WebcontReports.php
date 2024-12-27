@@ -4,6 +4,8 @@
 namespace App\Traits;
 
 use App\Models\ContainerLog;
+use App\Models\TechniqueLog;
+use App\Models\TechniqueStock;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -968,6 +970,176 @@ trait WebcontReports
         $writer->save(public_path() . $path_to_file);
 
         return $path_to_file;
+    }
+
+    public function getReportsCar(Request $request)
+    {
+        $data = $request->all();
+        $from_date = $data['from_date'];
+        if($data['report_id'] == 0) {
+            $technique_stocks = TechniqueStock::where('technique_stocks.status', '!=', 'shipped')/*whereDate('technique_stocks.created_at', '>=', $from_date)*/
+                ->selectRaw('technique_stocks.*, companies.short_en_name, technique_places.name as technique_place_name')
+                ->join('companies', 'companies.id', '=', 'technique_stocks.company_id')
+                ->join('technique_places', 'technique_places.id', '=', 'technique_stocks.technique_place_id')
+                //->where('technique_stocks.status', '!=', 'shipped')
+                ->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Отчет по остаткам авто');
+
+            $sheet->setCellValue('A1', '№');
+            $sheet->setCellValue('B1', 'Контрагент');
+            $sheet->setCellValue('C1', 'Вин Код');
+            $sheet->setCellValue('D1', 'Модель');
+            $sheet->setCellValue('E1', 'Цвет');
+            $sheet->setCellValue('F1', 'Дата завоза');
+            $sheet->setCellValue('G1', 'Зона хранения');
+
+            // Вставляем авто размер для колонок
+            $sheet->getColumnDimension('A')->setAutoSize(true);
+            $sheet->getColumnDimension('B')->setAutoSize(true);
+            $sheet->getColumnDimension('C')->setAutoSize(true);
+            $sheet->getColumnDimension('D')->setAutoSize(true);
+            $sheet->getColumnDimension('E')->setAutoSize(true);
+            $sheet->getColumnDimension('F')->setAutoSize(true);
+            $sheet->getColumnDimension('G')->setAutoSize(true);
+
+            $row_start = 1;
+            $current_row = $row_start;
+            foreach($technique_stocks as $key=>$item){
+                $current_row++;
+                $sheet->setCellValue('A'.$current_row, $key+1);
+                $sheet->setCellValue('B'.$current_row, $item->short_en_name);
+                $sheet->setCellValue('C'.$current_row, $item->vin_code);
+                $sheet->setCellValue('D'.$current_row, $item->mark);
+                $sheet->setCellValue('E'.$current_row, $item->color);
+                $sheet->setCellValue('F'.$current_row, $item->created_at);
+                $sheet->setCellValue('G'.$current_row, $item->technique_place_name);
+
+                $sheet->getStyle("A".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("C".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("D".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("E".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("F".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("G".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            $sheet->getStyle("A1:G".$current_row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+            $writer = new Xlsx($spreadsheet);
+            $filename = "webcont_report_for_cars_today_".date('d.m.Y_H_i_s_').".xlsx";
+
+            // Подготовка папок для сохранение картинки
+            $dir = '/temp/';
+
+            $path_to_file = $dir.$filename;
+            $writer->save(public_path() . $path_to_file);
+
+            return $path_to_file;
+        } else {
+            $technique_logs = TechniqueLog::whereIn('technique_logs.operation_type', ['received', 'completed'])
+                ->selectRaw('technique_logs.*, spines.created_at as spineDate')
+                ->leftJoin('spines', 'spines.spine_number', '=', 'technique_logs.spine_number')
+                ->whereDate('technique_logs.created_at', '>=', $from_date)
+                ->orderBy('technique_logs.id')
+                ->get();
+
+            $arr = [];
+
+            foreach($technique_logs as $item){
+                $log = $item->toArray();
+                if(!array_key_exists($log['vin_code'], $arr)){
+                    $arr[$log['vin_code']] = [
+                        'vin_code' => $log['vin_code'],
+                        'owner' => $log['owner'],
+                        'mark' => $log['mark'],
+                        'color' => $log['color'],
+                        'address_from' => $log['address_from'],
+                    ];
+                }
+                $arr[$log['vin_code']]['spine_number'] = $log['spine_number'];
+                /*if($log['operation_type'] == 'received' && !array_key_exists('received', $arr[$log['vin_code']])) {
+                    $arr[$log['vin_code']]['receive_date'] = date('Y-m-d H:i:s', strtotime($log['created_at']));
+                }*/
+                $arr[$log['vin_code']]['receive_date'][] = date('Y-m-d H:i:s', strtotime($log['created_at']));
+                if(is_null($log['spineDate'])){
+                    $arr[$log['vin_code']]['spine_date'] = '';
+                } else {
+                    $arr[$log['vin_code']]['shipped_date'] = date('Y-m-d H:i:s', strtotime($log['spineDate']));
+                }
+                /*if($log['operation_type'] == 'completed' && !array_key_exists('shipped', $arr[$log['vin_code']])) {
+                    $arr[$log['vin_code']]['shipped_date'] = date('Y-m-d H:i:s', strtotime($log['created_at']));
+                }*/
+            }
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Отчет завоз и вывоз по авто');
+
+            $sheet->setCellValue('A1', '№');
+            $sheet->setCellValue('B1', 'Контрагент');
+            $sheet->setCellValue('C1', 'Вин Код');
+            $sheet->setCellValue('D1', 'Модель');
+            $sheet->setCellValue('E1', 'Цвет');
+            $sheet->setCellValue('F1', 'Дата завоза');
+            $sheet->setCellValue('G1', 'Дата вывоза');
+            $sheet->setCellValue('H1', 'Корешок');
+            $sheet->setCellValue('I1', 'Номер автовоза / самоход');
+            $sheet->setCellValue('J1', 'Зона хранения');
+
+            // Вставляем авто размер для колонок
+            $sheet->getColumnDimension('A')->setAutoSize(true);
+            $sheet->getColumnDimension('B')->setAutoSize(true);
+            $sheet->getColumnDimension('C')->setAutoSize(true);
+            $sheet->getColumnDimension('D')->setAutoSize(true);
+            $sheet->getColumnDimension('E')->setAutoSize(true);
+            $sheet->getColumnDimension('F')->setAutoSize(true);
+            $sheet->getColumnDimension('G')->setAutoSize(true);
+            $sheet->getColumnDimension('H')->setAutoSize(true);
+            $sheet->getColumnDimension('I')->setAutoSize(true);
+            $sheet->getColumnDimension('J')->setAutoSize(true);
+
+            $arr = array_values($arr);
+            $row_start = 1;
+            $current_row = $row_start;
+            foreach($arr as $key=>$item){
+                $current_row++;
+                $sheet->setCellValue('A'.$current_row, $key+1);
+                $sheet->setCellValue('B'.$current_row, $item['owner']);
+                $sheet->setCellValue('C'.$current_row, $item['vin_code']);
+                $sheet->setCellValue('D'.$current_row, $item['mark']);
+                $sheet->setCellValue('E'.$current_row, $item['color']);
+                $sheet->setCellValue('F'.$current_row, ($item['receive_date'][0]) ?? '');
+                $sheet->setCellValue('G'.$current_row, ($item['shipped_date']) ?? '');
+                $sheet->setCellValue('H'.$current_row, $item['spine_number']);
+                $sheet->setCellValue('I'.$current_row, '');
+                $sheet->setCellValue('J'.$current_row, $item['address_from']);
+
+                $sheet->getStyle("A".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("C".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("D".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("E".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("F".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("G".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("H".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("I".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("J".$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            $sheet->getStyle("A1:J".$current_row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+            $writer = new Xlsx($spreadsheet);
+            $filename = "webcont_report_for_cars_today_".date('d.m.Y_H_i_s_').".xlsx";
+
+            // Подготовка папок для сохранение картинки
+            $dir = '/temp/';
+
+            $path_to_file = $dir.$filename;
+            $writer->save(public_path() . $path_to_file);
+
+            return $path_to_file;
+        }
     }
 
     public function getLetter($number){

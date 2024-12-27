@@ -82,7 +82,7 @@ class EmployeeController extends Controller
     {
         $data = $request->all();
 
-        $data['company_id'] = Auth::user()->company->id;
+        //$data['company_id'] = Auth::user()->company->id;
 
 		if(isset($data['password'])) {
 			$data['password'] = bcrypt($data['password']);

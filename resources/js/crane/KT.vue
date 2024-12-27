@@ -43,7 +43,7 @@
                             ></v-select>
                         </div>
 
-                        <div v-if="technique_id !== 4" class="form-group">
+                        <div v-if="technique_id !== 4 && technique_id !== 10" class="form-group">
                             <v-autocomplete
                                 :items="slingers"
                                 label="Выберите стропальщиков"
@@ -1110,7 +1110,7 @@
                     }
                 }
 
-                if(this.slinger_ids.length === 0 && this.technique_id !== 4) {
+                if(this.slinger_ids.length === 0 && (this.technique_id !== 4 && this.technique_id !== 10)) {
                     this.errors.push('Выберите стропальщика');
                 }
 
@@ -1119,7 +1119,7 @@
                 } else {
                     if(this.errors.length === 0) {
                         this.overlay = true;
-                        if(this.technique_id === 4) {
+                        if(this.technique_id === 4 && this.technique_id === 10) {
                             this.slinger_ids = [];
                         }
                         let formData = new FormData();

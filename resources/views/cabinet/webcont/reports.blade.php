@@ -229,6 +229,72 @@
                                 </div>
                                 <!-- /.card-body -->
                             </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            Отчет: По колесных техники
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <v-app>
+                                        <v-main>
+                                            <v-container>
+                                                <template>
+                                                    <v-container>
+                                                        <v-row>
+                                                            <v-col md="3">
+                                                                <v-menu
+                                                                    v-model="menu2"
+                                                                    :close-on-content-click="false"
+                                                                    :nudge-right="40"
+                                                                    transition="scale-transition"
+                                                                    offset-y
+                                                                    min-width="290px"
+                                                                >
+                                                                    <template v-slot:activator="{ on, attrs }">
+                                                                        <v-text-field
+                                                                            v-model="from_date"
+                                                                            label="C"
+                                                                            prepend-icon="event"
+                                                                            readonly
+                                                                            v-bind="attrs"
+                                                                            v-on="on"
+                                                                        ></v-text-field>
+                                                                    </template>
+                                                                    <v-date-picker v-model="from_date" :first-day-of-week="1" locale="ru" @input="menu2 = false"></v-date-picker>
+                                                                </v-menu>
+                                                            </v-col>
+
+                                                            <v-col md="3">
+                                                                <v-autocomplete
+                                                                    :hint="`${reports2.value}, ${reports2.text}`"
+                                                                    :items="reports2"
+                                                                    v-model="report_car_id"
+                                                                    item-value="value"
+                                                                    item-text="text"
+                                                                    label="Тип отчета"
+                                                                    required
+                                                                ></v-autocomplete>
+                                                            </v-col>
+
+                                                            <v-col md="3">
+                                                                <v-btn type="button" @click="getReportsForCar()" class="primary">Скачать отчет</v-btn>
+                                                            </v-col>
+                                                        </v-row>
+                                                    </v-container>
+                                                </template>
+
+                                            </v-container>
+                                        </v-main>
+                                    </v-app>
+                                </div>
+                                <!-- /.card-body -->
+                            </div>
                         </div>
                     </div>
                 </v-container>
@@ -256,7 +322,12 @@
                         { text: 'Стропальщики', value: 1}
                     ],
                     users: <?php echo json_encode($users) ?>,
-                    user_id: 0
+                    user_id: 0,
+                    reports2: [
+                        { text: 'Отчет по остаткам', value: 0 },
+                        { text: 'Отчет завоз и вывоз', value: 1}
+                    ],
+                    report_car_id: 0
                 }
             },
             methods: {
@@ -297,6 +368,19 @@
                     formData.append('report_id', this.report_id);
 
                     axios.post('/cabinet/webcont/get-stats-today', formData)
+                        .then(res => {
+                            window.location.href = res.data;
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                },
+                getReportsForCar(){
+                    let formData = new FormData();
+                    formData.append('from_date', this.from_date);
+                    formData.append('report_id', this.report_car_id);
+
+                    axios.post('/cabinet/webcont/get-reports-car', formData)
                         .then(res => {
                             window.location.href = res.data;
                         })

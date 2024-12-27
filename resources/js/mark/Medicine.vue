@@ -53,6 +53,17 @@
                                             item-text="line3"
                                         ></v-select>
                                     </div>
+                                    <div class="form-group mt-2">
+                                        <v-select
+                                            :items="pattern_list"
+                                            :hint="`${pattern_list.id}, ${pattern_list.name}`"
+                                            item-value="id"
+                                            v-model="pattern_id"
+                                            label="Выберите шаблон этикетки"
+                                            outlined
+                                            item-text="name"
+                                        ></v-select>
+                                    </div>
                                 </v-col>
                                 <v-col>
                                     <h4>Товар</h4>
@@ -229,6 +240,10 @@
                 print_id: 0,
                 mark_id: 0,
                 markings: [],
+                pattern_id: 0,
+                pattern_list: [
+                    {id: 1, name: "1.5 x 1.5"}, {id: 2, name: "5 x 5"}, {id: 3, name: "4 x 1.5"}
+                ],
                 errors: [],
                 container_number: '',
                 corop_number: '',
@@ -432,6 +447,7 @@
                 formData.append('mark_id', this.mark_id);
                 formData.append('printer_id', this.print_id);
                 formData.append('seria', this.seria);
+                formData.append('pattern_id', this.pattern_id)
                 axios.post('/marking-manager/aggregation/print-product', formData)
                 .then(res => {
                     console.log(res)

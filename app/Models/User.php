@@ -152,8 +152,8 @@ class User extends Authenticatable
                 return explode(',', $settings['human_resources_departments']['departments']);
             }
 
-        } else {
-            return [];
         }
+
+        return [];
     }
 }

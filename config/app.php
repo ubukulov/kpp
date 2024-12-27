@@ -184,6 +184,7 @@ return [
         App\Providers\DPDServiceProvider::class,
         App\Providers\RusGuardServiceProvider::class,
         App\Providers\MarkServiceProvider::class,
+        App\Providers\ANTServiceProvider::class,
     ],
 
     /*
@@ -242,6 +243,7 @@ return [
         'DPD' => App\Facades\DPD::class,
         'CKUD' => App\Facades\CKUD::class,
         'MARK' => App\Facades\Mark::class,
+        'ANT' => App\Facades\ANT::class,
     ],
 
 ];

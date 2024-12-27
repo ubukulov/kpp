@@ -40,7 +40,7 @@ class ContainerController extends BaseController
 
     public function getTechniques()
     {
-        $techniques = Technique::whereNotIn('id', Session::getTechniqueIds())->orderBy('name', 'ASC')->get();
+        $techniques = Technique::/*whereNotIn('id', Session::getTechniqueIds())->*/orderBy('name', 'ASC')->get();
         return response()->json($techniques);
     }
 
@@ -500,7 +500,7 @@ class ContainerController extends BaseController
                 $container_address = $container_stock->container_address;
                 $isCustoms = ($container_stock->customs == 'yes') ? 'Да' : 'Нет';
 
-                if($technique_id != 4 AND $session->ids == null) {
+                if($session->ids == null && ($technique_id != 4 && $technique_id != 10)) {
                     return response(
                         "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> <br>Адрес: $container_address->name <br><span style='color:red'>Выберите стропальщика</span>",
                         404

@@ -110,7 +110,7 @@
                         </div>
                     </div>
 
-                    <!--<div class="row">
+                    <div class="row">
                         <div class="col-md-6">
                             <div v-if="operation_type !== 3" class="form-group">
                                 <label>Собственник по техпаспорту/частник</label>
@@ -123,7 +123,7 @@
                                 <input type="text" class="form-control" v-model="employer_name">
                             </div>
                         </div>
-                    </div>-->
+                    </div>
 
 
 
@@ -472,9 +472,9 @@
                 if (this.bt_id == 0) {
                     this.errors.push('Укажите тип кузова');
                 }
-                /*if (!this.employer_name) {
+                if (!this.employer_name) {
                     this.errors.push('Укажите наниматель');
-                }*/
+                }
                 if (this.incoming_container_number && this.incoming_container_number.length < 11) {
                     this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                 }
@@ -483,28 +483,28 @@
                         this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                     }
                 }
-                /*if (this.operation_type != 3) {
-                    if (this.direction_id == 0) {
+                if (this.operation_type != 3) {
+                    /*if (this.direction_id == 0) {
                         this.errors.push('Укажите маршрут');
-                    }
+                    }*/
                     if (!this.from_company) {
                         this.errors.push('Укажите транспортной компании/частник');
                     }
-                    if (this.direction_id == 6) {
+                    /*if (this.direction_id == 6) {
                         if (!this.to_city) {
                             this.errors.push('Укажите названия маршрута ');
                         }
-                    }
-                }*/
+                    }*/
+                }
 
                 if (this.operation_type > 1) {
                     if (!this.invoice_cmr_number) {
                         this.errors.push('Укажите номер инвойса/CMR');
                     }
-                    /*if (!this.from_company) {
+                    if (!this.from_company) {
                         this.errors.push('Укажите транспортной компании/частник');
                     }
-                    if (this.direction_id == 6) {
+                    /*if (this.direction_id == 6) {
                         if (!this.to_city) {
                             this.errors.push('Укажите названия маршрута ');
                         }
@@ -536,7 +536,7 @@
                     formData.append('operation_type', this.operation_type);
                     formData.append('computer_name', this.computer_name);
                     //formData.append('direction_id', this.direction_id);
-                    //formData.append('employer_name', this.employer_name);
+                    formData.append('employer_name', this.employer_name);
                     formData.append('foreign_car', this.foreign_car);
                     formData.append('incoming_container_number', this.incoming_container_number);
                     formData.append('invoice_cmr_number', this.invoice_cmr_number);

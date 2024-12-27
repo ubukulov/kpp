@@ -39,8 +39,8 @@
             </p>
             <p>Отправитель: <strong><i><u>ТОО "International Logistics Corporation"</u></i></strong></p>
             <p>Грузополучатель: {{ $technique_task->company->full_company_name }}</p>
-            <p>По доверенности: {{ $technique_task->agreement->name }}</p>
-            <p>Через кого: {{ $technique_task->agreement->full_name }}</p>
+            <p>По доверенности: @if($technique_task->agreement) {{ $technique_task->agreement->name }} @endif</p>
+            <p>Через кого: @if($technique_task->agreement){{ $technique_task->agreement->full_name }} @endif</p>
         </div>
     </div>
     <table border="1" cellpadding="5" cellspacing="2">

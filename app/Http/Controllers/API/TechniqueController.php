@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\SpineCode;
 use App\Models\TechniqueLog;
 use App\Models\TechniquePlace;
 use App\Models\TechniqueStock;
@@ -20,6 +21,7 @@ class TechniqueController extends BaseApiController
         return response()->json(TechniquePlace::all());
     }
 
+    // АПИ для размещение авто
     public function receiveTechniqueToPlace(Request $request)
     {
         $technique_place_id = $request->input('technique_place_id');
@@ -71,12 +73,12 @@ class TechniqueController extends BaseApiController
 
                 TechniqueLog::create($data);
 
-                DB::commit();
-
                 if($technique_task->completeTask()) {
                     $technique_task->status = 'closed';
                     $technique_task->save();
                 }
+
+                DB::commit();
 
                 return response([
                     'message' => "Техника: <span style='color: red;'>".$vin_code."</span>.<br> Успешно размещено!",
@@ -91,15 +93,27 @@ class TechniqueController extends BaseApiController
         }
     }
 
+    // АПИ для проверки статуса авто
     public function getInformationByQRCode(Request $request)
     {
         $vin_code = $request->input('vin_code');
         $user = $request->user();
-        //$technique_stock = TechniqueStock::where(['vin_code' => $vin_code])->first();
-        $technique_stock = TechniqueStock::where('vin_code', 'like', '%'.$vin_code)->first();
+//        $technique_stock = TechniqueStock::where(['vin_code' => $vin_code])->first();
+        $technique_stock = TechniqueStock::where('vin_code', 'like', '%'.$vin_code.'%')->first();
         if($technique_stock) {
-            $vin_code =$technique_stock->vin_code;
+            $vin_code = $technique_stock->vin_code;
             if($technique_stock->status == 'incoming') {
+                /*if(SpineCode::exists($technique_stock->technique_task_id, $vin_code)) {
+                    return response([
+                        'message' => "Техника: <span style='color: red;'>".$vin_code."<br> </span> необходимо <span style='color: green;'>РАЗМЕСТИТЬ.</span>",
+                        'event' => 1,
+                        'vin_code' => $technique_stock->vin_code
+                    ]);
+                } else {
+                    return response([
+                        'message' => "Техника: <span style='color: red;'>".$vin_code.".<br> </span> <p style='color: black; font-size: 18px; margin-top: 20px;'>ДЛЯ РАЗМЕЩЕНИЕ НУЖНО ПОЛУЧИТЬ КОРЕШОК</p>",
+                    ], 404);
+                }*/
                 return response([
                     'message' => "Техника: <span style='color: red;'>".$vin_code."<br> </span> необходимо <span style='color: green;'>РАЗМЕСТИТЬ.</span>",
                     'event' => 1,

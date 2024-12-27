@@ -51,6 +51,10 @@
                                     Размещено
                                 @elseif($stock->status == 'in_order')
                                     Необходимо выдать
+                                @elseif($stock->status == 'exit_pass')
+                                    Корешок подписан
+                                @elseif($stock->status == 'canceled')
+                                    Отменен
                                 @else
                                     Выдано
                                 @endif

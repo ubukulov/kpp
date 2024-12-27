@@ -29,4 +29,9 @@ class SpineCode extends Model
         $record = SpineCode::where(['technique_task_id' => $technique_task_id, 'vin_code' => $vin_code])->first();
         return (bool) $record;
     }
+
+    public static function getData($technique_task_id, $vin_code)
+    {
+        return SpineCode::where(['technique_task_id' => $technique_task_id, 'vin_code' => $vin_code])->first();
+    }
 }

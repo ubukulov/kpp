@@ -81,6 +81,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/technique/spine', 'TechniqueController@storeSpine');
         Route::get('/technique/{spine_id}/print', 'TechniqueController@spinePrintView')->name('spine.printView');
         Route::post('/technique/get-spine-vincodes', 'TechniqueController@getSpineVincodes');
+        Route::get('get-spines', 'TechniqueController@getSpines');
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -110,7 +111,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/cancel-my-settings-to-session', 'ContainerController@cancelMySettingsToSession');
     });
 
-    # Контейнерный терминал - контролировщики
+    # Контейнерный терминал - контролировщики - Начальники смены
     Route::group(['prefix' => 'container-controller', 'middleware' => 'role:kt-controller'], function(){
         Route::get('/', 'KTController@controller')->name('kt.controller');
         Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
@@ -120,6 +121,10 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('task/confirm-cancel-position', 'KTController@confirmCancelPosition');
         Route::post('task/reject-edit-position', 'KTController@rejectEditPosition');
         Route::post('task/confirm-edit-position', 'KTController@confirmEditPosition');
+        Route::get('get-schedules', 'KTController@getSchedule'); // получить список расписание крановщиков и стропальщиков
+        Route::get('get-crane-users', 'KTController@getCraneUsers'); // получить список крановщиков которые нет в расписание
+        Route::get('get-slinger-users','KTController@getSlingerUsers'); // получить список стропальщиков которые свободные
+        Route::get('get-techniques', 'KTController@getTechniques'); // список свободных техники
 
         # Учет техники
         Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');

@@ -56,6 +56,8 @@
                                 <option value="outsourcing">Аутсорсинг</option>
                                 <option value="rent">Аренда</option>
                                 <option value="resident">Резидент</option>
+                                <option value="technique">Авто-техника</option>
+                                <option value="cargo">Грузы</option>
                                 <option value="damu_group">Damu Group</option>
                             </select>
                         </div>

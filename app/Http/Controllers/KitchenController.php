@@ -55,7 +55,7 @@ class KitchenController extends BaseController
             $username = $this->switch_en($username);
         }
 
-        $users = User::where(['users.iin' => $username])->orWhere(['users.uuid' => $username])->get();
+        $users = User::where(['users.uuid' => $username])->get();
 
         if(count($users) == 0) {
             return response([
@@ -72,7 +72,7 @@ class KitchenController extends BaseController
                     ], 406);
                 }
 
-                if($user->position_id === 224) {
+                if($user->position_id === 224 && $user->id != 1593) {
                     return response([
                         'message' => 'Для гостей запрещено использовать бейджик в столовое'
                     ], 406);

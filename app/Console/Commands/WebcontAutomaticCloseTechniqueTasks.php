@@ -39,7 +39,7 @@ class WebcontAutomaticCloseTechniqueTasks extends Command
      */
     public function handle()
     {
-        $technique_tasks = TechniqueTask::where(['status' => 'open', 'task_type' => 'ship', 'trans_type' => 'auto'])->get();
+        $technique_tasks = TechniqueTask::where(['status' => 'open', 'task_type' => 'ship'])->get();
 
         foreach($technique_tasks as $technique_task) {
             $technique_stocks = $technique_task->stocks;

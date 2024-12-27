@@ -61,25 +61,26 @@ class TechniqueController extends Controller
                     $color = $arr['A'];
                     $technique_type = $arr['B'];
                     $mark = $arr['C'];
-                    $vin_code = trim($arr['D']);
+                    $vin_code = $arr['D'];
+                    if($vin_code !== null) {
+                        $technique_type = TechniqueType::where(['name' => $technique_type])->first();
+                        if(!$technique_type) {
+                            $technique_type = TechniqueType::findOrFail(1);
+                            //dd("Тип техники не найдено в справочнике: " . $technique_type);
+                        }
 
-                    $technique_type = TechniqueType::where(['name' => $technique_type])->first();
-                    if(!$technique_type) {
-                        $technique_type = TechniqueType::findOrFail(1);
-                        //dd("Тип техники не найдено в справочнике: " . $technique_type);
+                        TechniqueStock::create([
+                            'technique_task_id' => $technique_task->id, 'technique_type_id' => $technique_type->id, 'color' => $color, 'mark' => $mark,
+                            'vin_code' => $vin_code, 'status' => 'incoming', 'company_id' => $data['company_id']
+                        ]);
+
+                        $company = Company::findOrFail($data['company_id']);
+
+                        TechniqueLog::create([
+                            'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'color' => $color, 'mark' => $mark,
+                            'vin_code' => $vin_code, 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name
+                        ]);
                     }
-
-                    TechniqueStock::create([
-                        'technique_task_id' => $technique_task->id, 'technique_type_id' => $technique_type->id, 'color' => $color, 'mark' => $mark,
-                        'vin_code' => $vin_code, 'status' => 'incoming', 'company_id' => $data['company_id']
-                    ]);
-
-                    $company = Company::findOrFail($data['company_id']);
-
-                    TechniqueLog::create([
-                        'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'color' => $color, 'mark' => $mark,
-                        'vin_code' => $vin_code, 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name
-                    ]);
                 }
             } else {
                 $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify(public_path($path_to_file));
@@ -170,7 +171,7 @@ class TechniqueController extends Controller
         }
     }
 
-    public function getTechniqueTasks()
+    public function getTechniqueTasks(): \Illuminate\Http\JsonResponse
     {
         $technique_tasks = TechniqueTask::where('technique_tasks.status', '!=', 'canceled')->orderBy('id', 'DESC')
             ->selectRaw('technique_tasks.*, companies.short_en_name')
@@ -194,7 +195,9 @@ class TechniqueController extends Controller
     {
         $technique_task = TechniqueTask::findOrFail($id);
         if($technique_task->status == 'closed' && $technique_task->task_type == 'ship') {
-            $stocks = TechniqueLog::where(['technique_task_id' => $technique_task->id, 'operation_type' => 'shipped'])
+            $stocks = TechniqueLog::where(['technique_task_id' => $technique_task->id])
+                ->selectRaw('technique_logs.*, technique_logs.operation_type as status')
+                ->whereIn('operation_type', ['completed', 'canceled'])
                 ->get();
         } else {
             $stocks = TechniqueStock::where(['technique_stocks.technique_task_id' => $technique_task->id])
@@ -207,13 +210,13 @@ class TechniqueController extends Controller
         return view('technique.details', compact('stocks', 'technique_task'));
     }
 
-    public function getTechniqueCompanies()
+    public function getTechniqueCompanies(): \Illuminate\Http\JsonResponse
     {
         $companies = Company::where(['type_company' => 'technique'])->get();
         return response()->json($companies);
     }
 
-    public function getAgreements($company_id)
+    public function getAgreements($company_id): \Illuminate\Http\JsonResponse
     {
         $agreements = Agreement::where(['company_id' => $company_id])
                 ->selectRaw('id, CONCAT(name, " на имя ", full_name) as name')
@@ -221,7 +224,7 @@ class TechniqueController extends Controller
         return response()->json($agreements);
     }
 
-    public function storeAgreement(Request $request, $company_id)
+    public function storeAgreement(Request $request, $company_id): \Illuminate\Http\JsonResponse
     {
         $data = $request->except('agreement_file');
         $data['user_id'] = Auth::id();
@@ -252,35 +255,96 @@ class TechniqueController extends Controller
 
     public function storeSpine(Request $request)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             $data['user_name'] = Auth::user()->full_name;
             $company = Company::findOrFail($data['company_id']);
             $data['company'] = $company->short_en_name;
             $data['spine_number'] = Spine::generateUniqueNumber($data['type']);
-            $technique_task = TechniqueTask::where(['company_id' => $data['company_id'], 'task_type' => $data['type'], 'status' => 'open'])
-                ->first();
-            if($technique_task) {
-                $data['technique_task_number'] = $technique_task->getNumber();
+
+            if(isset($data['selectedCodes'])) {
+                $codes = json_decode($data['selectedCodes']);
+                $data['name'] = "Авто - " . count($codes) . " шт";
 
                 $spine = Spine::create($data);
 
-                if($data['selectedCodes']) {
-                    $codes = json_decode($data['selectedCodes']);
-                    foreach($codes as $item) {
-                        SpineCode::create([
-                            'spine_id' => $spine->id, 'technique_task_id' => $technique_task->id, 'vin_code' => $item->code,
-                        ]);
+                $arr_vin = [];
+
+                foreach($codes as $item) {
+
+                    $technique_stock = TechniqueStock::where(['vin_code' => $item->code])->first();
+
+                    if($technique_stock) {
+
+                        $tech_place = $technique_stock->technique_place;
+                        if(!SpineCode::exists($technique_stock->technique_task_id, $item->code)) {
+                            SpineCode::create([
+                                'spine_id' => $spine->id, 'technique_task_id' => $technique_stock->technique_task_id, 'vin_code' => $item->code,
+                            ]);
+                        }
+
+                        /*if($data['type'] == 'ship') {
+                            $technique_stock->status = 'exit_pass';
+                            $technique_stock->save();
+                        }*/
+
+                        if($data['type'] == 'ship' && $technique_stock->status == 'shipped') {
+                            TechniqueLog::create([
+                                'user_id' => Auth::id(), 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
+                                'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
+                                'operation_type' => 'completed', 'address_from' => $tech_place->name, 'address_to' => 'completed', 'spine_number' => $spine->spine_number,
+                            ]);
+
+                            $arr_vin[] = [
+                                'company' => $company->full_company_name,
+                                'vin_code' => $technique_stock->vin_code,
+                                'status' => 'Техника выдано, корешок оформлено',
+                                'number' => $spine->spine_number,
+                                'car_number' => $spine->car_number,
+                                'driver' => $spine->driver_name,
+                            ];
+
+                            $technique_stock->delete();
+                        }
+
+                    } else {
+                        return response()->json('Vincode not found in stocks', 403);
                     }
                 }
 
+                $technique_stocks = TechniqueStock::where('status', '!=', 'exit_pass')
+                    ->where('status', '!=', 'incoming')
+                    ->get();
+
+                $emails = ['Nursultan.Amangeldiyev@htl.kz', 'kairat.ubukulov@htl.kz'];
+                /*if($company->id == 172) {
+                    $emails[] = 'S.maratuly1990@gmail.com';
+                }*/
+                $beautymail = app()->make(\Snowfire\Beautymail\Beautymail::class);
+                $beautymail->send('emails.technique.auto-close-tasks', [
+                    'data' => $arr_vin,
+                    'operation_type' => 'ВЫДАЧА',
+                    'stocks' => $technique_stocks->count(),
+                ], function($message) use ($emails)
+                {
+                    $message
+                        ->from('webcont@dlg.kz')
+                        ->to($emails)
+                        //->to('kairat.ubukulov@htl.kz')
+                        ->subject('ВНИМАНИЕ: ВЫДАНО АВТО');
+                });
+
+                DB::commit();
+
                 return response()->json($spine);
+            } else {
+                return response()->json("VinCodes not found", 403);
             }
 
-            return response()->json('Not found open tasks', 400);
         } catch (\Exception $exception) {
             DB::rollBack();
-            return response()->json('errors', 500);
+            return response()->json("ERROR: " . $exception->getMessage(), 500);
         }
     }
 
@@ -290,24 +354,49 @@ class TechniqueController extends Controller
         return view('technique.spine', compact('spine'));
     }
 
+    // Получить список вин кодов которых кладовщик подтвердил выдачу
     public function getSpineVincodes(Request $request)
     {
         $data = $request->all();
-        $technique_tasks = TechniqueTask::where(['company_id' => $data['company_id'], 'task_type' => $data['type'], 'status' => 'open'])
+        if($data['type'] == 'ship') {
+            $technique_tasks = TechniqueTask::where(['company_id' => $data['company_id'], 'task_type' => $data['type'], 'status' => 'open'])
                 ->get();
-        $codes = [];
-        foreach($technique_tasks as $technique_task) {
-            $stocks = $technique_task->stocks;
-            foreach($stocks as $stock) {
-                if($stock->status == 'shipped' && !SpineCode::exists($technique_task->id, $stock->vin_code)) {
-                    $codes[] = [
-                        'id' => $stock->id,
-                        'code' => $stock->vin_code
-                    ];
+            $codes = [];
+            foreach($technique_tasks as $technique_task) {
+                $stocks = $technique_task->stocks;
+                foreach($stocks as $stock) {
+                    if($stock->status == 'shipped' && !SpineCode::exists($technique_task->id, $stock->vin_code)) {
+                        $codes[] = [
+                            'id' => $stock->id,
+                            'code' => $stock->vin_code
+                        ];
+                    }
+                }
+            }
+        } else {
+            $technique_tasks = TechniqueTask::where(['company_id' => $data['company_id'], 'task_type' => $data['type'], 'status' => 'open'])
+                ->get();
+            $codes = [];
+            foreach($technique_tasks as $technique_task) {
+                $stocks = $technique_task->stocks;
+                foreach($stocks as $stock) {
+                    if($stock->status == 'incoming' && !SpineCode::exists($stock->technique_task_id, $stock->vin_code)) {
+                        $codes[] = [
+                            'id' => $stock->id,
+                            'code' => $stock->vin_code
+                        ];
+                    }
                 }
             }
         }
 
+
         return response()->json($codes);
+    }
+
+    public function getSpines(): \Illuminate\Http\JsonResponse
+    {
+        $spines = Spine::orderBy('id', 'DESC')->get();
+        return response()->json($spines);
     }
 }

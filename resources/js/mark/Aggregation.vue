@@ -115,6 +115,25 @@
                 </v-card>
             </v-dialog>
         </div>
+        <div class="text-center">
+            <v-dialog v-model="dialogError" width="500">
+                <v-card>
+                    <v-card-title class="text-h5 green lighten-2">
+                        ❗❗ Предупреждение ❗❗
+                    </v-card-title>
+                    <v-card-text class="text-h4" style="color: rgb(255, 1, 1);">
+                        {{ dialogErrorText }}
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="green" text @click="handelErrorModal">
+                            ОК
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </div>
     </div>
 
 </template>
@@ -136,7 +155,9 @@
                 standartBoxToPal: '',
                 scanProductBoxToPal: 0,
                 lastBox: null,
-                lastItem: null
+                lastItem: null,
+                dialogError: false,
+                dialogErrorText: ''
             }
         },
         computed: {
@@ -163,6 +184,9 @@
                 })
                 .catch(err => {
                     console.log(err);
+                    this.overlay = false
+                    this.dialogErrorText = "Ошибка!"
+                    this.dialogError = true
                 });
                 // ЧЕрез GEt высылаю номер SSCC палеты в ответ буду получать все стандарты и сколько уже отсканирован
             },
@@ -188,6 +212,9 @@
                 })
                 .catch(err => {
                     console.log(err)
+                    this.overlay = false
+                    this.dialogErrorText = "Ошибка!"
+                    this.dialogError = true
                 })
 
             },
@@ -206,7 +233,18 @@
                     this.validationStepThree()
                 })
                 .catch(err => {
-                    console.log(err);
+                    if (err.response.statusCode === 400) {
+                        this.dialogErrorText = "Ошибка данная штука уже отсканирована!"
+                        this.overlay = false
+                        this.dialogError = true
+                        this.inputValueItem = ''
+                    } else {
+                        this.dialogErrorText = "Ошибка!"
+                        this.overlay = false
+                        this.dialogError = true
+                        this.inputValueItem = ''
+                    }
+
                 })
             },
             handleFinish() {
@@ -233,6 +271,9 @@
                 })
                 .catch(err => {
                     console.log(err)
+                    this.overlay = false
+                    this.dialogErrorText = "Ошибка!"
+                    this.dialogError = true
                 })
 
             },
@@ -244,10 +285,12 @@
                 }
             },
             handelModalBox() {
-
                 this.dialogBox = false
                 this.inputValueSSCC = ''
                 this.Step = 1
+            },
+            handelErrorModal() {
+                this.dialogError = false
             }
         },
     }

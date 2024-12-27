@@ -36,7 +36,7 @@
                         </v-col>
                     </v-row>
 
-                    <v-row v-if="type === 'ship'">
+                    <v-row>
                         <v-card flat>
                             <v-card-title class="d-flex align-center pe-2">
                                 <v-icon icon="mdi-video-input-component"></v-icon> &nbsp;
@@ -60,7 +60,7 @@
                             <v-data-table
                                 :headers="code_headers"
                                 :items="codes"
-                                :items-per-page="5"
+                                :items-per-page="8"
                                 class="elevation-1"
                                 show-select
                                 :search="search"
@@ -69,16 +69,8 @@
                         </v-card>
                     </v-row>
 
-                    <v-row v-if="type" class="mt-5">
-                        <v-col cols="12">
-                            <v-text-field
-                                label="Наименование груза"
-                                v-model="name"
-                                outlined
-                            ></v-text-field>
-                        </v-col>
-
-                        <v-col>
+                    <v-row v-if="type" class="mt-3">
+                        <v-col cols="5">
                             <v-text-field
                                 label="Номер автомашины"
                                 v-model="car_number"
@@ -86,20 +78,24 @@
                             ></v-text-field>
                         </v-col>
 
-                        <v-col>
+                        <v-col cols="5">
                             <v-text-field
                                 label="ФИО водителя"
                                 v-model="driver_name"
                                 outlined
                             ></v-text-field>
                         </v-col>
+
+                        <v-col cols="2">
+                            <v-text-field class="mt-2" label="Выбрано" disabled :value="selectedCodes.length"></v-text-field>
+                        </v-col>
                     </v-row>
                 </v-container>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" @click="closeModal">Отменить</v-btn>
-                <v-btn  @click="saveAndPreviewSpine" color="success darken-1">
+                <v-btn color="blue darken-1" @click="hideModal">Отменить или закрыть окно</v-btn>
+                <v-btn :disabled="selectedCodes && selectedCodes.length === 0" @click="saveAndPreviewSpine" color="success darken-1">
                     <v-icon
                         middle
                     >
@@ -120,7 +116,6 @@
             return {
                 companies: [],
                 company_id: null,
-                name: null,
                 car_number: null,
                 driver_name: null,
                 types: [
@@ -152,16 +147,12 @@
             ...mapGetters(['isModalVisible'])
         },
         methods: {
-            ...mapActions(['hideModal']),
-            closeModal() {
-                this.hideModal();
+            //...mapActions(['hideModal']),
+            hideModal() {
+                this.codes = [];
                 this.company_id = null;
                 this.type = null;
-                this.name = null;
-                this.car_number = null;
-                this.driver_name = null;
-                this.codes = null;
-                this.selectedCodes = null;
+                this.$store.dispatch('hideModal');
             },
             getTechniqueCompanies(){
                 axios.get('/container-terminals/get-technique-companies')
@@ -177,10 +168,9 @@
                 let formData = new FormData();
                 formData.append('company_id', this.company_id);
                 formData.append('type', this.type);
-                formData.append('name', this.name);
                 formData.append('car_number', this.car_number);
                 formData.append('driver_name', this.driver_name);
-                if(this.selectedCodes.length > 0) {
+                if(this.selectedCodes && this.selectedCodes.length > 0) {
                     formData.append('selectedCodes', JSON.stringify(this.selectedCodes));
                 }
 
@@ -193,8 +183,9 @@
                     this.car_number = null;
                     this.driver_name = null;
                     this.codes = null;
-                    this.selectedCodes = null;
-                    this.closeModal();
+                    this.selectedCodes = [];
+                    this.getItems();
+                    this.hideModal();
                     let url = `/container-terminals/technique/${res.data.id}/print`;
                     window.open(url, "_blank");
                 })
@@ -203,20 +194,18 @@
                 })
             },
             getItems(){
-                if(this.type === 'ship') {
-                    let formData = new FormData();
-                    formData.append('company_id', this.company_id);
-                    formData.append('type', this.type);
+                let formData = new FormData();
+                formData.append('company_id', this.company_id);
+                formData.append('type', this.type);
 
-                    axios.post('/container-terminals/technique/get-spine-vincodes', formData)
-                        .then(res => {
-                            console.log(res);
-                            this.codes = res.data;
-                        })
-                        .catch(err => {
-                            console.log(err);
-                        })
-                }
+                axios.post('/container-terminals/technique/get-spine-vincodes', formData)
+                    .then(res => {
+                        console.log(res);
+                        this.codes = res.data;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
             }
         },
         created() {
@@ -226,5 +215,7 @@
 </script>
 
 <style scoped>
-
+.v-dialog>.v-card>.v-card__subtitle, .v-dialog>.v-card>.v-card__text {
+    padding: 0 14px 10px;
+}
 </style>

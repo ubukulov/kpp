@@ -1166,6 +1166,12 @@ HERE;
 
     public function printSSCCProduct(Request $request)
     {
+        //TODO:
+        // 1. Добавить к таблицу 2 поля
+        // 2. Проверить шрифты
+        // 3. НЕ ПУСКАТЬ В ПЕЧАТЬ ВСЕ). Попробовать печатать 500шт
+
+        $pattern_id = $request->input('pattern_id');
         $marking = Mark::findOrFail($request->input('mark_id'));
         $printer = Printer::findOrFail($request->input('printer_id'));
         $marking_detail = MarkDetail::where(['marking_id' => $marking->id, 'line3' => $request->input('seria')])->first();
@@ -1173,8 +1179,10 @@ HERE;
         $printer_name = $printer->printer_name;
         if($marking_detail) {
             $marking_codes = MarkCode::where(['marking_details_id' => $marking_detail->id, 'status' => 'not_marked'])->get();
+            if($pattern_id == 1) {
+                // размер этикетки на 1,5 на 1,5см
 
-            $data = <<<HERE
+                $data = <<<HERE
 ^XA^LRN^CI0^XZ
 ^XA
 ~TA000
@@ -1199,88 +1207,141 @@ HERE;
 ^LL120
 ^LS0
 HERE;
-            $arrCodesIds = [];
-            $marking_codes = $marking_codes->toArray();
-            foreach($marking_codes as $marking_code) {
-                $code = $marking_code['marking_code'];
-                $arrCodesIds[] = $marking_code['id'];
-                switch ($this->i) {
-                    case 1:
-                        $data .= <<<HERE
+                $arrCodesIds = [];
+                $marking_codes = $marking_codes->toArray();
+                foreach($marking_codes as $marking_code) {
+                    $code = $marking_code['marking_code'];
+                    $arrCodesIds[] = $marking_code['id'];
+                    switch ($this->i) {
+                        case 1:
+                            $data .= <<<HERE
 ^FT17,100^BXN,2,200,0,0,1,_,1
 ^FH\^FD$code^FS
 HERE;
-                        break;
+                            break;
 
-                    case 2:
-                        $data .= <<<HERE
+                        case 2:
+                            $data .= <<<HERE
 ^FT177,100^BXN,2,200,0,0,1,_,1
 ^FH\^FD$code^FS
 HERE;
-                        break;
+                            break;
 
-                    case 3:
-                        $data .= <<<HERE
+                        case 3:
+                            $data .= <<<HERE
 ^FT337,100^BXN,2,200,0,0,1,_,1
 ^FH\^FD$code^FS
 HERE;
-                        break;
+                            break;
 
-                    case 4:
-                        $data .= <<<HERE
+                        case 4:
+                            $data .= <<<HERE
 ^FT497,100^BXN,2,200,0,0,1,_,1
 ^FH\^FD$code^FS
 HERE;
-                        break;
+                            break;
 
-                    case 5:
-                        $data .= <<<HERE
+                        case 5:
+                            $data .= <<<HERE
 ^FT656,100^BXN,2,200,0,0,1,_,1
 ^FH\^FD$code^FS
 HERE;
-                        break;
-                }
+                            break;
+                    }
 
-                if($marking_code == end($marking_codes)) {
-                    //$r = 5 - $this->i;
-                    $data .= <<<HERE
+                    if($marking_code == end($marking_codes)) {
+                        //$r = 5 - $this->i;
+                        $data .= <<<HERE
 
 HERE;
 
-                    $this->i = 5;
-                }
+                        $this->i = 5;
+                    }
 
 
-                if($this->i == 5) {
-                    $data .= <<<HERE
+                    if($this->i == 5) {
+                        $data .= <<<HERE
 ^PQ1,0,1,Y
 ^XZ
 HERE;
 
-                    $printer = '\\\\'.$computer_name.$printer_name;
-                    // Open connection to the thermal printer
-                    $fp = fopen($printer, "w");
-                    if (!$fp){
-                        return response([
-                            'data' => [
-                                'message' => 'no connection to printer'
-                            ]
-                        ], 401);
-                    }
+                        $printer = '\\\\'.$computer_name.$printer_name;
+                        // Open connection to the thermal printer
+                        $fp = fopen($printer, "w");
+                        if (!$fp){
+                            return response([
+                                'data' => [
+                                    'message' => 'no connection to printer'
+                                ]
+                            ], 401);
+                        }
 
-                    if (!fwrite($fp,$data)){
-                        return response(['data' => 'writing failed'], 403);
-                    }
+                        if (!fwrite($fp,$data)){
+                            return response(['data' => 'writing failed'], 403);
+                        }
 
-                    $this->i = 0;
+                        $this->i = 0;
 
 //                    MarkCode::whereIn('id', $arrCodesIds)
 //                        ->update(['status' => 'marked', 'scan_user_id' => Auth::id()]);
 //                    $arrCodesIds = [];
+                    }
+
+                    $this->i++;
+                }
+            } else {
+                $seria = $marking_detail->line3;
+                $from_date = date('m/Y', strtotime($marking_detail->line12)); // Дата изготовление
+                $to_date = date('m/Y', strtotime($marking_detail->line4));
+                $sn = $marking_detail->sn;
+                $gtin = $marking_detail->gtin;
+
+                $printer = '\\\\'.$computer_name.$printer_name;
+                // Open connection to the thermal printer
+                $fp = fopen($printer, "w");
+                if (!$fp){
+                    return response([
+                        'data' => [
+                            'message' => 'no connection to printer'
+                        ]
+                    ], 401);
                 }
 
-                $this->i++;
+
+                foreach($marking_codes as $item) {
+                    $code = $item->marking_code;
+                    $data = <<<HERE
+^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ
+^XA
+^MMT
+^PW440
+^LL0440
+^LS0
+^FT8,57^A0N,25,24^FH\^FDСерия №: ^FS
+^FT8,95^A0N,25,24^FH\^FDДайындалған күні/^FS
+^FT8,126^A0N,25,24^FH\^FDДата пр:     ^FS
+^FT8,157^A0N,25,24^FH\^FDдейiн/до:    ^FS
+^FT8,201^A0N,25,24^FH\^FDGTIN No.:          ^FS
+^FT8,233^A0N,25,24^FH\^FDSR No.    :^FS
+^BY104,104^FT306,142^BXN,4,200,0,0,1,~
+^FH\^FD$code^FS
+^FT192,129^A0N,25,24^FH\^FD$from_date^FS
+^FT192,160^A0N,25,24^FH\^FD$to_date^FS
+^FT146,59^A0N,25,24^FH\^FD$seria^FS
+^FT152,201^A0N,25,24^FH\^FD$gtin^FS
+^FT152,235^A0N,25,24^FH\^FD$sn^FS
+^PQ1,0,1,Y^XZ
+HERE;
+                    if (!fwrite($fp,$data)){
+                        return response(['data' => 'writing failed'], 403);
+                    } else {
+                        $item->scan_user_id = Auth::id();
+                        $item->status = "marked";
+                        $item->save();
+                    }
+                }
             }
+
         }
     }
 }

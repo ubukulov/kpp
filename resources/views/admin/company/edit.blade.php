@@ -58,6 +58,8 @@
                                 <option @if($company->type_company == 'outsourcing') selected @endif value="outsourcing">Аутсорсинг</option>
                                 <option @if($company->type_company == 'rent') selected @endif value="rent">Аренда</option>
                                 <option @if($company->type_company == 'resident') selected @endif value="resident">Резидент</option>
+                                <option @if($company->type_company == 'technique') selected @endif value="technique">Авто-техника</option>
+                                <option @if($company->type_company == 'cargo') selected @endif value="cargo">Грузы</option>
                                 <option @if($company->type_company == 'damu_group') selected @endif value="damu_group">Damu Group</option>
                             </select>
                         </div>

@@ -359,7 +359,7 @@
                             <span class="badge badge-info right">1</span>
                         </p>
                     </a>
-                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/webcont/*')) display: block; @else display: none; @endif">
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('cabinet/webcont/*')) display: block; @else display: none; @endif">
 
                         <li class="nav-item">
                             <a href="{{ route('cabinet.webcont.reports') }}" class="nav-link @if(request()->is('cabinet/webcont/reports*')) active @endif">

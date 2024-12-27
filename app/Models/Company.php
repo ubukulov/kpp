@@ -20,11 +20,12 @@ class Company extends Model
      * kind_of_activity - Вид деятельности
      * type_company - Тип клиента
      * ashana - принимает два значение: 0 - разрешен питаться в столовое, 1 - запрещен
+     * status - если ok то работает
      */
 
     protected $fillable = [
         'full_company_name', 'short_ru_name', 'short_en_name', 'address', 'kind_of_activity',
-        'type_company', 'ashana', 'bin', 'created_at', 'updated_at'
+        'type_company', 'ashana', 'bin', 'status', 'created_at', 'updated_at'
     ];
 
     public function getTypeCompany()

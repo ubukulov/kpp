@@ -25,6 +25,11 @@ class TechniqueStock extends Model
         return $this->belongsTo(TechniqueTask::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function technique_type()
     {
         return $this->belongsTo(TechniqueType::class);

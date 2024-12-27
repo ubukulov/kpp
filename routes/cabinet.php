@@ -59,6 +59,7 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
         Route::post('/get-reports', 'WebcontController@getReports');
         Route::post('get-detail', 'WebcontController@getDetail');
         Route::post('get-stats-today', 'WebcontController@getStatsToday');
+        Route::post('get-reports-car', 'WebcontController@getReportsCar');
     });
 
     # WMS

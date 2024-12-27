@@ -39,7 +39,7 @@ class AuthController
             echo "Не могу открыть файл ($file2)";
             exit;
         }
-        for ($i = 0; $i < $count_file_lines; $i++) {
+        for ($i = 0; $i < 899; $i++) {
             $ss = explode("91KZF0", fgets($file));
             file_put_contents($file2, "$ss[0] \n", FILE_APPEND);
         }

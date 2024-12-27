@@ -175,7 +175,7 @@ class CabinetController extends BaseController
             $sql = "SELECT TOP 1500
                  LV_Order.ord_Code,
 		         av.oav_Value as KASPI_DO,
-				 'https://kaspi.kz/mc/api/merchant/kaspi-delivery/waybill?orderCode=' + av.oav_Value as KASPI_URL,
+				 'https://mc.shop.kaspi.kz/mc/api/merchant/kaspi-delivery/waybill/?orderCode=' + av.oav_Value + '&_m=133445566'  as KASPI_URL,
                  LV_Order.ord_CustomerOrderCode,
                  isnull(LV_OrderAttributesValues.oav_Value,'no address') as address,
                  LV_OrderStatus.*

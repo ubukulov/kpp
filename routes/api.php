@@ -63,4 +63,22 @@ Route::group(['namespace' => 'API', 'middleware' => 'auth:sanctum'], function(){
         Route::get('get-free-rows', 'WebcontController@getFreeRows');
         Route::get('get-free-slingers', 'WebcontController@getFreeSlingers');
     });
+
+    # Aggregation JTI
+    Route::post('aggregation', 'AggregationController@aggregation');
+    Route::get('get-aggregation-codes', 'AggregationController@getAggregationCodes');
+    Route::get('get-aggregation-qty', 'AggregationController@getAggregationQty');
+    Route::post('delete-aggregation-sscc', 'AggregationController@deleteAggregationSscc');
+    Route::get('get-aggregations-ordercodes', 'AggregationController@getAggregationOrderCodes');
+    Route::post('aggregation-order', 'AggregationController@aggregationOrder');
+    Route::get('get-aggregation-order-scanqty', 'AggregationController@getAggregationOrderScanQty');
+
+    # Inventory Samsung
+    Route::get('invent-list', 'InventSamsungController@getInventCodeList');
+    Route::post('inventory', 'InventSamsungController@inventory');
+    Route::get('inventory', 'InventSamsungController@getInventory');
+    Route::get('inventory/{id}', 'InventSamsungController@getInventoryById');
+
+    # Parking
+    Route::post('parking', 'InventSamsungController@parking');
 });

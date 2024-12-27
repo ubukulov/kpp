@@ -316,7 +316,8 @@
                     ],
                     kitchens: [
                         //{ text: 'ИП Акмуратов А.М', value: 1099 },
-                        { text: 'ИП Cargotraffic(АБК + Мобильная + КПП3)', value: 1097}
+                        { text: 'ИП Cargotraffic(АБК + Мобильная + КПП3)', value: 1097},
+                        { text: 'Объект "Маната"', value: 2279}
                     ],
                     kitchen_id: 0,
                     kitchens_reports_type: [
