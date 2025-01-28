@@ -131,6 +131,10 @@ class User extends Authenticatable
 
     public function getCompanyIds() : array
     {
+        if(is_null($this->settings)) {
+            return [$this->company_id];
+        }
+
         $settings = json_decode($this->settings, true);
         if(!empty($settings) && isset($settings['human_resources_departments'])) {
 

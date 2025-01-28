@@ -295,14 +295,8 @@
                             this.takePhoto();
                         })
                         .catch(err => {
-                            if(err.response.statusCode === 404) {
-                                this.info = true;
-                                this.infoHtml = '<strong style="font-size: 30px; color: red;">' + this.username +'  - не найден</strong>';
-                            }
-                            if(err.response.statusCode === 406) {
-                                this.info = true;
-                                this.infoHtml = '<strong style="font-size: 30px; color: red;">' + err.response.data.message +'</strong>';
-                            }
+                            this.info = true;
+                            this.infoHtml = '<strong style="font-size: 30px; color: red;">' + err.response.data.message +'</strong>';
                         })
                 } else {
                     this.dialog = false

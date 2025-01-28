@@ -55,6 +55,12 @@ class KitchenController extends BaseController
             $username = $this->switch_en($username);
         }
 
+        if(strlen($username) > 7) {
+            return response([
+                'message' => 'ЗАПРЕЩЕНО ИСПОЛЬЗОВАТЬ ИИН. ИСПОЛЬЗУЙТЕ БЕЙДЖИК'
+            ], 404);
+        }
+
         $users = User::where(['users.uuid' => $username])->get();
 
         if(count($users) == 0) {

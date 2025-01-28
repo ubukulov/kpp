@@ -242,7 +242,7 @@
                 markings: [],
                 pattern_id: 0,
                 pattern_list: [
-                    {id: 1, name: "1.5 x 1.5"}, {id: 2, name: "5 x 5"}, {id: 3, name: "4 x 1.5"}
+                    {id: 1, name: "1.5 x 1.5"}, {id: 2, name: "5 x 5"}, {id: 3, name: "4 x 1.5"}, {id: 4, name: "3 x 1.5"}
                 ],
                 errors: [],
                 container_number: '',

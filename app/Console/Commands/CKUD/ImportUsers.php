@@ -42,7 +42,7 @@ class ImportUsers extends Command
     {
         $ckud_users_numbers = Cache::get('ckud_users');
 
-        $users = User::whereRaw('LENGTH(users.uuid) = 7')
+        $users = User::whereRaw('LENGTH(users.uuid) = 7')/*->where('users.id', 731)*/
                 ->selectRaw('users.*, companies.full_company_name, companies.type_company, positions.title as position_name')
                 ->selectRaw("CONCAT('https://kpp.dlg.kz:8900/', REGEXP_REPLACE(users.image, 'f', 'l')) as photo_http")
                 ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')

@@ -68,7 +68,11 @@ class EmployeeController extends Controller
     {
         $companies = Company::whereIn('id', Auth::user()->getCompanyIds())->get();
         $positions = Position::all();
-        $departments = Department::whereIn('id', Auth::user()->getDepartmentIds())->get();
+        if(empty(Auth::user()->getDepartmentIds())) {
+            $departments = Department::all();
+        } else {
+            $departments = Department::whereIn('id', Auth::user()->getDepartmentIds())->get();
+        }
         return view('cabinet.employee.create', compact('positions', 'companies', 'departments'));
     }
 
@@ -82,7 +86,7 @@ class EmployeeController extends Controller
     {
         $data = $request->all();
 
-        //$data['company_id'] = Auth::user()->company->id;
+        $data['company_id'] = Auth::user()->company->id;
 
 		if(isset($data['password'])) {
 			$data['password'] = bcrypt($data['password']);

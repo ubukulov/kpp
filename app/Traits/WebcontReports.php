@@ -977,7 +977,7 @@ trait WebcontReports
         $data = $request->all();
         $from_date = $data['from_date'];
         if($data['report_id'] == 0) {
-            $technique_stocks = TechniqueStock::where('technique_stocks.status', '!=', 'shipped')/*whereDate('technique_stocks.created_at', '>=', $from_date)*/
+            $technique_stocks = TechniqueStock::where('technique_stocks.status', '!=', 'exit_pass')->where('technique_stocks.status', '!=', 'incoming')/*whereDate('technique_stocks.created_at', '>=', $from_date)*/
                 ->selectRaw('technique_stocks.*, companies.short_en_name, technique_places.name as technique_place_name')
                 ->join('companies', 'companies.id', '=', 'technique_stocks.company_id')
                 ->join('technique_places', 'technique_places.id', '=', 'technique_stocks.technique_place_id')

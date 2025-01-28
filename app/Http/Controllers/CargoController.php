@@ -18,10 +18,23 @@ use Auth;
 
 class CargoController extends BaseController
 {
-    public function index()
+    public function getCargos(): \Illuminate\Http\JsonResponse
     {
-        $cargo  = Cargo::orderBy('id', 'DESC')->get();
-        return view('cargo.index', compact('cargo'));
+        $cargo  = Cargo::orderBy('id', 'DESC')
+            ->selectRaw('cargo.*, companies.short_en_name')
+            ->join('companies', 'companies.id', '=', 'cargo.company_id')
+            ->get();
+        return response()->json($cargo);
+    }
+
+    public function getCargoCompanies(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(Company::where('type_company', 'cargo')->get());
+    }
+
+    public function getCargoNames(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(CargoTonnage::orderBy('name', 'ASC')->get());
     }
 
     public function create()

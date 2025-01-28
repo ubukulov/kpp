@@ -6,27 +6,38 @@ Vue.use(Vuex);
 export default new Vuex.Store({
     state: {
         modalVisible: false,
+        cargoModalVisible: false,
     },
     mutations: {
-        // мутации для изменения состояния
         SHOW_MODAL(state) {
             state.modalVisible = true;
         },
         HIDE_MODAL(state) {
             state.modalVisible = false;
-        }
+        },
+        SHOW_CARGO_MODAL(state) {
+            state.cargoModalVisible = true;
+        },
+        HIDE_CARGO_MODAL(state) {
+            state.cargoModalVisible = false;
+        },
     },
     actions: {
-        // действия, которые могут вызывать мутации
         showModal({ commit }) {
             commit('SHOW_MODAL');
         },
         hideModal({ commit }) {
             commit('HIDE_MODAL');
-        }
+        },
+        showCargoModal({ commit }) {
+            commit('SHOW_CARGO_MODAL');
+        },
+        hideCargoModal({ commit }) {
+            commit('HIDE_CARGO_MODAL');
+        },
     },
     getters: {
-        // геттеры для получения состояния
-        isModalVisible: state => state.modalVisible
+        isModalVisible: state => state.modalVisible,
+        isCargoModalVisible: state => state.cargoModalVisible,
     }
 });

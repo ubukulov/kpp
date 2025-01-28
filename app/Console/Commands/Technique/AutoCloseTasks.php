@@ -51,7 +51,7 @@ class AutoCloseTasks extends Command
             foreach($technique_tasks as $technique_task) {
                 $technique_stocks = $technique_task->stocks;
                 foreach($technique_stocks as $technique_stock) {
-                    if ($technique_stock->status == 'shipped') {
+                    if ($technique_stock->status == 'shipped' || $technique_stock->status == 'in_order') {
                         $spine_code = SpineCode::where(['vin_code' => $technique_stock->vin_code])->first();
                         if(!$spine_code) {
                             $technique_stock->status = 'received';

@@ -82,6 +82,19 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/technique/{spine_id}/print', 'TechniqueController@spinePrintView')->name('spine.printView');
         Route::post('/technique/get-spine-vincodes', 'TechniqueController@getSpineVincodes');
         Route::get('get-spines', 'TechniqueController@getSpines');
+
+        # Cargo - учет грузов
+//        Route::get('/', 'CargoController@index')->name('cargo.index');
+//        Route::get('/create', 'CargoController@create')->name('cargo.create');
+//        Route::post('store', 'CargoController@store')->name('cargo.store');
+//        Route::get('/{id}/show', 'CargoController@show')->name('cargo.show');
+//        Route::get('{id}/qr-code', 'CargoController@qr')->name('cargo.qr');
+        Route::group(['prefix' => 'cargo'], function(){
+            Route::get('/create', 'CargoController@create')->name('cargo.create');
+            Route::get('lists', 'CargoController@getCargos');
+            Route::get('get-cargo-companies', 'CargoController@getCargoCompanies');
+            Route::get('get-cargo-names', 'CargoController@getCargoNames');
+        });
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -181,41 +194,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/search-by-number', 'ViewController@searchByNumberInWCL');
         Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
     });
-
-    # Учет запчастей или грузов
-    Route::group(['prefix' => 'cargo', 'middleware' => 'role:cargo-dispatcher'], function(){
-        Route::get('/', 'CargoController@index')->name('cargo.index');
-        Route::get('/create', 'CargoController@create')->name('cargo.create');
-        Route::post('store', 'CargoController@store')->name('cargo.store');
-        Route::get('/{id}/show', 'CargoController@show')->name('cargo.show');
-        Route::get('{id}/qr-code', 'CargoController@qr')->name('cargo.qr');
-
-    });
-
-    Route::group(['prefix' => 'cargo/controller', 'middleware' => 'role:cargo-controller'], function(){
-        Route::get('/', 'CargoController@controller')->name('cargo.controller');
-        Route::get('{id}/show', 'CargoController@controllerShow')->name('cargo.controller.show');
-        Route::get('/{id}/start', 'CargoController@cargoItems')->name('cargo.controller.cargoItems');
-        Route::get('{cargoItem}/cargo-item', 'CargoController@cargoItemStepTwo')->name('cargo.controller.cargoItemStepTwo');
-        Route::post('{cargoItem}/cargo-item', 'CargoController@cargoItemStepTwoStore')->name('cargo.controller.cargoItemStepTwoStore');
-        Route::get('{cargoItem}/cargo-item/complete', 'CargoController@cargoItemStepThree')->name('cargo.controller.cargoItemStepThree');
-        Route::post('{cargoItem}/cargo-item/complete', 'CargoController@cargoItemStepThreeStore')->name('cargo.controller.cargoItemStepThreeStore');
-
-
-        Route::get('/{id}/start/page/{pageId}/', 'CargoController@startPage')->name('cargo.controller.startPage');
-    });
-
 });
-
-/*# Учет запчастей или грузов
-Route::group(['prefix' => 'technique-parts'], function(){
-    Route::get('/', 'TechniquePartController@index')->name('technique_parts.index');
-    Route::get('/create', 'TechniquePartController@create')->name('technique_parts.create');
-    Route::get('/{id}/show', 'TechniquePartController@show')->name('technique_parts.show');
-
-    Route::get('/{id}/start', 'TechniquePartController@start')->name('technique_parts.start');
-    Route::get('/{id}/start/page/{pageId}', 'TechniquePartController@startPage')->name('technique_parts.startPage');
-});*/
 
 # Маршруты для тех водителей которые оформляет себе предварительную пропуск
 Route::get('/driver', 'DriverController@index');
