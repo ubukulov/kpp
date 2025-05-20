@@ -24,7 +24,7 @@ class CreateTableSpines extends Migration
             $table->string('car_number')->nullable();
             $table->string('driver_name')->nullable();
             $table->string('user_name')->nullable();
-
+            $table->enum('kind', ['auto', 'cargo']);
             $table->timestamps();
         });
     }

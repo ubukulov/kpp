@@ -26,11 +26,11 @@ class ViewController extends BaseController
     public function index()
     {
         $cur_month = DB::select("SELECT COUNT(*) as cnt FROM permits
-                         WHERE date_in IS NOT NULL AND status='printed'
+                         WHERE date_in IS NOT NULL AND status != 'awaiting_print' AND status != 'deleted'
                          AND MONTH(date_in)=MONTH(CURDATE()) AND YEAR(date_in)=YEAR(CURDATE())");
 
         $pre_month = DB::select("SELECT COUNT(*) as cnt FROM permits
-                         WHERE date_in IS NOT NULL AND status='printed'
+                         WHERE date_in IS NOT NULL AND status != 'awaiting_print' AND status != 'deleted'
                          AND MONTH(date_in)=MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)) AND YEAR(date_in)=YEAR(NOW())");
         $companies = Company::all();
 
@@ -148,13 +148,13 @@ class ViewController extends BaseController
 
         if ($company_id == 0) {
             if($kpp_name == "") {
-                $permits = Permit::where(['status' => 'printed'])
+                $permits = Permit::where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->whereNotNull('date_in')
                     ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
                     ->get();
             } else {
-                $permits = Permit::where(['status' => 'printed'])
+                $permits = Permit::where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->where('kpp_name', '=', $kpp_name)
                     ->whereNotNull('date_in')
@@ -163,13 +163,13 @@ class ViewController extends BaseController
             }
         } else{
             if($kpp_name == "") {
-                $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+                $permits = Permit::where(['company_id' => $company_id])->where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->whereNotNull('date_in')
                     ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
                     ->get();
             } else {
-                $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+                $permits = Permit::where(['company_id' => $company_id])->where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->where('kpp_name', '=', $kpp_name)
                     ->whereNotNull('date_in')
@@ -276,22 +276,24 @@ class ViewController extends BaseController
         $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
 
         if($kpp_name == "") {
-            $permits = Permit::where(['status' => 'printed'])
-                ->selectRaw('company, SUM(CASE WHEN lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
-                ->where('lc_id', '>', 0)->whereNotNull('date_in')
-                ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
-                ->groupBy('company')
-                ->orderBy('company')
+            $permits = Permit::where('permits.status', '!=', 'awaiting_print')->where('permits.status', '!=', 'deleted')
+                ->selectRaw('companies.short_en_name as company, SUM(CASE WHEN permits.lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN permits.lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN permits.lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN permits.from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
+                ->join('companies', 'companies.id', 'permits.company_id')
+                ->where('permits.lc_id', '>', 0)->whereNotNull('permits.date_in')
+                ->whereRaw("(permits.date_in >= ? AND permits.date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->groupBy('permits.company_id')
+                ->orderBy('permits.company_id')
                 ->get();
         } else {
-            $permits = Permit::where(['status' => 'printed'])
-                ->selectRaw('company, SUM(CASE WHEN lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
-                ->where('lc_id', '>', 0)
-                ->where('kpp_name', '=', $kpp_name)
-                ->whereNotNull('date_in')
-                ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
-                ->groupBy('company')
-                ->orderBy('company')
+            $permits = Permit::where('permits.status', '!=', 'awaiting_print')->where('permits.status', '!=', 'deleted')
+                ->selectRaw('companies.short_en_name as company, SUM(CASE WHEN permits.lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN permits.lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN permits.lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN permits.from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
+                ->join('companies', 'companies.id', 'permits.company_id')
+                ->where('permits.lc_id', '>', 0)
+                ->where('permits.kpp_name', '=', $kpp_name)
+                ->whereNotNull('permits.date_in')
+                ->whereRaw("(permits.date_in >= ? AND permits.date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->groupBy('permits.company_id')
+                ->orderBy('permits.company_id')
                 ->get();
         }
 

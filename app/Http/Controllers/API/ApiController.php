@@ -63,6 +63,13 @@ class ApiController extends Controller
                 ], 401);
             }
 
+            if(empty($request->email) || empty($request->password)){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email or Password does not empty.',
+                ], 422);
+            }
+
             $user = User::where('email', $request->email)->with('company', 'position')->first();
 
             return response()->json([

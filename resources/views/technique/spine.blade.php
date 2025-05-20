@@ -64,7 +64,7 @@
                     <td>{{ $spine->company }}</td>
                 </tr>
                 <tr>
-                    <td>@if($spine->type == 'receive')Завоз груза @elseВывоз груза@endif</td>
+                    <td>@if($spine->type == 'receive') Завоз груза @else Вывоз груза @endif</td>
                     <td></td>
                 </tr>
                 <tr>

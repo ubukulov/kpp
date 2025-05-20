@@ -49,7 +49,6 @@
                             </v-icon>
                             &nbsp;&nbsp;
                             <v-icon
-                                v-if="item.status === 'printed'"
                                 title="Перенести в архив"
                                 middle
                                 @click="showArchiveForm(item.id)"

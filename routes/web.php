@@ -84,16 +84,19 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('get-spines', 'TechniqueController@getSpines');
 
         # Cargo - учет грузов
-//        Route::get('/', 'CargoController@index')->name('cargo.index');
-//        Route::get('/create', 'CargoController@create')->name('cargo.create');
-//        Route::post('store', 'CargoController@store')->name('cargo.store');
-//        Route::get('/{id}/show', 'CargoController@show')->name('cargo.show');
-//        Route::get('{id}/qr-code', 'CargoController@qr')->name('cargo.qr');
         Route::group(['prefix' => 'cargo'], function(){
-            Route::get('/create', 'CargoController@create')->name('cargo.create');
-            Route::get('lists', 'CargoController@getCargos');
+            Route::get('lists', 'CargoController@getCargoTasks');
             Route::get('get-cargo-companies', 'CargoController@getCargoCompanies');
             Route::get('get-cargo-names', 'CargoController@getCargoNames');
+            Route::post('store', 'CargoController@store');
+            Route::get('{company_id}/get-cargo-stocks-for-shipment', 'CargoController@getCargoStocksForShipment');
+            Route::post('complete/cargo-task', 'CargoController@completeCargoTask');
+            Route::post('{cargoTaskId}/update', 'CargoController@update');
+            Route::post('spine', 'CargoController@storeSpine');
+            Route::get('{spine_id}/print', 'CargoController@spinePrintView')->name('spine.printView');
+            Route::get('get-spines', 'CargoController@getSpines');
+            Route::get('{company_id}/get-cars', 'CargoController@getCars');
+            Route::get('{company_id}/get-codes', 'CargoController@getCodesForCar');
         });
     });
 
@@ -194,6 +197,21 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/search-by-number', 'ViewController@searchByNumberInWCL');
         Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
     });
+
+    # Груз: Кладовщик
+    Route::group(['prefix' => 'cargo-controller', 'middleware' => 'role:cargo-controller'], function(){
+        Route::get('/', 'CargoController@controller')->name('cargo.controller');
+        Route::get('get-cargo-tasks', 'CargoController@getCargoTasks');
+        Route::get('cargo-task/{id}/show', 'CargoController@showCargoTask');
+        Route::get('cargo-task/{id}-{pos}/start', 'CargoController@startCargoTask');
+        Route::get('cargo-task/{id}-{pos}/edit', 'CargoController@editCargoTask');
+        Route::get('get-techniques', 'CargoController@getTechniques');
+        Route::get('get-employees', 'CargoController@getEmployees');
+        Route::get('get-areas', 'CargoController@getAreas');
+        Route::post('cargo/fix-operations', 'CargoController@fixOperations');
+        Route::post('cargo/tasks/changes', 'CargoController@changeTasks');
+        Route::get('get-cargo-services', 'CargoController@getCargoServices');
+    });
 });
 
 # Маршруты для тех водителей которые оформляет себе предварительную пропуск
@@ -221,3 +239,8 @@ Route::get('/lv-order-screen', 'LVController@lvOrderScreen')->name('lv.order.scr
 
 Route::get('/scan-qr-code', 'IndexController@scanQR');
 Route::post('/avigilon', 'IndexController@avigilon');
+
+# API routes for Parquor
+Route::post('permit/access-to-entrance', 'KppController@accessToEntrance');
+Route::post('permit/access-to-exit', 'KppController@accessToExit');
+Route::post('permit/completed-to-exit', 'KppController@completedToExit');

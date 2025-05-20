@@ -12,9 +12,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use File;
 use Auth;
-use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use DPD;
 use CKUD;
 
@@ -23,26 +20,6 @@ class IndexController extends BaseController
 {
     public function welcome()
     {
-//        $user = User::with('company', 'position')->find(1);
-//        $data = [
-//            'Comment' => $user->position->title,
-//            'employeeGroupID' => 'f6e6250b-69f4-4f4a-9c4b-2bc357645d6b',
-//            'Number' => $user->id,
-//            'KeyNumber' => 54585655,
-//            'ResidentialAddress' => $user->company->full_company_name,
-//            'photo_http' => 'https://kpp.dlg.kz:8900/users_photos/d3/c8/1400_l_1682571448.jpeg',
-//        ];
-//
-//        $arr = explode(" ", $user->full_name);
-//        $LastName = (array_key_exists(0, $arr)) ? $arr[0] : '';
-//        $FirstName = (array_key_exists(1, $arr)) ? $arr[1] : '';
-//        $SecondName = (array_key_exists(2, $arr)) ? $arr[2] : '';
-//        $data['LastName'] = $LastName;
-//        $data['FirstName'] = $FirstName;
-//        $data['SecondName'] = $SecondName;
-        //dd(json_encode($data, JSON_UNESCAPED_SLASHES));
-        //dd(CKUD::addEmployee($data));
-        //dd(CKUD::getEmployees());
         return view('welcome');
     }
 
@@ -81,7 +58,10 @@ class IndexController extends BaseController
 
     public function getNotCompletedPermitsForWeek()
     {
-        $permits = Permit::whereNotNull('date_in')->where('status', 'printed')->where('created_at', '>=', Carbon::now()->subDays(7))->orderBy('id', 'DESC')->get();
+        $permits = Permit::whereNotNull('date_in')
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->orderBy('id', 'DESC')
+            ->get();
         return response()->json($permits);
     }
 
@@ -140,6 +120,7 @@ class IndexController extends BaseController
 
                 $permit->from_company = $from_company;
                 $permit->to_city = $to_city;
+                $permit->status = 'completed';
                 $permit->save();
                 return response(['data' => 'Дата успешно зафиксирован']);
             } else {

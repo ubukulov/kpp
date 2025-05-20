@@ -43,6 +43,13 @@ class User extends Authenticatable
         return $this->hasMany(AshanaLog::class)->whereDate('date', Carbon::now())->count();
     }
 
+    public function countAshanaMonth()
+    {
+        return $this->hasMany(AshanaLog::class)
+            ->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+            ->count();
+    }
+
     public function ashana()
     {
         return $this->hasMany(AshanaLog::class);

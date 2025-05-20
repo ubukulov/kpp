@@ -92,7 +92,7 @@
                                 <div class="form-check">
                                     <input class="form-check-input" v-model="isChecked" name="isChecked" type="checkbox" id="flexCheckChecked">
                                     <label class="form-check-label" for="flexCheckChecked">
-                                        В любое время
+                                        В течение суток
                                     </label>
                                 </div>
                             </div>

@@ -106,6 +106,8 @@ export default {
                                         <div><strong>Телефон:</strong> {{ item.phone }}</div>
                                         <div><strong>Клиент:</strong> {{ item.owner }}</div>
                                         <div><strong>ВИНКОД:</strong> {{ item.vin_code }}</div>
+                                        <div><strong>ЦВЕТ:</strong> {{ item.color }}</div>
+                                        <div><strong>Марка:</strong> {{ item.mark }}</div>
                                         <div v-if="item.operation_type === 'completed'"><strong>Корешок:</strong> {{ item.spine_number }}</div>
                                         <table class="table table-bordered mt-2">
                                             <thead>

@@ -259,13 +259,33 @@
 
                 @role('rezidenty')
 
-                <li class="nav-item">
+                {{--<li class="nav-item">
                     <a href="{{ route('cabinet.employees.index') }}" class="nav-link  @if(request()->is('cabinet/employees*')) active @endif">
                         <i class="nav-icon fas fa-users"></i>
                         <p>
                             Список сотрудников
                         </p>
                     </a>
+                </li>--}}
+
+                <li class="nav-item has-treeview @if(request()->is('cabinet/utilities/*')) menu-open @endif">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p>
+                            Ком. услуги
+                            <i class="fas fa-angle-left right"></i>
+                            <span class="badge badge-info right">1</span>
+                        </p>
+                    </a>
+
+                    <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('cabinet/utilities/*')) display: block; @else display: none; @endif">
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.utilities.energy') }}" class="nav-link @if(request()->is('cabinet/utilities/energy*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Электр энергия</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 {{--<li class="nav-item">
@@ -296,6 +316,19 @@
                         <i style="font-size: 25px; vertical-align: super;" class="nav-icon fas fa-align-justify"></i>
                         <p>
                             Разовый пропуск <br> на автомашину
+                        </p>
+                    </a>
+                </li>
+
+                @endrole
+
+                @role('parqour-gosti')
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.white-cars.guest.index') }}" class="nav-link  @if(request()->is('cabinet/white-car-list/guest/cars*')) active @endif">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>
+                            Parqour:Гости
                         </p>
                     </a>
                 </li>
@@ -337,7 +370,7 @@
                     </li>
                 @endif
 
-                @if(Auth::user()->company_id = 63)
+                @if(Auth::user()->company_id == 63)
                     <li class="nav-item">
                         <a href="{{ route('cabinet.webcont.aftos') }}" class="nav-link @if(request()->is('cabinet/webcont/aftos*')) active @endif">
                             <i class="nav-icon fas fa-align-justify"></i>

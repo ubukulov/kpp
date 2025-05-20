@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CargoItem;
-use App\Models\CargoLog;
-use App\Models\CargoStock;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Artisan;
 use Auth;
+use Illuminate\Http\Request;
 use MARK;
 
 class AdminController extends Controller

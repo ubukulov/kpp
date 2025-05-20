@@ -45,7 +45,7 @@
                         @foreach($white_car_lists as $wcl)
                         <tr>
                             <td>{{ $wcl->id }}</td>
-                            <td>{{ $wcl->gov_number }}</td>
+                            <td>{{ strtoupper($wcl->gov_number) }}</td>
                             <td>{{ $wcl->full_name }}</td>
                             <td>{{ $wcl->short_ru_name }}</td>
                             <td>

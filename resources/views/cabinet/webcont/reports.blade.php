@@ -24,6 +24,7 @@
                 <v-container>
                     <div class="row">
                         <div class="col-md-12">
+                            @if(\Illuminate\Support\Facades\Auth::user()->company->type_company == 'damu_group')
                             <div class="card" style="margin-top: 10px;">
                                 <div class="card-header">
                                     Отчеты по крановым операциям
@@ -229,6 +230,7 @@
                                 </div>
                                 <!-- /.card-body -->
                             </div>
+                            @endif
 
                             <div class="card">
                                 <div class="card-header">

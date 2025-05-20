@@ -56,7 +56,7 @@ class PermitController extends Controller
         $data['tex_number'] = mb_strtoupper(trim($data['tex_number']));
         $data['ud_number'] = mb_strtoupper(trim($data['ud_number']));
         $data['last_name'] = mb_strtoupper($data['last_name']);
-        $data['status'] = 'awaiting_print';
+        $data['status'] = 'exit_permitted';
 
         Permit::create($data);
 
@@ -78,7 +78,7 @@ class PermitController extends Controller
             $car = Car::where(['tex_number' => $data['tex_number']])->first();
             $car->lc_id = $data['lc_id'];
             $car->bt_id = $data['bt_id'];
-            $car->from_company = $data['from_company'];
+            $car->from_company = $data['from_company'] ?? null;
             $car->save();
         }
         return redirect()->route('cabinet.permits.index');
@@ -134,7 +134,7 @@ class PermitController extends Controller
         $from_date = $request->input('from_date');
         $to_date = $request->input('to_date');
         $company_id = $request->input('company_id');
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
+        $permits = Permit::where(['company_id' => $company_id])->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
         return json_encode($permits);
     }
 
@@ -143,7 +143,7 @@ class PermitController extends Controller
         $from_date = $request->input('from_date');
         $to_date = $request->input('to_date');
         $company_id = $request->input('company_id');
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed', 'kpp_name' => 'kpp4'])
+        $permits = Permit::where(['company_id' => $company_id, 'kpp_name' => 'kpp4'])
             ->where('lc_id', '!=', 1)
             ->where('operation_type', '!=', 1)
             ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])

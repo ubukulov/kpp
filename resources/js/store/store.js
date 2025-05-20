@@ -7,6 +7,7 @@ export default new Vuex.Store({
     state: {
         modalVisible: false,
         cargoModalVisible: false,
+        cargoEditModalVisible: false,
     },
     mutations: {
         SHOW_MODAL(state) {

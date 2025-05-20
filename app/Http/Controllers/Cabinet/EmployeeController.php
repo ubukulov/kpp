@@ -85,8 +85,11 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        $user = Auth::user();
+        if(!$user->hasRole('otdel-kadrov')) {
+            $data['company_id'] = Auth::user()->company->id;
+        }
 
-        $data['company_id'] = Auth::user()->company->id;
 
 		if(isset($data['password'])) {
 			$data['password'] = bcrypt($data['password']);

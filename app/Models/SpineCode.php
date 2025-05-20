@@ -12,7 +12,7 @@ class SpineCode extends Model
     protected $table = 'spine_codes';
 
     protected $fillable = [
-        'spine_id', 'technique_task_id', 'vin_code'
+        'spine_id', 'task_id', 'vin_code'
     ];
 
     protected $dates = [
@@ -24,14 +24,14 @@ class SpineCode extends Model
         return $this->belongsTo(Spine::class);
     }
 
-    public static function exists($technique_task_id, $vin_code): bool
+    public static function exists($task_id, $vin_code): bool
     {
-        $record = SpineCode::where(['technique_task_id' => $technique_task_id, 'vin_code' => $vin_code])->first();
+        $record = SpineCode::where(['task_id' => $task_id, 'vin_code' => $vin_code])->first();
         return (bool) $record;
     }
 
-    public static function getData($technique_task_id, $vin_code)
+    public static function getData($task_id, $vin_code)
     {
-        return SpineCode::where(['technique_task_id' => $technique_task_id, 'vin_code' => $vin_code])->first();
+        return SpineCode::where(['task_id' => $task_id, 'vin_code' => $vin_code])->first();
     }
 }

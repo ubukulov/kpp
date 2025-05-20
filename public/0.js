@@ -12,14 +12,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      cargoNameId: [],
+      cargoNameId: null,
       rows: [{
         cargoNameId: null,
         quantity: null,
         weight: null,
         carNumber: null
       }],
-      oneCar: false
+      oneCar: false,
+      vin_code: null,
+      car_number: null
     };
   },
   props: ['cargoNames'],
@@ -34,6 +36,25 @@ __webpack_require__.r(__webpack_exports__);
     },
     removeRow: function removeRow(index) {
       this.rows.splice(index, 1);
+    },
+    sendData: function sendData() {
+      this.$emit('cargo-receive-collection', {
+        cargoNameId: this.cargoNameId,
+        vin_code: this.vin_code,
+        car_number: this.car_number,
+        oneCar: this.oneCar,
+        rows: this.rows
+      });
+    }
+  },
+  watch: {
+    cargoNameId: 'sendData',
+    vin_code: 'sendData',
+    car_number: 'sendData',
+    oneCar: 'sendData',
+    rows: {
+      handler: 'sendData',
+      deep: true
     }
   }
 });
@@ -49,13 +70,49 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       agreements: [],
       agreement_id: null,
-      files: []
+      files: [],
+      search: '',
+      selectedCodes: [],
+      codes: [],
+      code_headers: [{
+        text: 'ID',
+        align: 'start',
+        sortable: true,
+        value: 'id'
+      }, {
+        text: 'Наименование',
+        value: 'cargo_name'
+      }, {
+        text: 'ВИНКОД',
+        value: 'vin_code'
+      }, {
+        text: 'Кол-во',
+        value: 'quantity'
+      }]
     };
+  },
+  props: ['companyId'],
+  methods: {
+    getCargoStocksForShip: function getCargoStocksForShip() {
+      var _this = this;
+      axios__WEBPACK_IMPORTED_MODULE_0___default.a.get("/container-terminals/cargo/".concat(this.companyId, "/get-cargo-stocks-for-shipment")).then(function (res) {
+        console.log(res);
+        _this.codes = res.data;
+      })["catch"](function (err) {
+        console.log(err);
+      });
+    }
+  },
+  created: function created() {
+    this.getCargoStocksForShip();
   }
 });
 
@@ -96,6 +153,17 @@ __webpack_require__.r(__webpack_exports__);
     },
     removeRow: function removeRow(index) {
       this.rows.splice(index, 1);
+    },
+    sendData: function sendData() {
+      this.$emit('cargo-receive-samoxod', {
+        rows: this.rows
+      });
+    }
+  },
+  watch: {
+    rows: {
+      handler: 'sendData',
+      deep: true
     }
   }
 });
@@ -154,7 +222,8 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
         'name': 'Самоход'
       }],
       cargoTypeId: null,
-      cargoNames: []
+      cargoNames: [],
+      cargoCollectionData: {}
     };
   },
   computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapGetters"])(['isCargoModalVisible'])),
@@ -176,6 +245,30 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
       })["catch"](function (err) {
         console.log(err);
       });
+    },
+    cargoReceiveCollection: function cargoReceiveCollection(data) {
+      this.cargoCollectionData = data;
+    },
+    cargoReceiveSamoxod: function cargoReceiveSamoxod(data) {
+      this.cargoCollectionData = data;
+    },
+    createCargo: function createCargo() {
+      var _this3 = this;
+      var formData = new FormData();
+      formData.append('company_id', this.company_id);
+      formData.append('orderTypeId', this.orderTypeId);
+      formData.append('cargoTypeId', this.cargoTypeId);
+      formData.append('cargoData', JSON.stringify(this.cargoCollectionData));
+      axios__WEBPACK_IMPORTED_MODULE_1___default.a.post('/container-terminals/cargo/store', formData).then(function (res) {
+        console.log(res);
+        _this3.hideCargoModal();
+        _this3.callParentMethod();
+      })["catch"](function (err) {
+        console.log(err);
+      });
+    },
+    callParentMethod: function callParentMethod() {
+      this.$emit('call-parent-method');
     }
   }),
   created: function created() {
@@ -855,6 +948,13 @@ var render = function render() {
     attrs: {
       label: "VINCODE/SERIA",
       solo: ""
+    },
+    model: {
+      value: _vm.vin_code,
+      callback: function callback($$v) {
+        _vm.vin_code = $$v;
+      },
+      expression: "vin_code"
     }
   })], 1), _vm._v(" "), _c("v-col", {
     attrs: {
@@ -864,6 +964,13 @@ var render = function render() {
     attrs: {
       label: "Номер машины",
       solo: ""
+    },
+    model: {
+      value: _vm.car_number,
+      callback: function callback($$v) {
+        _vm.car_number = $$v;
+      },
+      expression: "car_number"
     }
   })], 1), _vm._v(" "), _c("v-col", {
     attrs: {
@@ -1008,12 +1115,50 @@ var render = function render() {
     attrs: {
       cols: "12"
     }
-  }, [_c("v-text-field", {
+  }, [_c("v-card", {
     attrs: {
-      label: "Поиск (краткий номер либо Винкод)",
-      solo: ""
+      flat: ""
     }
-  })], 1), _vm._v(" "), _c("v-col", {
+  }, [_c("v-card-title", {
+    staticClass: "d-flex align-center pe-2"
+  }, [_c("v-icon", {
+    attrs: {
+      icon: "mdi-video-input-component"
+    }
+  }), _vm._v("  \r\n                    Список грузов\r\n\r\n                    "), _c("v-spacer"), _vm._v(" "), _c("v-text-field", {
+    attrs: {
+      density: "compact",
+      label: "Search",
+      "prepend-inner-icon": "mdi-magnify",
+      variant: "solo-filled",
+      flat: "",
+      "hide-details": "",
+      "single-line": ""
+    },
+    model: {
+      value: _vm.search,
+      callback: function callback($$v) {
+        _vm.search = $$v;
+      },
+      expression: "search"
+    }
+  })], 1), _vm._v(" "), _c("v-divider"), _vm._v(" "), _c("v-data-table", {
+    staticClass: "elevation-1",
+    attrs: {
+      headers: _vm.code_headers,
+      items: _vm.codes,
+      "items-per-page": 8,
+      "show-select": "",
+      search: _vm.search
+    },
+    model: {
+      value: _vm.selectedCodes,
+      callback: function callback($$v) {
+        _vm.selectedCodes = $$v;
+      },
+      expression: "selectedCodes"
+    }
+  })], 1)], 1), _vm._v(" "), _c("v-col", {
     attrs: {
       cols: "4"
     }
@@ -1024,7 +1169,7 @@ var render = function render() {
     }
   })], 1), _vm._v(" "), _c("v-col", {
     attrs: {
-      cols: "6"
+      cols: "8"
     }
   }, [_c("v-select", {
     staticClass: "form-control",
@@ -1047,7 +1192,7 @@ var render = function render() {
       outlined: "",
       color: "indigo"
     }
-  }, [_c("v-icon", [_vm._v("mdi-plus-circle-outline")]), _vm._v(" Создать\n            ")], 1)], 1), _vm._v(" "), _c("v-col", {
+  }, [_c("v-icon", [_vm._v("mdi-plus-circle-outline")]), _vm._v(" Создать\r\n            ")], 1)], 1), _vm._v(" "), _c("v-col", {
     attrs: {
       cols: "12"
     }
@@ -1296,12 +1441,22 @@ var render = function render() {
   }) : _vm._e()], 1)], 1), _vm._v(" "), _vm.cargoTypeId === 1 && _vm.orderTypeId === 1 ? _c("CargoCollection", {
     attrs: {
       cargoNames: _vm.cargoNames
+    },
+    on: {
+      "cargo-receive-collection": _vm.cargoReceiveCollection
     }
   }) : _vm._e(), _vm._v(" "), _vm.cargoTypeId === 2 && _vm.orderTypeId === 1 ? _c("CargoSamoxod", {
     attrs: {
       cargoNames: _vm.cargoNames
+    },
+    on: {
+      "cargo-receive-samoxod": _vm.cargoReceiveSamoxod
     }
-  }) : _vm._e(), _vm._v(" "), _vm.orderTypeId === 2 ? _c("CargoIssue") : _vm._e()], 1)], 1), _vm._v(" "), _c("v-card-actions", [_c("v-spacer"), _vm._v(" "), _c("v-btn", {
+  }) : _vm._e(), _vm._v(" "), _vm.orderTypeId === 2 ? _c("CargoIssue", {
+    attrs: {
+      companyId: _vm.company_id
+    }
+  }) : _vm._e()], 1)], 1), _vm._v(" "), _c("v-card-actions", [_c("v-spacer"), _vm._v(" "), _c("v-btn", {
     attrs: {
       color: "blue darken-1"
     },
@@ -1311,6 +1466,9 @@ var render = function render() {
   }, [_vm._v("Отменить или закрыть окно")]), _vm._v(" "), _c("v-btn", {
     attrs: {
       color: "success darken-1"
+    },
+    on: {
+      click: _vm.createCargo
     }
   }, [_c("v-icon", {
     attrs: {
@@ -2300,7 +2458,11 @@ var render = function render() {
     on: {
       click: _vm.showCargoModal
     }
-  }, [_vm._v("Создать заявку на груз")]), _vm._v(" "), _c("CargoCreateModal"), _vm._v(" "), _c("v-data-table", {
+  }, [_vm._v("Создать заявку на груз")]), _vm._v(" "), _c("CargoCreateModal", {
+    on: {
+      "call-parent-method": _vm.getCargoTasks
+    }
+  }), _vm._v(" "), _c("v-data-table", {
     staticClass: "elevation-1",
     attrs: {
       headers: _vm.technique_headers,
@@ -2326,28 +2488,7 @@ var render = function render() {
       key: "item.status",
       fn: function fn(_ref3) {
         var item = _ref3.item;
-        return [item.status === "open" ? _c("div", [_vm._v("\n                В работе "), _c("a", {
-          attrs: {
-            href: "/container-terminals/technique_task/" + item.id + "/show-details"
-          }
-        }, [_c("i", {
-          staticClass: "fa fa-history",
-          "class": [{
-            allow: item.allow
-          }],
-          staticStyle: {
-            "font-size": "20px"
-          }
-        })])]) : item.status === "failed" ? _c("div", [_vm._v("\n                Ошибка при импорте\n            ")]) : item.status === "waiting" ? _c("div", [_vm._v("\n                В ожидание\n            ")]) : _c("div", [_vm._v("\n                Выполнен "), _c("a", {
-          attrs: {
-            href: "/container-terminals/technique_task/" + item.id + "/show-details"
-          }
-        }, [_c("i", {
-          staticClass: "fa fa-history",
-          staticStyle: {
-            "font-size": "20px"
-          }
-        })])])];
+        return [item.status === "new" ? _c("div", [_vm._v("\n                Новый\n            ")]) : item.status === "processing" ? _c("div", [_vm._v("\n                В работе\n            ")]) : item.status === "completed" ? _c("div", [_vm._v("\n                Завершен\n            ")]) : item.status === "canceled" ? _c("div", [_vm._v("\n                Отменен\n            ")]) : item.status === "failed" ? _c("div", [_vm._v("\n                Ошибка\n            ")]) : _c("div", [_vm._v("\n                Игнарирован\n            ")])];
       }
     }, {
       key: "item.print",
@@ -2393,7 +2534,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "\n.cargoItem[data-v-9fe64368] {\n    border: 1px dashed;\n}\n.cargoMain[data-v-9fe64368] {\n    border: 2px solid green;\n    margin-bottom: 20px;\n}\n", ""]);
+exports.push([module.i, "\n.cargoItem[data-v-9fe64368] {\r\n    border: 1px dashed;\n}\n.cargoMain[data-v-9fe64368] {\r\n    border: 2px solid green;\r\n    margin-bottom: 20px;\n}\r\n", ""]);
 
 // exports
 
@@ -2412,7 +2553,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "\n.cargoItem[data-v-b9c03cc2] {\n    border: 1px dashed;\n}\n", ""]);
+exports.push([module.i, "\n.cargoItem[data-v-b9c03cc2] {\r\n    border: 1px dashed;\n}\r\n", ""]);
 
 // exports
 

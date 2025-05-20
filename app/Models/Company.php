@@ -21,11 +21,12 @@ class Company extends Model
      * type_company - Тип клиента
      * ashana - принимает два значение: 0 - разрешен питаться в столовое, 1 - запрещен
      * status - если ok то работает
+     * ckud_group_id - uuid CKUD ИД группы
      */
 
     protected $fillable = [
         'full_company_name', 'short_ru_name', 'short_en_name', 'address', 'kind_of_activity',
-        'type_company', 'ashana', 'bin', 'status', 'created_at', 'updated_at'
+        'type_company', 'ashana', 'bin', 'status', 'ckud_group_id', 'created_at', 'updated_at'
     ];
 
     public function getTypeCompany()
