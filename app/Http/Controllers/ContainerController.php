@@ -10,7 +10,9 @@ use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
 use App\Models\ImportLog;
+use App\Models\Session;
 use App\Models\Technique;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +25,7 @@ class ContainerController extends BaseController
     public function getZones()
     {
         $zones = ContainerAddress::select(['zone', 'title'])
-            ->whereIn('kind', ['r', 'k', 'pole', 'cia', 'rich'])
+            ->whereIn('kind', ['r', 'k', 'pole', 'cia', 'rich', 'buffer'])
             ->orderBy('title', 'ASC')
             ->groupBy('zone')->get();
         return response()->json($zones);
@@ -38,7 +40,8 @@ class ContainerController extends BaseController
 
     public function getTechniques()
     {
-        return response()->json(Technique::orderBy('name', 'ASC')->get());
+        $techniques = Technique::/*whereNotIn('id', Session::getTechniqueIds())->*/orderBy('name', 'ASC')->get();
+        return response()->json($techniques);
     }
 
     public function getFreeRows(Request $request)
@@ -88,20 +91,88 @@ class ContainerController extends BaseController
      */
     public function receiveContainerChange(Request $request)
     {
-        $data = $request->all();
-        $name = $data['zone']."-".$data['row']."-".$data['place']."-".$data['floor'];
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $name = $data['zone']."-".$data['row']."-".$data['place']."-".$data['floor'];
 
-        $container_address = ContainerAddress::whereName($name)->first();
-        if ($container_address) {
-            $container = Container::findOrFail($data['container_id']);
-            if ($container) {
-                $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
-                if ($container_address_dmu_in) {
-                    $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id])->first();
+            $container_address = ContainerAddress::whereName($name)->first();
+            if ($container_address) {
+                $container = Container::findOrFail($data['container_id']);
+                if ($container) {
+                    $container_address_dmu_in = ContainerAddress::whereName('damu_in')->first();
+                    if ($container_address_dmu_in) {
+                        $container_stock = ContainerStock::where(['container_id' => $container->id, 'container_address_id' => $container_address_dmu_in->id])->first();
+                        if ($container_stock) {
+                            $current_address_name = $container_address_dmu_in->name;
+                            $container_stock->container_address_id = $container_address->id;
+                            $container_stock->status = 'received';
+                            $container_stock->save();
+
+                            $cs = $container_stock->attributesToArray();
+                            $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
+                            $cs['user_id'] = Auth::id();
+                            $cs['container_number'] = $container->number;
+                            $cs['operation_type'] = 'received';
+                            $cs['technique_id'] = $data['technique_id'];
+                            $cs['address_from'] = $current_address_name;
+                            $cs['address_to'] = $container_address->name;
+                            $cs['action_type'] = 'put';
+                            $cs['slinger_ids'] = $data['slinger_ids'];
+
+                            // Зафиксируем в лог
+                            ContainerLog::create($cs);
+
+                            // Зафиксируем в таблицу import_logs
+                            $container_task = $container_stock->container_task;
+                            $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container->number])->first();
+                            if ($import_log) {
+                                $import_log->state = 'posted';
+                                $import_log->save();
+                            }
+
+                            // Если этот контейнер последняя в заявке, то автоматический закрываем заявку
+                            if (!is_null($container_stock->container_task_id)) {
+                                $container_task = $container_stock->container_task;
+                                if ($container_task && $container_task->allowCloseThisTask()) {
+                                    ContainerTask::complete($container_task->id);
+                                }
+                            }
+                            DB::commit();
+                            return response(['data' => '<span style="font-size: 30px;line-height: 30px;">Контейнер успешно размещен!!!</span>'], 200);
+                        } else {
+                            return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
+                        }
+                    } else {
+                        return response(['data' => 'Не найден адрес damu_in'], 404);
+                    }
+                } else {
+                    return response(['data' => 'Не найден контейнер'], 404);
+                }
+            } else {
+                return response(['data' => 'Не найден адрес контейнера'], 404);
+            }
+        }catch (\Exception $exception){
+            DB::rollBack();
+            echo $exception->getMessage();
+            exit();
+        }
+    }
+
+    public function movingContainerChange(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $name = $data['zone']."-".$data['row']."-".$data['place']."-".$data['floor'];
+            $container_address = ContainerAddress::whereName($name)->first();
+            if ($container_address) {
+                $container = Container::find($data['container_id']);
+                if ($container) {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+                    $current_address_name = $container_stock->container_address->name;
                     if ($container_stock) {
-                        $current_address_name = $container_address_dmu_in->name;
                         $container_stock->container_address_id = $container_address->id;
-                        $container_stock->status = 'received';
                         $container_stock->save();
 
                         $cs = $container_stock->attributesToArray();
@@ -112,78 +183,26 @@ class ContainerController extends BaseController
                         $cs['technique_id'] = $data['technique_id'];
                         $cs['address_from'] = $current_address_name;
                         $cs['address_to'] = $container_address->name;
-                        $cs['action_type'] = 'put';
+                        $cs['action_type'] = 'move';
+                        $cs['slinger_ids'] = $data['slinger_ids'];
 
                         // Зафиксируем в лог
                         ContainerLog::create($cs);
-
-                        // Зафиксируем в таблицу import_logs
-                        $container_task = $container_stock->container_task;
-                        $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container->number])->first();
-                        if ($import_log) {
-                            $import_log->state = 'posted';
-                            $import_log->save();
-                        }
-
-                        // Если этот контейнер последняя в заявке, то автоматический закрываем заявку
-                        if (!is_null($container_stock->container_task_id)) {
-                            $container_task = $container_stock->container_task;
-                            if ($container_task && $container_task->allowCloseThisTask()) {
-                                ContainerTask::complete($container_task->id);
-                            }
-                        }
-
-                        return response(['data' => '<span style="font-size: 30px;line-height: 30px;">Контейнер успешно размещен!!!</span>'], 200);
+                        DB::commit();
+                        return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно перемещен!!!</span>'], 200);
                     } else {
                         return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
                     }
                 } else {
-                    return response(['data' => 'Не найден адрес damu_in'], 404);
+                    return response(['data' => 'Не найден контейнер'], 404);
                 }
             } else {
-                return response(['data' => 'Не найден контейнер'], 404);
+                return response(['data' => 'Не найден адрес контейнера'], 404);
             }
-        } else {
-            return response(['data' => 'Не найден адрес контейнера'], 404);
-        }
-    }
-
-    public function movingContainerChange(Request $request)
-    {
-        $data = $request->all();
-        $name = $data['zone']."-".$data['row']."-".$data['place']."-".$data['floor'];
-        $container_address = ContainerAddress::whereName($name)->first();
-        if ($container_address) {
-            $container = Container::find($data['container_id']);
-            if ($container) {
-                $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
-                $current_address_name = $container_stock->container_address->name;
-                if ($container_stock) {
-                    $container_stock->container_address_id = $container_address->id;
-                    $container_stock->save();
-
-                    $cs = $container_stock->attributesToArray();
-                    $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
-                    $cs['user_id'] = Auth::id();
-                    $cs['container_number'] = $container->number;
-                    $cs['operation_type'] = 'received';
-                    $cs['technique_id'] = $data['technique_id'];
-                    $cs['address_from'] = $current_address_name;
-                    $cs['address_to'] = $container_address->name;
-                    $cs['action_type'] = 'move';
-
-                    // Зафиксируем в лог
-                    ContainerLog::create($cs);
-
-                    return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно перемещен!!!</span>'], 200);
-                } else {
-                    return response(['data' => 'В таблице остатки не найдено запись на размещение'], 404);
-                }
-            } else {
-                return response(['data' => 'Не найден контейнер'], 404);
-            }
-        } else {
-            return response(['data' => 'Не найден адрес контейнера'], 404);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            echo $exception->getMessage();
+            exit();
         }
     }
 
@@ -471,13 +490,34 @@ class ContainerController extends BaseController
 
     public function getInfoForContainer(Request $request)
     {
+        $session = Session::where(['user_id' => Auth::id()])->first();
         $container_number = $request->input('container_number');
+        $technique_id = $request->input('technique_id');
         $container = Container::where('number', 'like', '%'.$container_number)->first();
         if ($container) {
             $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
             if ($container_stock) {
                 $container_address = $container_stock->container_address;
                 $isCustoms = ($container_stock->customs == 'yes') ? 'Да' : 'Нет';
+
+                if($session->ids == null && ($technique_id != 4 && $technique_id != 10)) {
+                    return response(
+                        "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> <br>Адрес: $container_address->name <br><span style='color:red'>Выберите стропальщика</span>",
+                        404
+                    );
+                }
+
+                if(($session->zone_id == 'SPR' || $session->zone_id == 'SPK') AND ($container_address->zone == 'SPR' || $container_address->zone == 'SPK')) {
+
+                } else {
+                    if($container_address->zone != $session->zone_id AND $container_address->zone != 'BUFFER' AND $container_address->zone != 'DAMU_IN' AND $container_address->zone != 'DAMU_OUT' AND $container_address->zone != 'ZTCIA') {
+                        return response(
+                            "Контейнер: <span style='color: red;'>".$container->number."<br> ($container->company, $container_stock->state, $container->container_type, $isCustoms)</span> находиться не вашем зоне.  <br>Адрес: $container_address->name",
+                            404
+                        );
+                    }
+                }
+
                 if ($container_address->name == 'damu_in' && $container_stock->status == 'incoming') {
                     return response([
                         'data' => [
@@ -908,48 +948,56 @@ class ContainerController extends BaseController
     // Метод для выдачи контейнера
     public function shippingContainerChange(Request $request)
     {
-        $data = $request->all();
-        $container = Container::findOrFail($data['container_id']);
-        if ($container) {
-            $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
-            $current_address_name = $container_stock->container_address->name;
-            $container_address_dam_out = ContainerAddress::whereName('damu_out')->first();
-            if ($container_stock) {
-                $container_stock->container_address_id = $container_address_dam_out->id;
-                $container_stock->status = 'shipped';
-                $container_stock->save();
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $container = Container::findOrFail($data['container_id']);
+            if ($container) {
+                $container_stock = ContainerStock::where(['container_id' => $container->id, 'status' => 'in_order'])->first();
+                $current_address_name = $container_stock->container_address->name;
+                $container_address_dam_out = ContainerAddress::whereName('damu_out')->first();
+                if ($container_stock) {
+                    $container_stock->container_address_id = $container_address_dam_out->id;
+                    $container_stock->status = 'shipped';
+                    $container_stock->save();
 
-                $cs = $container_stock->attributesToArray();
-                $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
-                $cs['user_id'] = Auth::id();
-                $cs['container_number'] = $container->number;
-                $cs['operation_type'] = 'shipped';
-                $cs['technique_id'] = $data['technique_id'];
-                $cs['address_from'] = $current_address_name;
-                $cs['address_to'] = $container_address_dam_out->name;
-                $cs['action_type'] = 'pick';
+                    $cs = $container_stock->attributesToArray();
+                    $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
+                    $cs['user_id'] = Auth::id();
+                    $cs['container_number'] = $container->number;
+                    $cs['operation_type'] = 'shipped';
+                    $cs['technique_id'] = $data['technique_id'];
+                    $cs['address_from'] = $current_address_name;
+                    $cs['address_to'] = $container_address_dam_out->name;
+                    $cs['action_type'] = 'pick';
+                    $cs['slinger_ids'] = $data['slinger_ids'];
 
-                // Зафиксируем в лог
-                ContainerLog::create($cs);
+                    // Зафиксируем в лог
+                    ContainerLog::create($cs);
 
-                // Зафиксируем в таблицу import_logs и если заявка по авто, то автоматические удаляем из стока текущего контейнера.
-                $container_task = $container_stock->container_task;
-                if ($container_task) {
-                    if ($container_task->trans_type == 'auto') {
-                        ContainerTask::complete_part($container_task->id, $container->id);
-                    } else {
-                        $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container->number])->first();
-                        $import_log->state = 'selected';
-                        $import_log->save();
+                    // Зафиксируем в таблицу import_logs и если заявка по авто, то автоматические удаляем из стока текущего контейнера.
+                    $container_task = $container_stock->container_task;
+                    if ($container_task) {
+                        if ($container_task->trans_type == 'auto') {
+                            ContainerTask::complete_part($container_task->id, $container->id);
+                        } else {
+                            $import_log = ImportLog::where(['container_task_id' => $container_task->id, 'container_number' => $container->number])->first();
+                            $import_log->state = 'selected';
+                            $import_log->save();
+                        }
                     }
+                    DB::commit();
+                    return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно выдан!!!</span>'], 200);
+                } else {
+                    return response(['data' => 'В таблице остатки не найдено запись на отбор'], 404);
                 }
-
-                return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно выдан!!!</span>'], 200);
             } else {
-                return response(['data' => 'В таблице остатки не найдено запись на отбор'], 404);
+                return response(['data' => 'Не найден контейнер'], 404);
             }
-        } else {
-            return response(['data' => 'Не найден контейнер'], 404);
+        } catch (\Exception $exception){
+            DB::rollBack();
+            echo  $exception->getMessage();
+            exit();
         }
     }
 
@@ -1128,44 +1176,52 @@ class ContainerController extends BaseController
 
     public function movingContainerToAnotherZone(Request $request)
     {
-        $data = $request->all();
-        if (is_null($data['other_container_ship'])) {
-            $car = Car::findOrFail($data['container_ship_id']);
-            $car_number = $car->gov_number;
-        } else {
-            $car_number = $data['other_container_ship'];
-        }
-
-        $container_address = ContainerAddress::whereName('buffer')->first();
-
-        if ($container_address) {
-            $container = Container::find($data['container_id']);
-            if ($container) {
-                $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
-                $current_address_name = $container_stock->container_address->name;
-                $container_stock->container_address_id = $container_address->id;
-                $container_stock->save();
-
-                $cs = $container_stock->attributesToArray();
-                $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
-                $cs['user_id'] = Auth::id();
-                $cs['container_number'] = $container->number;
-                $cs['operation_type'] = 'received';
-                $cs['technique_id'] = $data['technique_id'];
-                $cs['address_from'] = $current_address_name;
-                $cs['address_to'] = $data['zone']." | ".$container_address->name;
-                $cs['action_type'] = 'move_another_zone';
-                $cs['car_number_carriage'] = $car_number;
-
-                // Зафиксируем в лог
-                ContainerLog::create($cs);
-
-                return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно перемещен!!!</span>'], 200);
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            if (is_null($data['other_container_ship'])) {
+                $car = Car::findOrFail($data['container_ship_id']);
+                $car_number = $car->gov_number;
             } else {
-                return response(['data' => 'Не найден контейнер'], 404);
+                $car_number = $data['other_container_ship'];
             }
-        } else {
-            return response(['data' => 'Не найден адрес зоны'], 404);
+
+            $container_address = ContainerAddress::whereName('buffer')->first();
+
+            if ($container_address) {
+                $container = Container::find($data['container_id']);
+                if ($container) {
+                    $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+                    $current_address_name = $container_stock->container_address->name;
+                    $container_stock->container_address_id = $container_address->id;
+                    $container_stock->save();
+
+                    $cs = $container_stock->attributesToArray();
+                    $cs['start_date'] = date('Y-m-d H:i:s', $data['start_date'] / 1000);
+                    $cs['user_id'] = Auth::id();
+                    $cs['container_number'] = $container->number;
+                    $cs['operation_type'] = 'received';
+                    $cs['technique_id'] = $data['technique_id'];
+                    $cs['address_from'] = $current_address_name;
+                    $cs['address_to'] = $data['zone']." | ".$container_address->name;
+                    $cs['action_type'] = 'move_another_zone';
+                    $cs['car_number_carriage'] = $car_number;
+                    $cs['slinger_ids'] = $data['slinger_ids'];
+
+                    // Зафиксируем в лог
+                    ContainerLog::create($cs);
+                    DB::commit();
+                    return response(['data' => '<span style="font-size: 30px;line-height: 30px;color: #fff;">Контейнер успешно перемещен!!!</span>'], 200);
+                } else {
+                    return response(['data' => 'Не найден контейнер'], 404);
+                }
+            } else {
+                return response(['data' => 'Не найден адрес зоны'], 404);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            echo $exception->getMessage();
+            exit();
         }
     }
 
@@ -1232,5 +1288,58 @@ class ContainerController extends BaseController
         });
 
         return response('success', 200);
+    }
+
+    public function getSlingers()
+    {
+        $result = User::whereIn('company_id', [31, 223])
+                ->selectRaw('id, full_name')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                ->whereIn('position_id', [91,92,93,153,174])
+                ->whereNotIn('id', Session::getIds())
+                ->orderBy('full_name')
+                ->get();
+        $users = [];
+
+        foreach($result as $item) {
+            if($item->status != 'works') continue;
+            $arr =explode(' ', $item->full_name);
+            $users[] = [
+                'id' => $item->id,
+                'full_name' => $arr[0]. " " . mb_substr($arr[1],0,1) . "."
+            ];
+        }
+        return response()->json($users);
+    }
+
+    public function sendMySettingsToSession(Request $request)
+    {
+        $zone_id = $request->input('zone_id');
+        $technique_id = $request->input('technique_id');
+        $slinger_ids = $request->input('slinger_ids');
+
+        $session = Session::where(['user_id' => Auth::id()])->first();
+        if($session) {
+            $session->zone_id = $zone_id;
+            $session->technique_ids = $technique_id;
+            $session->ids = ($zone_id == 'RICH') ? null : $slinger_ids;
+            $session->save();
+
+            return response('success');
+        }
+
+        return response('unknown session', 403);
+    }
+
+    public function cancelMySettingsToSession(Request $request) {
+        $session = Session::where(['user_id' => Auth::id()])->first();
+        if($session) {
+            $session->zone_id = null;
+            $session->technique_ids = null;
+            $session->ids = null;
+            $session->save();
+
+            return response('success');
+        }
     }
 }

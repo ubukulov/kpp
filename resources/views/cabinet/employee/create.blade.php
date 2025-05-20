@@ -52,10 +52,6 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" class="form-control" name="email">
-                        </div>
                     </div>
 
                     <div class="col-md-6">
@@ -64,20 +60,10 @@
                             <input type="text" class="form-control" name="full_name" required>
                         </div>
 
-                        <div class="form-group">
+                        {{--<div class="form-group">
                             <label>Телефон</label><span style="color: red;">*</span>
                             <input type="text" required class="form-control" name="phone">
-                        </div>
-
-                        <div class="form-group">
-                            <label>ИИН</label><span style="color: red;">*</span>
-                            <input type="text" required class="form-control" name="iin">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Пароль</label>
-                            <input type="text" class="form-control" name="password">
-                        </div>
+                        </div>--}}
                     </div>
                 </div>
 

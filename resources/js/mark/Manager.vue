@@ -13,144 +13,191 @@
             </div>
         </div>
 
-        <template>
-            <v-window v-model="step">
-                <v-window-item :value="1">
-                    <br>
-                    <div class="form-group">
-                        <v-select
-                            :items="markings"
-                            :hint="`${markings.id}, ${markings.number}`"
-                            item-value="id"
-                            v-model="mark_id"
-                            label="Выберите Заявку"
-                            outlined
-                            item-text="number"
-                        ></v-select>
-                    </div>
+        <v-app id="inspire">
+            <v-card>
+                <v-tabs
+                    v-model="tab"
+                    background-color="deep-purple accent-4"
+                    dark
+                    icons-and-text
+                >
+                    <v-tabs-slider></v-tabs-slider>
 
-                    <div class="form-group">
-                        <v-select
-                            :items="prints"
-                            :hint="`${prints.id}, ${prints.printer_name}`"
-                            item-value="id"
-                            v-model="print_id"
-                            label="Выберите принтер"
-                            outlined
-                            item-text="printer_name"
-                        ></v-select>
-                    </div>
+                    <v-tab href="#tab-1">
+                        Обувь
+                        <v-icon>mdi-shoe-heel</v-icon>
+                    </v-tab>
 
-                    <v-divider></v-divider>
+                    <v-tab href="#tab-2">
+                        Лекарство
+                        <v-icon>mdi-medical-bag</v-icon>
+                    </v-tab>
 
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            color="primary"
-                            depressed
-                            @click="nextStep()"
-                        >
-                            Далее
-                        </v-btn>
-                    </v-card-actions>
-                </v-window-item>
+                </v-tabs>
 
-                <v-window-item :value="2">
+                <v-tabs-items v-model="tab">
+                    <v-tab-item
+                        :value="'tab-1'"
+                    >
+                        <v-card flat>
+                            <div class="container-fluid">
+                                <v-window v-model="step">
+                                    <v-window-item :value="1">
+                                        <div class="form-group mt-10">
+                                            <v-select
+                                                :items="markings"
+                                                :hint="`${markings.id}, ${markings.number}`"
+                                                item-value="id"
+                                                v-model="mark_id"
+                                                label="Выберите Заявку"
+                                                outlined
+                                                item-text="number"
+                                            ></v-select>
+                                        </div>
 
-                    <v-select
-                        :items="containers"
-                        :hint="`${containers.id}, ${containers.container_number}`"
-                        item-value="container_number"
-                        v-model="container_number"
-                        label="Выберите контейнер"
-                        outlined
-                        item-text="container_number"
-                    ></v-select>
+                                        <div class="form-group">
+                                            <v-select
+                                                :items="prints"
+                                                :hint="`${prints.id}, ${prints.printer_name}`"
+                                                item-value="id"
+                                                v-model="print_id"
+                                                label="Выберите принтер"
+                                                outlined
+                                                item-text="printer_name"
+                                            ></v-select>
+                                        </div>
 
-                    <v-divider></v-divider>
+                                        <v-divider></v-divider>
 
-                    <v-card-actions>
-                        <v-btn
-                            text
-                            @click="step--"
-                        >
-                            Назад
-                        </v-btn>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            color="primary"
-                            depressed
-                            @click="nextStep()"
-                        >
-                            Далее
-                        </v-btn>
-                    </v-card-actions>
-                </v-window-item>
+                                        <v-card-actions>
+                                            <v-spacer></v-spacer>
+                                            <v-btn
+                                                color="primary"
+                                                depressed
+                                                @click="nextStep()"
+                                            >
+                                                Далее
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-window-item>
 
-                <v-window-item :value="3">
-                    <br>
-                    <v-text-field
-                        v-model="corop_number"
-                        label="Сканировать внешний короб"
-                        hide-details="auto"
-                    ></v-text-field>
+                                    <v-window-item :value="2">
 
-                    <v-divider></v-divider>
+                                        <div class="form-group mt-10">
+                                            <v-select
+                                                :items="containers"
+                                                :hint="`${containers.id}, ${containers.container_number}`"
+                                                item-value="container_number"
+                                                v-model="container_number"
+                                                label="Выберите контейнер"
+                                                outlined
+                                                item-text="container_number"
+                                            ></v-select>
+                                        </div>
 
-                    <v-card-actions>
-                        <v-btn
-                            text
-                            @click="step--"
-                        >
-                            Назад
-                        </v-btn>
-                        <v-spacer></v-spacer>
-                        <v-btn
-                            color="primary"
-                            depressed
-                            @click="nextStep()"
-                        >
-                            Далее
-                        </v-btn>
-                    </v-card-actions>
-                </v-window-item>
+                                        <v-divider></v-divider>
 
-                <v-window-item :value="4">
-                    <br>
-                    <v-text-field
-                        v-model="gtin_number"
-                        label="Сканировать товар/GTIN"
-                        hide-details="auto"
-                    ></v-text-field>
-                    <br>
-                    <v-btn
-                        color="primary"
-                        depressed
-                        @click="markPrint()"
-                    >Распечатать</v-btn>
+                                        <v-card-actions>
+                                            <v-btn
+                                                text
+                                                @click="step--"
+                                            >
+                                                Назад
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn
+                                                color="primary"
+                                                depressed
+                                                @click="nextStep()"
+                                            >
+                                                Далее
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-window-item>
 
-                    <v-divider></v-divider>
+                                    <v-window-item :value="3">
 
-                    <v-card-actions>
-                        <v-btn style="font-size: 14px !important;" @click="step--">
-                            Назад
-                        </v-btn>
+                                        <div class="form-group mt-10">
+                                            <v-text-field
+                                                v-model="corop_number"
+                                                label="Сканировать внешний короб"
+                                                hide-details="auto"
+                                            ></v-text-field>
+                                        </div>
 
-                        <v-spacer></v-spacer>
+                                        <v-divider></v-divider>
 
-                    </v-card-actions>
-                </v-window-item>
+                                        <v-card-actions>
+                                            <v-btn
+                                                text
+                                                @click="step--"
+                                            >
+                                                Назад
+                                            </v-btn>
+                                            <v-spacer></v-spacer>
+                                            <v-btn
+                                                color="primary"
+                                                depressed
+                                                @click="nextStep()"
+                                            >
+                                                Далее
+                                            </v-btn>
+                                        </v-card-actions>
+                                    </v-window-item>
 
-                <div class="col-md-12">
-                    <p v-if="errors.length" style="margin-bottom: 0px !important;">
-                        <b>Пожалуйста исправьте указанные ошибки:</b>
-                    <ul style="color: #cc0000; padding-left: 15px; list-style: circle; text-align: left;">
-                        <li v-for="error in errors">{{error}}</li>
-                    </ul>
-                    </p>
-                </div>
-            </v-window>
-        </template>
+                                    <v-window-item :value="4">
+                                        <div class="form-group mt-10">
+                                            <v-text-field
+                                                v-model="gtin_number"
+                                                label="Сканировать товар/GTIN"
+                                                hide-details="auto"
+                                            ></v-text-field>
+                                        </div>
+                                        <br>
+                                        <v-btn
+                                            color="primary"
+                                            depressed
+                                            @click="markPrint()"
+                                        >Распечатать</v-btn>
+
+                                        <v-divider></v-divider>
+
+                                        <v-card-actions>
+                                            <v-btn style="font-size: 14px !important;" @click="step--">
+                                                Назад
+                                            </v-btn>
+
+                                            <v-spacer></v-spacer>
+
+                                        </v-card-actions>
+                                    </v-window-item>
+
+                                    <div class="col-md-12">
+                                        <p v-if="errors.length" style="margin-bottom: 0px !important;">
+                                            <b>Пожалуйста исправьте указанные ошибки:</b>
+                                        <ul style="color: #cc0000; padding-left: 15px; list-style: circle; text-align: left;">
+                                            <li v-for="error in errors">{{error}}</li>
+                                        </ul>
+                                        </p>
+                                    </div>
+                                </v-window>
+                            </div>
+
+                        </v-card>
+                    </v-tab-item>
+
+                    <v-tab-item
+                        :value="'tab-2'"
+                    >
+                        <v-card flat>
+                            <div class="container-fluid">
+                                <technique-medicine></technique-medicine>
+                            </div>
+                        </v-card>
+                    </v-tab-item>
+                </v-tabs-items>
+            </v-card>
+        </v-app>
 
         <v-overlay :value="overlay">
             <v-progress-circular
@@ -206,7 +253,9 @@
                 other_container_ship: '',
                 start_date: '',
                 bottom_nav: 'operation_cont',
-                containersInRow: []
+                containersInRow: [],
+                tab: null,
+                text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
             }
         },
         methods: {

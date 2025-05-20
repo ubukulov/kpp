@@ -24,7 +24,7 @@ class EmployeeController extends Controller
         $user = Auth::user();
         $company = $user->company;
         if($user->hasRole('otdel-kadrov')) {
-            //$employees = User::orderBy('id', 'DESC')->get();
+
             $settings = json_decode($user->settings, true);
             if(!empty($settings) && isset($settings['human_resources_departments'])) {
                 $query = User::orderBy('id', 'DESC')
@@ -32,6 +32,7 @@ class EmployeeController extends Controller
                     ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
                     ->join('companies', 'companies.id', 'users.company_id')
                     ->leftJoin('departments', 'departments.id', 'users.department_id');
+
                 if(!is_null($settings['human_resources_departments']['companies'])) {
                     $companyIds = explode(',', $settings['human_resources_departments']['companies']);
                     $query = $query->whereIn('users.company_id', $companyIds);
@@ -47,7 +48,12 @@ class EmployeeController extends Controller
                 $employees = [];
             }
         } else {
-            $employees = User::where(['company_id' => $company->id])->get();
+            $employees = User::where(['users.company_id' => $company->id])
+                ->selectRaw('users.*, companies.short_en_name, departments.title as dep_name')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                ->join('companies', 'companies.id', 'users.company_id')
+                ->leftJoin('departments', 'departments.id', 'users.department_id')
+                ->get();
         }
 
         return view('cabinet.employee.index', compact('employees'));
@@ -60,9 +66,13 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $companies = Company::all();
+        $companies = Company::whereIn('id', Auth::user()->getCompanyIds())->get();
         $positions = Position::all();
-        $departments = Department::all();
+        if(empty(Auth::user()->getDepartmentIds())) {
+            $departments = Department::all();
+        } else {
+            $departments = Department::whereIn('id', Auth::user()->getDepartmentIds())->get();
+        }
         return view('cabinet.employee.create', compact('positions', 'companies', 'departments'));
     }
 
@@ -75,8 +85,11 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        $user = Auth::user();
+        if(!$user->hasRole('otdel-kadrov')) {
+            $data['company_id'] = Auth::user()->company->id;
+        }
 
-        $data['company_id'] = Auth::user()->company->id;
 
 		if(isset($data['password'])) {
 			$data['password'] = bcrypt($data['password']);

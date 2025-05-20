@@ -68,8 +68,6 @@
     <script src="/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
     <script src="/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
     <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
 
     <script>
         $(function () {

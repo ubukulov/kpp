@@ -3,12 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ContainerAddress;
 use App\Models\ContainerLog;
 use App\Models\ContainerStock;
+use App\Models\Technique;
+use App\Models\TechniqueLog;
+use App\Models\User;
+use App\Traits\WebcontReports;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use File;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class WebcontController extends Controller
 {
+    use WebcontReports;
+
     public function stocks()
     {
         $stocks = ContainerStock::selectRaw('containers.number,container_address.name,container_address.title,container_stocks.*')
@@ -55,5 +68,28 @@ class WebcontController extends Controller
         }
 
         return response()->json($container_logs);
+    }
+
+    public function reports()
+    {
+        /*$arr = [];
+        $technique_logs = TechniqueLog::where(['operation_type' => 'incoming'])->get();
+        foreach ($technique_logs as $technique_log) {
+            if(array_key_exists($technique_log->vin_code, $arr)) {
+
+            } else {
+                $arr[$technique_log->vin_code] = $technique_log->owner;
+            }
+        }
+        foreach($arr as $key=>$val) {
+            DB::update("UPDATE technique_logs SET owner='$val' WHERE vin_code='$key'");
+        }*/
+        //foreach($arr as $key=>$value)
+        $users = User::whereIn('users.position_id', [91,92,93,153])
+            ->selectRaw('users.*')
+            //->join('users_roles', 'users_roles.user_id', 'users.id')
+            ->orderBy('users.full_name')
+            ->get();
+        return view('admin.webcont.reports', compact('users'));
     }
 }

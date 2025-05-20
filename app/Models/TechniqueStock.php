@@ -12,7 +12,8 @@ class TechniqueStock extends Model
     protected $table = 'technique_stocks';
 
     protected $fillable = [
-        'technique_task_id', 'technique_type_id', 'technique_place_id', 'owner', 'mark', 'vin_code', 'status', 'image'
+        'technique_task_id', 'technique_type_id', 'technique_place_id', 'company_id', 'color', 'mark', 'vin_code', 'status', 'image',
+        'defect', 'defect_note', 'defect_image'
     ];
 
     protected $dates = [
@@ -22,6 +23,11 @@ class TechniqueStock extends Model
     public function technique_task()
     {
         return $this->belongsTo(TechniqueTask::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function technique_type()

@@ -35,7 +35,8 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            <th>ИИН</th>
+                            {{--<th>ИИН</th>--}}
+                            <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -54,8 +55,15 @@
                             <td>
                                 {{ $employee->department_name }}
                             </td>
-                            <td>
+                            {{--<td>
                                 {{ $employee->iin }}
+                            </td>--}}
+                            <td>
+                                @if(array_key_exists($employee->id, $ckud_users_numbers))
+                                    <i title="В СКУД есть" style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i> &nbsp;
+                                @else
+                                    <i title="В СКУД нет" style="font-size: 20px; color: red;" class="fa fa-minus" aria-hidden="true"></i>
+                                @endif
                             </td>
                             <td>
                                 {{ $employee->position_name }}
@@ -91,7 +99,8 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            <th>ИИН</th>
+                            {{--<th>ИИН</th>--}}
+                            <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
                             <th>Бейджик</th>
@@ -113,7 +122,8 @@
     <script src="/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
     <script src="/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
     <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+{{--    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>--}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.min.js" integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
 
     <script>

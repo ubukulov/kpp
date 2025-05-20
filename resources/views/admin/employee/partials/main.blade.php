@@ -42,12 +42,6 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>ИИН</label><span style="color: red;">*</span>
-                    <input type="text" value="{{ $employee->iin }}" required class="form-control" name="iin">
-                </div>
-            </div>
 
             <div class="col-md-6">
                 <div class="form-group">
@@ -66,7 +60,7 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="text" placeholder="Если поле оставить пустой, то пароль не изменяться!" class="form-control" name="password">
+                    <input type="text" placeholder="Если поле оставить пустой, то пароль не измениться!" class="form-control" name="password">
                 </div>
             </div>
         </div>

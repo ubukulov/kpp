@@ -38,7 +38,7 @@ class RusGUARD
         }
     }
 
-    public function getEmployees($pageNumber = 0, $pageSize = 1000)
+    public function getEmployees($pageNumber = 0, $pageSize = 100)
     {
         $this->data['cmd'] = 'GetPageFilteredEmployeesByGroup';
         $this->data['pageNumber'] = $pageNumber;
@@ -61,5 +61,42 @@ class RusGUARD
         $this->data['photo_http'] = $data['photo_http'];
         $response = $this->client->get('?dat='.json_encode($this->data, JSON_UNESCAPED_SLASHES));
         return $response->getStatusCode();
+    }
+
+    public function removeEmployee($uuid)
+    {
+        $this->data['cmd'] = 'RemoveAcsEmployee';
+        $this->data['AcsEmployeeId'] = $uuid;
+        $response = $this->client->get('?dat='.json_encode($this->data, JSON_UNESCAPED_SLASHES));
+        return $response->getStatusCode();
+    }
+
+    public function getEvents($lastEventId = 0)
+    {
+        $this->data['cmd'] = 'GetEvents';
+        $this->data['Id'] = $lastEventId;
+        $this->data['pageSize'] = 100;
+        $this->data['pageNumber'] = 0;
+        $response = $this->client->get('?dat='.json_encode($this->data, JSON_UNESCAPED_SLASHES));
+        if($response->getStatusCode() == 200) {
+            $events = $response->getBody()->getContents();
+            if(json_decode($events, true) == null) {
+                $events = str_replace('Биометрический считыватель "Выход"', "Биометрический считыватель Выход", $events);
+                $events = str_replace('Биометрический считыватель "Вход"', "Биометрический считыватель Вход", $events);
+            }
+
+            return json_decode($events, true);
+        }
+        return false;
+    }
+
+    public function getLastEvent()
+    {
+        $this->data['cmd'] = 'GetLastEvent';
+        $response = $this->client->get('?dat='.json_encode($this->data, JSON_UNESCAPED_SLASHES));
+        if($response->getStatusCode() == 200) {
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        return false;
     }
 }

@@ -17,8 +17,23 @@
             @method('PUT')
             <div class="card-body">
                 <div class="form-group">
-                    <label>Наименование</label>
-                    <input type="text" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" class="form-control" value="{{ $white_car_list->gov_number }}" name="gov_number" required>
+                    <label>ФИО водителя <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ $white_car_list->full_name }}" required style="text-transform: uppercase;" class="form-control" name="full_name">
+                </div>
+
+                <div class="form-group">
+                    <label>Должность <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ $white_car_list->position }}" required style="text-transform: uppercase;" class="form-control" name="position">
+                </div>
+
+                <div class="form-group">
+                    <label>Номер машины <span style="color: red;">*</span></label>
+                    <input type="text" disabled value="{{ $white_car_list->gov_number }}" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" class="form-control @error('gov_number') is-invalid @enderror" name="gov_number" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Марка машины <span style="color: red;">*</span></label>
+                    <input type="text" value="{{ $white_car_list->mark_car }}" required style="text-transform: uppercase;" class="form-control" name="mark_car">
                 </div>
 
                 <div class="form-group">

@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'Asia/Almaty',
+    'timezone' => 'Asia/Aqtobe',
 
     /*
     |--------------------------------------------------------------------------
@@ -183,6 +183,10 @@ return [
         App\Providers\RepositoryServiceProvider::class,
         App\Providers\DPDServiceProvider::class,
         App\Providers\RusGuardServiceProvider::class,
+        App\Providers\MarkServiceProvider::class,
+        App\Providers\ANTServiceProvider::class,
+        App\Providers\ParqourServiceProvider::class,
+        App\Providers\AstelServiceProvider::class,
     ],
 
     /*
@@ -240,6 +244,10 @@ return [
         'Image' => Intervention\Image\Facades\Image::class,
         'DPD' => App\Facades\DPD::class,
         'CKUD' => App\Facades\CKUD::class,
+        'MARK' => App\Facades\Mark::class,
+        'ANT' => App\Facades\ANT::class,
+        'PARQOUR' => App\Facades\Parqour::class,
+        'ASTEL' => App\Facades\Astel::class,
     ],
 
 ];

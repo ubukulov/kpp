@@ -92,7 +92,7 @@
                                 <div class="form-check">
                                     <input class="form-check-input" v-model="isChecked" name="isChecked" type="checkbox" id="flexCheckChecked">
                                     <label class="form-check-label" for="flexCheckChecked">
-                                        В любое время
+                                        В течение суток
                                     </label>
                                 </div>
                             </div>
@@ -145,7 +145,8 @@
 @stop
 @push('cabinet_scripts')
     <!-- Select2 -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+{{--    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>--}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.min.js" integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
     <script src="/plugins/select2/js/select2.full.min.js"></script>
     <script>

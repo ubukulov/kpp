@@ -52,18 +52,14 @@
                                         <v-card-title
                                             class="text-h5"
                                         >
-                                            <v-container>
-                                                <v-row>
-                                                    <div style="width: 50%">
-                                                        {{ item.number }}
-                                                    </div>
-                                                    <div style="width: 50%;">
-                                        <span style="float: right; font-size: 14px;">
-                                            Выполнено: {{ item.stat }}
-                                        </span>
-                                                    </div>
-                                                </v-row>
-                                            </v-container>
+                                            <div style="font-size: 18px;">
+                                                {{ item.number }}
+                                            </div>
+                                            <div>
+                                                <span style="float: right; font-size: 14px;">
+                                                    Выполнено: {{ item.stat }}
+                                                </span>
+                                            </div>
 
                                         </v-card-title>
 
@@ -190,6 +186,12 @@
                                     </v-btn>
                                 </v-col>
                             </v-row>
+
+                            <v-row style="padding-right: 0;" class="mt-2" v-if="bottom_nav ==='schedule'">
+                                <v-col cols="12" style="padding: 0;">
+                                    <List></List>
+                                </v-col>
+                            </v-row>
                         </v-row>
 
                         <v-overlay :value="overlay">
@@ -217,10 +219,10 @@
                     <v-icon>mdi-search-web</v-icon>
                 </v-btn>
 
-                <v-btn value="nearby">
-                    <span style="font-size: 12px;">Статистика</span>
+                <v-btn value="schedule">
+                    <span style="font-size: 12px;">График</span>
 
-                    <v-icon>mdi-margin</v-icon>
+                    <v-icon>mdi-calendar-check</v-icon>
                 </v-btn>
             </v-bottom-navigation>
         </v-footer>
@@ -230,8 +232,11 @@
 <script>
     import axios from "axios";
     import dateformat from "dateformat";
-
+    import List from "./List.vue";
     export default {
+        components: {
+            List
+        },
         data: () => ({
             container_tasks: [],
             overlay: false,
@@ -324,5 +329,7 @@
 </script>
 
 <style scoped>
-
+    .v-card__title {
+        justify-content: space-between;
+    }
 </style>

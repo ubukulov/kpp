@@ -55,31 +55,53 @@ class KitchenController extends BaseController
             $username = $this->switch_en($username);
         }
 
-        $users = User::where(['users.iin' => $username])->orWhere(['users.uuid' => $username])->get();
+        if(strlen($username) > 7) {
+            return response([
+                'message' => 'ЗАПРЕЩЕНО ИСПОЛЬЗОВАТЬ ИИН. ИСПОЛЬЗУЙТЕ БЕЙДЖИК'
+            ], 404);
+        }
 
-        if(count($users) == 0) {
+        $user = User::whereUuid($username)->first();
+
+        if(!$user) {
             return response([
                 'message' => 'НЕ НАЙДЕНО. ОБРАЩАЙТЕСЬ В ОТДЕЛ КАДРОВ ЗА ТАЛОНОМ.'
             ], 404);
         }
 
-        foreach($users as $user) {
-            if($user->hasWorkPermission()) {
+        if($user->hasWorkPermission()) {
+            $company = $user->company;
+            $positionIds = [127,161,204,126];
+            $userIds = [484,1371,1407,31,2265,1732,1831,2828,2447]; // для этих сотрудников по просьбе ДБ убираем ограничение
 
-                if($user->company->ashana === 1) {
+            if($company->id == 33 && in_array($user->position_id, $positionIds) && !in_array($user->id, $userIds)) {
+                $countAshanaMonth = $user->countAshanaMonth();
+                if($countAshanaMonth >= 10) {
                     return response([
-                        'message' => 'Для сотрудников этой компании запрещено питаться в столовое'
+                        'message' => 'ВАШ ЛИМИТ ОБЕДОВ ЗА МЕСЯЦ ИСЧЕРПАН. ЗА МЕСЯЦ ПОЛОЖЕНО 10 ТАЛОНОВ.'
                     ], 406);
                 }
-
-                return response([
-                    'full_name' => $user->full_name,
-                    'company_name' => $user->company->short_ru_name,
-                    'count' => $user->countAshanaToday(),
-                    'user_id' => $user->id,
-                    'image' => (file_exists(public_path() . $user->image)) ? $user->image : null
-                ], 200);
             }
+
+            if($company->ashana === 1) {
+                return response([
+                    'message' => 'Для сотрудников этой компании запрещено питаться в столовое'
+                ], 406);
+            }
+
+            if($user->position_id === 224 && $user->id != 1593) {
+                return response([
+                    'message' => 'Для гостей запрещено использовать бейджик в столовое'
+                ], 406);
+            }
+
+            return response([
+                'full_name' => $user->full_name,
+                'company_name' => $company->short_ru_name,
+                'count' => $user->countAshanaToday(),
+                'user_id' => $user->id,
+                'image' => (file_exists(public_path() . $user->image)) ? $user->image : null
+            ], 200);
         }
 
         return response([
@@ -96,7 +118,9 @@ class KitchenController extends BaseController
         $user = User::find($user_id);
         if($user) {
             if($user->company_id == 0) {
-                return response('В штрих-коде отсутствует компания, срочно обратитесь в ИТ', 406);
+                return response([
+                    'message' => 'В штрих-коде отсутствует компания, срочно обратитесь в ИТ'
+                ], 406);
             }
 
             $countAshanaToday = $user->countAshanaToday();
@@ -141,7 +165,9 @@ class KitchenController extends BaseController
                 'count' => $user->countAshanaToday()
             ], 200);
         } else {
-            return response('Не найден пользватель, срочно обратитесь в ИТ', 404);
+            return response([
+                'message' => 'Не найден пользватель, срочно обратитесь в ИТ'
+            ], 404);
         }
     }
 
@@ -245,30 +271,30 @@ class KitchenController extends BaseController
 
         $company = Company::findOrFail($company_id);
         $logs = AshanaLog::whereDate('ashana_logs.date', '>=', $from_date)->whereDate('ashana_logs.date', '<=', $to_date)
-            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob')
+            ->selectRaw('users.full_name,ashana_logs.din_type,companies.short_ru_name as company_name,positions.title as p_name, SUM(IF(ashana_logs.cashier_id = 1097, 1, 0)) as abk,SUM(IF(ashana_logs.cashier_id = 1238, 1, 0)) as mob, SUM(IF(ashana_logs.cashier_id = 1773, 1, 0)) as kpp3')
             ->join('users', 'users.id', 'ashana_logs.user_id')
             ->join('companies', 'companies.id', 'ashana_logs.company_id')
             ->leftJoin('positions', 'positions.id', 'users.position_id')
             ->where('ashana_logs.company_id', $company_id)
-            ->whereIn('ashana_logs.cashier_id', [1097,1238])
+            ->whereIn('ashana_logs.cashier_id', [1097,1238,1773])
             ->groupBy('ashana_logs.user_id', 'ashana_logs.company_id')
             ->get();
-        $kitchen_company = "ИП Cargotraffic(АБК + Мобильная)";
+        $kitchen_company = "ИП Cargotraffic(АБК + Мобильная + КПП3)";
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Отчет по столовое');
 
         $str = "Отчет по обедам за период: ".$from_date." - ".$to_date;
-        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A1:G1');
         $sheet->setCellValue('A1', $str);
         $sheet->getStyle("A1")->getFont()->setSize(12)->setBold(true);
 
-        $sheet->mergeCells('A2:F2');
+        $sheet->mergeCells('A2:G2');
         $sheet->setCellValue('A2', "Оператор столовой: ".$kitchen_company);
         $sheet->getStyle("A2")->getFont()->setSize(12)->setBold(true);
 
-        $sheet->mergeCells('A3:F3');
+        $sheet->mergeCells('A3:G3');
         $sheet->setCellValue('A3', "Клиент: ".$company->short_ru_name);
         $sheet->getStyle("A3")->getFont()->setSize(12)->setBold(true);
 
@@ -277,13 +303,15 @@ class KitchenController extends BaseController
         $sheet->setCellValue('C5', 'Тип обеда');
         $sheet->setCellValue('D5', 'АБК');
         $sheet->setCellValue('E5', 'Мобильная');
-        $sheet->setCellValue('F5', 'Сумма');
+        $sheet->setCellValue('F5', 'КПП3');
+        $sheet->setCellValue('G5', 'Сумма');
 
         // Вставляем авто размер для колонок
-        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D', 'E', 'F');
+        $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D', 'E', 'F', 'G');
 
         $abk = 0;
         $mob = 0;
+        $kpp3 = 0;
         $itog = 0;
 
         $row_start = 5;
@@ -297,10 +325,12 @@ class KitchenController extends BaseController
             $sheet->setCellValue('C'.$current_row,$din_type);
             $sheet->setCellValue('D'.$current_row,$item->abk);
             $sheet->setCellValue('E'.$current_row,$item->mob);
-            $sum = (int) $item->abk + (int) $item->mob;
-            $sheet->setCellValue('F'.$current_row,$sum);
+            $sheet->setCellValue('F'.$current_row,$item->kpp3);
+            $sum = (int) $item->abk + (int) $item->mob+ (int) $item->kpp3;
+            $sheet->setCellValue('G'.$current_row,$sum);
             $abk += (int) $item->abk;
             $mob += (int) $item->mob;
+            $kpp3 += (int) $item->kpp3;
             $itog += (int) $sum;
         }
 
@@ -310,12 +340,14 @@ class KitchenController extends BaseController
         $sheet->setCellValue('A'.$current_row, "ИТОГО");
         $sheet->setCellValue('D'.$current_row,$abk);
         $sheet->setCellValue('E'.$current_row,$mob);
-        $sheet->setCellValue('F'.$current_row,$itog);
+        $sheet->setCellValue('F'.$current_row,$kpp3);
+        $sheet->setCellValue('G'.$current_row,$itog);
 
         $sheet->getStyle("A".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("D".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("E".$current_row)->getFont()->setSize(12)->setBold(true);
         $sheet->getStyle("F".$current_row)->getFont()->setSize(12)->setBold(true);
+        $sheet->getStyle("G".$current_row)->getFont()->setSize(12)->setBold(true);
 
         // Выравниваем по левому краю
         $this->setHorizontal($sheet, Alignment::HORIZONTAL_RIGHT, 'A'.$current_row);

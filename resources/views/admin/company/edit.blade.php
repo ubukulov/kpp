@@ -58,6 +58,9 @@
                                 <option @if($company->type_company == 'outsourcing') selected @endif value="outsourcing">Аутсорсинг</option>
                                 <option @if($company->type_company == 'rent') selected @endif value="rent">Аренда</option>
                                 <option @if($company->type_company == 'resident') selected @endif value="resident">Резидент</option>
+                                <option @if($company->type_company == 'technique') selected @endif value="technique">Авто-техника</option>
+                                <option @if($company->type_company == 'cargo') selected @endif value="cargo">Грузы</option>
+                                <option @if($company->type_company == 'damu_group') selected @endif value="damu_group">Damu Group</option>
                             </select>
                         </div>
 
@@ -69,12 +72,30 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        {{--<div class="form-group">
                             <label>КПП. </label>
                             <select name="kpp[]" required multiple class="form-control js-example-basic-multiple">
                                 @foreach($kpp as $k)
                                 <option @if($company->hasKpp($k->name)) selected @endif value="{{ $k->id }}">{{ $k->title }}</option>
                                 @endforeach
+                            </select>
+                        </div>--}}
+
+                        <div class="form-group">
+                            <label>СКУД: Укажите группу</label>
+                            <select name="ckud_group_id" class="form-control select2bs4" style="width: 100%;">
+                                <option value="0">Не нужно</option>
+                                @foreach($ckud_groups->GetAcsEmployeeGroupsFull as $ckud_group)
+                                    <option @if($company->ckud_group_id == $ckud_group->AcsEmployeeGroupId) selected @endif value="{{ $ckud_group->AcsEmployeeGroupId }}">{{ $ckud_group->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Статус</label>
+                            <select name="status" class="form-control">
+                                <option @if($company->status == 'ok') selected @endif value="ok">Работает</option>
+                                <option @if($company->status == 'no') selected @endif value="no">Не работает</option>
                             </select>
                         </div>
                     </div>
@@ -104,6 +125,10 @@
                 placeholder: "Выберите",
                 allowClear: true,
                 closeOnSelect: false,
+            });
+
+            $('.select2bs4').select2({
+                theme: 'bootstrap4'
             });
         });
     </script>

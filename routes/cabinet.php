@@ -42,6 +42,10 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'cabinet']);
     Route::get('/white-car-list/{id}/destroy', 'WhiteCarController@destroy')->name('cabinet.wcl.destroy');
 
+    Route::get('white-car-list/guest/cars', 'WhiteCarController@guestCars')->name('cabinet.white-cars.guest.index');
+    Route::get('white-car-list/guest/cars/create', 'WhiteCarController@guestCreate')->name('cabinet.white-cars.guest.create');
+    Route::post('white-car-list/guest/cars/store', 'WhiteCarController@guestStore')->name('cabinet.white-cars.guest.store');
+
     # Position's routes
     Route::resource('/position', 'PositionController', ['as' => 'cabinet']);
 
@@ -51,6 +55,16 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     # WEBCONT
     Route::get('webcont', 'WebcontController@index')->name('cabinet.webcont.index');
     Route::get('webcont/{id}/show', 'WebcontController@show')->name('cabinet.webcont.show');
+    Route::get('webcont/aftos', 'WebcontController@aftosWebcont')->name('cabinet.webcont.aftos');
+    Route::post('webcont/aftos/search', 'WebcontController@aftosWebcontSearch');
+
+    Route::group(['prefix' => 'webcont'], function(){
+        Route::get('/reports', 'WebcontController@reports')->name('cabinet.webcont.reports');
+        Route::post('/get-reports', 'WebcontController@getReports');
+        Route::post('get-detail', 'WebcontController@getDetail');
+        Route::post('get-stats-today', 'WebcontController@getStatsToday');
+        Route::post('get-reports-car', 'WebcontController@getReportsCar');
+    });
 
     # WMS
     Route::group(['prefix' => 'wms'], function(){
@@ -74,6 +88,11 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
         Route::get('bosch/invoice/{id}/print', 'WmsController@boschPrint');
     });
 
+    # Ком. услуги
+    Route::group(['prefix' => 'utilities'], function(){
+        Route::get('energy', 'UtilityController@energy')->name('cabinet.utilities.energy');
+    });
+
     # Ashana
     Route::get('ashana', 'KitchenController@ashana')->name('cabinet.ashana.index');
     Route::get('/talon', 'KitchenController@talon')->name('cabinet.ashana.talon');
@@ -90,5 +109,10 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     # Диспетчер (оповещение)
     Route::group(['prefix' => 'dispatcher'], function(){
         Route::get('/', 'DispatcherController@index')->name('cabinet.dispatcher.index');
+    });
+
+    # Техники
+    Route::group(['prefix' => 'technique'], function(){
+        Route::get('/', 'TechniqueController@technique')->name('cabinet.technique.index');
     });
 });

@@ -20,6 +20,8 @@ class CompanyRepository implements ICompanyRepository
     {
         return Company::orderBy($column)
             ->select('id', 'short_en_name')
+            ->where('type_company', '!=', 'technique')
+            ->where('status', '=', 'ok')
             ->get();
     }
 

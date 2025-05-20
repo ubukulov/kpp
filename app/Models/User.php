@@ -43,6 +43,13 @@ class User extends Authenticatable
         return $this->hasMany(AshanaLog::class)->whereDate('date', Carbon::now())->count();
     }
 
+    public function countAshanaMonth()
+    {
+        return $this->hasMany(AshanaLog::class)
+            ->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+            ->count();
+    }
+
     public function ashana()
     {
         return $this->hasMany(AshanaLog::class);
@@ -127,5 +134,37 @@ class User extends Authenticatable
         }
 
         return false;
+    }
+
+    public function getCompanyIds() : array
+    {
+        if(is_null($this->settings)) {
+            return [$this->company_id];
+        }
+
+        $settings = json_decode($this->settings, true);
+        if(!empty($settings) && isset($settings['human_resources_departments'])) {
+
+            if(!is_null($settings['human_resources_departments']['companies'])) {
+                return explode(',', $settings['human_resources_departments']['companies']);
+            }
+
+        } else {
+            return [];
+        }
+    }
+
+    public function getDepartmentIds() : array
+    {
+        $settings = json_decode($this->settings, true);
+        if(!empty($settings) && isset($settings['human_resources_departments'])) {
+
+            if(!is_null($settings['human_resources_departments']['departments'])) {
+                return explode(',', $settings['human_resources_departments']['departments']);
+            }
+
+        }
+
+        return [];
     }
 }

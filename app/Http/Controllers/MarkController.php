@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mark;
+use App\Models\MarkAggregation;
 use App\Models\MarkCode;
 use App\Models\MarkDetail;
+use App\Models\PalletSSCC;
 use App\Models\Printer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,9 +19,11 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class MarkController extends BaseController
 {
+    public $i = 1;
+
     public function index()
     {
-        $marking = Mark::orderBy('id', 'DESC')->get();
+        $marking = Mark::whereIn('status', ['new', 'processing'])->orderBy('id', 'DESC')->get();
         return view('mark.index', compact('marking'));
     }
 
@@ -124,6 +128,7 @@ class MarkController extends BaseController
                     if ($key <= 2) continue;
                     $container_number = $arr['A'];
                     $gtin = $arr['B'];
+                    if(empty($gtin)) break;
                     $line1 = (empty($arr['C'])) ? null : $arr['C'];
                     $line2 = (empty($arr['D'])) ? null : $arr['D'];
                     $line3 = (empty($arr['E'])) ? null : $arr['E'];
@@ -135,16 +140,10 @@ class MarkController extends BaseController
                     $line9 = (empty($arr['K'])) ? null : $arr['K'];
                     $line10 = (empty($arr['L'])) ? null : $arr['L'];
                     $line11 = (empty($arr['M'])) ? null : $arr['M'];
-                    $eac = $arr['N'];
-                    $mc = $arr['O'];
+                    $eac = 'Y';//$arr['N'];
+                    $mc = 'Y';//$arr['O'];
 
-                    $mark_detail = MarkDetail::where(['gtin' => $gtin])->first();
-                    /*if($mark_detail) {
-                        //throw new \Exception("В файле присутствует ");
-                        abort(406, "В файле присутствует записи которые были ранее добавлены в систему в других заявках!");
-                    } else {
-
-                    }*/
+                    $mark_detail = MarkDetail::where(['marking_id' => $marking->id, 'gtin' => $gtin])->first();
 
                     if(!$mark_detail) {
                         $mark_detail = new MarkDetail();
@@ -220,26 +219,14 @@ class MarkController extends BaseController
     public function printByUsingCodes($printer_id)
     {
         $codes = [
-            "0104871227005613213H%_9EGLOS5bN91KZF092hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxfSnx6aJ3DBtGFUzR7ZC1bO4M=hpxf",
-            "0104871227005248213w)WiboxtIRch91KZF0927dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2dp30K6Mj/dn0P81ST1Wmljc=7dx2",
-            "0104871227005705213NU3<5L)dcSgx91KZF092RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ795pBA9MF1+LJ2DC5hakcn1Lk=RQ79",
-            "0104871227005705213p:sfiKnGfIUy91KZF092zTwBxKII5292B8qFa7wh2tI0r6c=zTwBxKII5292B8qFa7wh2tI0r6c=zTwBxKII5292B8qFa7wh2tI0r6c=zTwB",
-            "0104871227005408213Xxx'wgQ49fHM91KZF092/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5kSgJ+7QqVCtU0a20C2Lv0/U=/Gj5",
-            "0104871227005408213vddRP*f?MJj991KZF092k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg4V8CRulWZRHbQEbc8Libmgw=k2Fg",
-            "0104871227006115213&DrjyqM&_ZLB91KZF092VfVNZOtuHEu+MybB1gSceOdp334=VfVNZOtuHEu+MybB1gSceOdp334=VfVNZOtuHEu+MybB1gSceOdp334=VfVN",
-            "0104871227006115213GeeYkqJsPkgi91KZF092qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO7cguxcKBUzucRZ2KH2cg8ZQ=qDVO",
-            "0104871227005941213VPRcarpt9Kzi91KZF092vF6Kl65CtXLBkUodXIshTvka/8k=vF6Kl65CtXLBkUodXIshTvka/8k=vF6Kl65CtXLBkUodXIshTvka/8k=vF6K",
-            "01048712270054152138Sk'uUTDX,DX91KZF092Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2Yz2YIxLnVOVIWDP72Vb6x5c=Wop2",
-            //"0104871227006245213hWvHHLRM)ObY91KZF092rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqjfjqP5ty7Q7sgTADSI/JtdGU=rlqj",
-            //'0104871227006245213poaXoOmB"NwE91KZF092mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/NsOuTH0+hiVOPoKB/9T4NQNE=mi/N',
-            //'0104871227006245213umh"FX!H-IQb91KZF092leBp5asJFQyHPlgYR7guONeHJ5I=leBp5asJFQyHPlgYR7guONeHJ5I=leBp5asJFQyHPlgYR7guONeHJ5I=leBp',
-            //'0104871227006245213bkX!QBt!fzCM91KZF0920pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSqaPWa5kBPcKWUXGIvEW1wmSA=0pSq',
-            //'01048712270062452137RN_iCCFOtUC91KZF0923LSGcnTpazc/ZgxzotvQJl+5kxI=3LSGcnTpazc/ZgxzotvQJl+5kxI=3LSGcnTpazc/ZgxzotvQJl+5kxI=3LSG',
-            //'0104871227006245213ur<s<iaKTZoc91KZF092VILsIyDzuv90rRhYbNs9GQbeg44=VILsIyDzuv90rRhYbNs9GQbeg44=VILsIyDzuv90rRhYbNs9GQbeg44=VILs',
-            //'0104871227005569213k2nOH9At"b5891KZF092YMABJGpRhmfkyShNa9FInnPShLA=YMABJGpRhmfkyShNa9FInnPShLA=YMABJGpRhmfkyShNa9FInnPShLA=YMAB',
-            "0104871227000410213qTqqT3NwGHFd91KZF092Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3sDaqf8GY4m4c3baIE74PV8k=Zwf3",
-            "0104871227000410213t=JFnPnAgSb+91KZF092dBmKpg5kzIHnjt2wz2uqOnJyink=dBmKpg5kzIHnjt2wz2uqOnJyink=dBmKpg5kzIHnjt2wz2uqOnJyink=dBmK",
-            "0104871227000441213CeTUK)DSQUHo91KZF092R38/58IqCCQjeeLGkiOHc0tSUDs=R38/58IqCCQjeeLGkiOHc0tSUDs=R38/58IqCCQjeeLGkiOHc0tSUDs=R38/",
+            "0105021466516770213sqlo>GHTDmYd 91KZF092bhOyYR3bICIrKYo6+hR/Hblaepg=bhOyYR3bICIrKYo6+hR/Hblaepg=bhOyYR3bICIrKYo6+hR/Hblaepg=bhOy",
+            "0105021466516770213OOXiaqjTuNj3 91KZF092IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW2H+napIFTMXgyBohZ5NnkEA=IxlW",
+            "0105021466516770213*F.,IitN2HmD 91KZF092KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoEgR+zMdUaOmDKjrZmuUJ9lyg=KNoE",
+            "0105021466516770213z6<I<tS+Jlej 91KZF092sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiLbxcQ/6kEMSxH9QW0DO4aMy0=sbiL",
+            "0105021466516770213tj%KMo)W_q: 91KZF092wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6ZGeZbFe3PmQLBbfIZHKG0Snw=wW6Z",
+            "0105021466520326213yYvfqdiQtotF 91KZF092WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMtYjjcRdlIOFZP1hDzgm9iXQ4=WoMt",
+            "01050214665203262134VP_t1t'9QaL 91KZF092YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUMWbl8Bpy6vql0jZKijWGYGxc=YoUM",
+            "0105021466520852213d:VvY6BUXrdg 91KZF092kG+olNNesc7mjb/zn5QVP4lKAvM=kG+olNNesc7mjb/zn5QVP4lKAvM=kG+olNNesc7mjb/zn5QVP4lKAvM=kG+o"
         ];
 
         foreach($codes as $index=>$code) {
@@ -288,15 +275,15 @@ class MarkController extends BaseController
                 }
 
                 if($mark_detail->eac == 'Y') {
-                    //$eac = "^FT477,87^AZN,48,47,ARIALMT^FH\^FDEAC^FS";
-                    $eac = "^FT430,87^AZN,48,47,ARIALMT^FH\^CI17^F8^FDEAC^FS^CI0";
+                    //$eac = "^FT477,87^A0N,48,47,TT0003M_^FH\^FDEAC^FS";
+                    $eac = "^FT430,87^A0N,48,47,TT0003M_^FH\^CI17^F8^FDEAC^FS^CI0";
                 } else {
                     $eac = "";
                 }
 
                 if($mark_detail->mc == 'Y') {
                     $mc = "^BY20,20^FT400,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
-                    $mc .= ($mark->type == 2) ? "^FT20,295^AZN,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^AZN,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
+                    $mc .= ($mark->type == 2) ? "^FT20,295^A0N,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^A0N,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
                 } else {
                     $mc = '';
                 }
@@ -304,23 +291,23 @@ class MarkController extends BaseController
                 if($mark->type == 1) {
                     $data = <<<HERE
 ^XA^LRN^CI0^XZ
-^XA^CWZ,E:ARIALMT^FS^XZ
+^XA^CWZ,E:TT0003M_^FS^XZ
 ^XA
 ^MMT
 ^PW559
 ^LL0320
 ^LS0
-^FT20,35^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,58^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line2^FS^CI0
-^FT20,81^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line3^FS^CI0
-^FT20,102^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line4^FS^CI0
-^FT20,128^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line5^FS^CI0
-^FT20,152^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line6^FS^CI0
-^FT20,179^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line7^FS^CI0
-^FT20,205^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line8^FS^CI0
-^FT20,231^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line9^FS^CI0
-^FT20,257^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line10^FS^CI0
-^FT20,281^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line11^FS^CI0
+^FT20,35^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
+^FT20,58^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line2^FS^CI0
+^FT20,81^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line3^FS^CI0
+^FT20,102^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line4^FS^CI0
+^FT20,128^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line5^FS^CI0
+^FT20,152^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line6^FS^CI0
+^FT20,179^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line7^FS^CI0
+^FT20,205^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line8^FS^CI0
+^FT20,231^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line9^FS^CI0
+^FT20,257^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line10^FS^CI0
+^FT20,281^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line11^FS^CI0
 $eac
 $mc
 ^PQ1,0,1,Y^XZ
@@ -328,15 +315,15 @@ HERE;
                 } else {
                     $data = <<<HERE
 ^XA
-^XA^CWA,E:ARIALKZ^FS^XZ
+^XA^CWA,E:TT0003M_^FS^XZ
 ^XA
 ^MMT
 ^PW559
 ^LL0320
 ^LS0
-^FT20,35^AZN,17,16,ARIALKZ^FH\^CI28^FDModel Name: $line1^FS
-^FT20,58^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDModel Code: $line2^FS
-^FT20,81^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDSize: $line3^FS
+^FT20,35^A0N,17,16,TT0003M_^FH\^CI28^FDModel Name: $line1^FS
+^FT20,58^A0N,17,16,TT0003M_^FH\^CI28^F8^FDModel Code: $line2^FS
+^FT20,81^A0N,17,16,TT0003M_^FH\^CI28^F8^FDSize: $line3^FS
 HERE;
                     $arr = [];
                     $txt = "Main Composition: ";
@@ -365,11 +352,11 @@ HERE;
                     foreach($arr as $key=>$item) {
                         if($key == 0) {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FD$item^FS
+               ^FT20,$val^A0N,17,16,TT0003M_^FH\^CI28^F8^FD$item^FS
 HERE;
                         } else {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FD$item^FS
+               ^FT20,$val^A0N,17,16,TT0003M_^FH\^CI28^F8^FD$item^FS
 HERE;
                         }
 
@@ -377,23 +364,23 @@ HERE;
                     }
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDLiner Composition: $line5^FS
+^FT20,$val^A0N,17,16,TT0003M_^FH\^CI28^F8^FDLiner Composition: $line5^FS
 HERE;
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDSole Composition: $line6^FS
+^FT20,$val^A0N,17,16,TT0003M_^FH\^CI17^F8^FDSole Composition: $line6^FS
 HERE;
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDProduction Date: $line7^FS
+^FT20,$val^A0N,17,16,TT0003M_^FH\^CI17^F8^FDBrand: $line7^FS
 HERE;
 
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDCountry Of Manufacture: $line8^FS
+^FT20,$val^A0N,17,16,TT0003M_^FH\^CI17^F8^FDCountry Of Manufacture: $line8^FS
 HERE;
                     $val += 20;
 
@@ -423,11 +410,11 @@ HERE;
                     foreach($arr as $key=>$item) {
                         if($key == 0) {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FD$item^FS
+               ^FT20,$val^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$item^FS
 HERE;
                         } else {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FD$item^FS
+               ^FT20,$val^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$item^FS
 HERE;
                         }
 
@@ -470,19 +457,16 @@ HERE;
     {
         $data = $request->all();
         $marking = Mark::findOrFail($data['mark_id']);
-        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        if($data['mark_id'] >= 180 AND $data['mark_id'] <= 181) {
+            $mark_detail = MarkDetail::where(['gtin' => $data['gtin_number']])->whereIn('marking_id', [180,181])->first();
+        } else {
+            $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        }
+
+//        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
         if($mark_detail) {
             $mark_code = MarkCode::where(['marking_details_id' => $mark_detail->id, 'status' => 'not_marked'])->first();
             if($mark_code) {
-                $mark_code->status = 'marked';
-                $mark_code->scan_user_id = Auth::user()->id;
-                if($marking->type == 1) {
-                    $mark_code->box_number = $data['box_number'];
-                }
-
-                $mark_code->updated_at = Carbon::now();
-                $mark_code->save();
-
                 $mark = Mark::findOrFail($data['mark_id']);
                 if($mark->free_codes() > 0) {
                     $mark->status = 'processing';
@@ -503,7 +487,8 @@ HERE;
                 $line6 = Str::limit($mark_detail->line6, 45, '');
                 $line7 = Str::limit($mark_detail->line7, 45, '');
                 $line8 = Str::limit($mark_detail->line8, 45, '');
-                $line9 = Str::limit($mark_detail->line9, 45, '');
+                //$line9 = Str::limit($mark_detail->line9, 45, '');
+                $line9 = Str::limit($mark_detail->line9, 110, '');
                 if($marking->type == 1) {
                     $line10 = Str::limit($mark_detail->line10, 45, '');
                     $line11 = Str::limit($mark_detail->line11, 45, '');
@@ -521,7 +506,7 @@ HERE;
                 $printer_name = $print->printer_name;
 
                 //$printer = "\\\\".$computer_name.$printer_name;
-                $printer = "\\\\".$computer_name.$printer_name;
+                $printer = '\\\\'.$computer_name.$printer_name;
                 // Open connection to the thermal printer
                 $fp = fopen($printer, "w");
                 if (!$fp){
@@ -532,16 +517,25 @@ HERE;
                     ], 401);
                 }
 
+                $mark_code->status = 'marked';
+                $mark_code->scan_user_id = Auth::user()->id;
+                if($marking->type == 1) {
+                    $mark_code->box_number = $data['box_number'];
+                }
+
+                $mark_code->updated_at = Carbon::now();
+                $mark_code->save();
+
                 if($mark_detail->eac == 'Y') {
-                    //$eac = "^FT477,87^AZN,48,47,ARIALMT^FH\^FDEAC^FS";
-                    $eac = "^FT430,87^AZN,48,47,ARIALMT^FH\^CI17^F8^FDEAC^FS^CI0";
+                    //$eac = "^FT477,87^A0N,48,47,TT0003M_^FH\^FDEAC^FS";
+                    $eac = "^FT430,87^A0N,48,47,TT0003M_^FH\^CI17^F8^FDEAC^FS^CI0";
                 } else {
                     $eac = "";
                 }
 
                 if($mark_detail->mc == 'Y') {
-                    $mc = "^BY20,20^FT400,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
-                    $mc .= ($marking->type == 2) ? "^FT20,295^AZN,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^AZN,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
+                    $mc = "^BY20,20^FT380,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
+                    $mc .= ($marking->type == 2) ? "^FT20,295^A0N,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^A0N,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
                 } else {
                     $mc = '';
                 }
@@ -549,23 +543,23 @@ HERE;
                 if($marking->type == 1) {
                     $data = <<<HERE
 ^XA^LRN^CI0^XZ
-^XA^CWZ,E:ARIALMT^FS^XZ
+^XA^CWZ,E:TT0003M_^FS^XZ
 ^XA
 ^MMT
 ^PW559
 ^LL0320
 ^LS0
-^FT20,35^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,58^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line2^FS^CI0
-^FT20,81^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line3^FS^CI0
-^FT20,102^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line4^FS^CI0
-^FT20,128^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line5^FS^CI0
-^FT20,152^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line6^FS^CI0
-^FT20,179^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line7^FS^CI0
-^FT20,205^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line8^FS^CI0
-^FT20,231^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line9^FS^CI0
-^FT20,257^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line10^FS^CI0
-^FT20,281^AZN,17,16,ARIALMT^FH\^CI17^F8^FD$line11^FS^CI0
+^FT20,35^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
+^FT20,58^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line2^FS^CI0
+^FT20,81^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line3^FS^CI0
+^FT20,102^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line4^FS^CI0
+^FT20,128^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line5^FS^CI0
+^FT20,152^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line6^FS^CI0
+^FT20,179^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line7^FS^CI0
+^FT20,205^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line8^FS^CI0
+^FT20,231^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line9^FS^CI0
+^FT20,257^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line10^FS^CI0
+^FT20,281^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line11^FS^CI0
 $eac
 $mc
 ^PQ1,0,1,Y^XZ
@@ -573,15 +567,15 @@ HERE;
                 } else {
                     $data = <<<HERE
 ^XA
-^XA^CWA,E:ARIALKZ^FS^XZ
+^XA^CWA,E:TT0003M_^FS^XZ
 ^XA
 ^MMT
 ^PW559
 ^LL0320
 ^LS0
-^FT20,35^AZN,17,16,ARIALKZ^FH\^CI28^FDModel Name: $line1^FS
-^FT20,58^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDModel Code: $line2^FS
-^FT20,81^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDSize: $line3^FS
+^FT20,35^AZN,17,16,TT0003M_^FH\^CI28^FDModel Name: $line1^FS
+^FT20,58^AZN,17,16,TT0003M_^FH\^CI28^F8^FDModel Code: $line2^FS
+^FT20,81^AZN,17,16,TT0003M_^FH\^CI28^F8^FDSize: $line3^FS
 HERE;
                     $arr = [];
                     $txt = "Main Composition: ";
@@ -610,11 +604,11 @@ HERE;
                     foreach($arr as $key=>$item) {
                         if($key == 0) {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FD$item^FS
+               ^FT20,$val^AZN,17,16,TT0003M_^FH\^CI28^F8^FD$item^FS
 HERE;
                         } else {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FD$item^FS
+               ^FT20,$val^AZN,17,16,TT0003M_^FH\^CI28^F8^FD$item^FS
 HERE;
                         }
 
@@ -622,23 +616,29 @@ HERE;
                     }
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI28^F8^FDLiner Composition: $line5^FS
+^FT20,$val^AZN,17,16,TT0003M_^FH\^CI28^F8^FDLiner Composition: $line5^FS
 HERE;
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDSole Composition: $line6^FS
+^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FDSole Composition: $line6^FS
 HERE;
                     $val += 20;
 
-                    $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDProduction Date: $line7^FS
+                    if(($mark->id >= 154 AND $mark->id <= 158) || ($mark->id >= 161 AND $mark->id <= 164)) {
+                        $data .= <<<HERE
+^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FDBrand: $line7^FS
 HERE;
+                    } else {
+                        $data .= <<<HERE
+^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FDProduction Date: $line7^FS
+HERE;
+                    }
 
                     $val += 20;
 
                     $data .= <<<HERE
-^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FDCountry Of Manufacture: $line8^FS
+^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FDCountry Of Manufacture: $line8^FS
 HERE;
                     $val += 20;
 
@@ -652,7 +652,7 @@ HERE;
                             $all = mb_strlen($txt);
                             $sizeItem = mb_strlen($item);
                             $sum = $all + $sizeItem;
-                            if($all < 48 && $sum < 48) {
+                            if($all < 45 && $sum < 45) {
                                 $txt .= " ".$item;
                             } else {
                                 $arr[] = $txt;
@@ -668,11 +668,11 @@ HERE;
                     foreach($arr as $key=>$item) {
                         if($key == 0) {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FD$item^FS
+               ^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$item^FS
 HERE;
                         } else {
                             $data .= <<<HERE
-               ^FT20,$val^AZN,17,16,ARIALKZ^FH\^CI17^F8^FD$item^FS
+               ^FT20,$val^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$item^FS
 HERE;
                         }
 
@@ -699,17 +699,17 @@ HERE;
 ^PW559
 ^LL0320
 ^LS0
-^FT20,35^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,58^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,81^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line3^FS^CI0
-^FT20,102^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line4^FS^CI0
-^FT20,128^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line5^FS^CI0
-^FT20,152^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line6^FS^CI0
-^FT20,179^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line7^FS^CI0
-^FT20,205^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line8^FS^CI0
-^FT20,231^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line9^FS^CI0
-^FT20,257^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line10^FS^CI0
-^FT20,281^AZN,17,16,TT0003M_^FH\^CI17^F8^FD$line11^FS^CI0
+^FT20,35^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
+^FT20,58^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
+^FT20,81^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line3^FS^CI0
+^FT20,102^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line4^FS^CI0
+^FT20,128^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line5^FS^CI0
+^FT20,152^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line6^FS^CI0
+^FT20,179^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line7^FS^CI0
+^FT20,205^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line8^FS^CI0
+^FT20,231^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line9^FS^CI0
+^FT20,257^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line10^FS^CI0
+^FT20,281^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line11^FS^CI0
 $eac
 $mc
 ^PQ1,0,1,Y^XZ
@@ -772,5 +772,576 @@ HERE;*/
         $writer->save(public_path() . $path_to_file);
 
         return $path_to_file;
+    }
+
+    public function generateSSCC(Request $request)
+    {
+        $data = $request->all();
+        $marking = Mark::findOrFail($data['mark_id']);
+        $print = Printer::findOrFail($data['printer_id']);
+        $marking_detail = MarkDetail::where(['marking_id' => $marking->id, 'line3' => $data['seria']])->first();
+        if($marking_detail) {
+            if($data['option_id'] == 1) {
+                $count_box = (count($marking_detail->codes) / $marking_detail->line6);
+                $standard = $marking_detail->line6;
+            } else {
+                $count_box = (count($marking_detail->codes) / $marking_detail->line6);
+                if($count_box < $marking_detail->line7) {
+                    $count_box = 1;
+                }
+
+                $standard = $marking_detail->line7;
+            }
+
+            for($i=1; $i <= $count_box; $i++) {
+                $sscc_code = PalletSSCC::generateSSCC($marking->id, $data['option_id'], $standard);
+                $code = <<<HERE
+^XA^LRN^CI0^XZ
+^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD28
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW799
+^LL400
+^LS0
+^BY2,3,91^FT100,349^BCN,,Y,N
+^FH\^FD>:$sscc_code^FS
+^FT40,95^A0N,39,38^FH\^CI28^FDProduct: $standard^FS^CI27
+^FT40,181^A0N,37,38^FH\^CI28^FDSSCC: $sscc_code^FS^CI27
+^FO551,40^GFA,821,4416,24,:Z64:eJzdl0Fu2zAQRUdRCwfpgt10TcAXyA2sHqEbo1fpwrC47K5HKNCle4dauQmXXgoFAgioIFbikNRIHCsm4BZJJpFF/zx9fY0phwJ4dlUcp/XL6aWZldPnslFWziK9snoe6Rr1x+1Qnx+HXztCXpzgtv95p29zHAnkV5Xf5U6okXfvtNfzBvXAZwi6nVD+MAdmuJNqxkOL7Rl5p3eow5zf2dcN+NM7Y8fvRt3xBfnrEMvzeEbPh+Ag7WsTeD+0yf3BMgTHDuQE8ofqQSemu3ApoZ02REt41/4JX1N+vBR7ShHz9jpc+2GjAm+ju/ZbH8fb8xeeh9Bae5xr/0TfkTHV98STMiSzZYKupryE8Vq6A9awP7rxUTGzH++AePbjHXA1/vcaq+u34geO73WYM5P8470z7a1Y4GuGX13o7z/TJX8uz6X+/yL/6YXnp/4vMf/r6f/mTP79Gd4o1j8zFcvnRrP5V6Zm8wvTsP7yoWX7b1T3nfM3UHJ5TAeFYfzLFqTh+AaE56l/WcOK8l7vvwNz1n9YeXD+CrcoP/Cf1xeqE/59v71heFrUnxbNP9EX+BOjL/lzeZb8Of6a+VP9Of4Jf4U1999ifZrnd/8r25l/xui2/07vRl0s8Br+/LRFePSfrAoJP1kVEv+G5WvP7y/2v1N3h4OK/UUl+yVDzEtd9EuM2F/qcoGP/Vecf5//Bm7W60vznxL7o9P7I9R9/9AS+8uqYPMXif0RZ/rz9uOH7fYK+ZP6kzp/0ud/zFt///x4jm9m/hDXM/3+SfJPzd98jevbFZ8XEnk4cKWY8P+n/gK6ZpRi:32FB
+^PQ1,0,1,Y
+^XZ
+HERE;
+                $computer_name = $print->computer_name;
+                $printer_name = $print->printer_name;
+
+//                $code = <<<HERE
+//^XA^LRN^CI0^XZ^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR3,3~SD18^JUS^LRN^CI27^PA0,1,1,0^XZ^XA^MMT^PW759^LL120^LS0^FT17,100^BXN,2,200,0,0,1,_,1^FH\^FD0108421225626783213Ohs?--1Xo*aC\x1D91KZF0\x1D92Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+^FS^FT177,100^BXN,2,200,0,0,1,_,1^FH\^FD01084212256267832136dRbVKIZxT2o\x1D91KZF0\x1D929JrGGQWm1zvfml7Em+kiu0XQwZM=9JrGGQWm1zvfml7Em+kiu0XQwZM=9JrGGQWm1zvfml7Em+kiu0XQwZM=9JrG^FS^FT337,100^BXN,2,200,0,0,1,_,1^FH\^FD0108421225626783213GrV'OrTGlIB2\x1D91KZF0\x1D92YAPGa3XD7vFaqdHPr3CsDQeZxww=YAPGa3XD7vFaqdHPr3CsDQeZxww=YAPGa3XD7vFaqdHPr3CsDQeZxww=YAPG^FS^FT497,100^BXN,2,200,0,0,1,_,1^FH\^FD0108421225626783213Ohs?--1Xo*aC91KZF092Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+^FS^FT656,100^BXN,2,200,0,0,1,_,1^FH\^FD0108421225626783213Ohs?--1Xo*aC91KZF092Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+ShxEO5qYNZKbxs3oa/sT298=Gy8+^FS^PQ1,0,1,Y^XZ
+//HERE;
+
+
+                //$printer = "\\\\".$computer_name.$printer_name;
+                $printer = '\\\\'.$computer_name.$printer_name;
+                // Open connection to the thermal printer
+                $fp = fopen($printer, "w");
+                if (!$fp){
+                    return response([
+                        'data' => [
+                            'message' => 'no connection to printer'
+                        ]
+                    ], 401);
+                }
+
+                if (!fwrite($fp,$code)){
+                    return response(['data' => 'writing failed'], 403);
+                }
+            }
+
+            return response('Success', 200);
+        }
+    }
+
+    public function confirmGeneratedSSCC(Request $request)
+    {
+        $data = $request->all();
+        $marking = Mark::findOrFail($data['mark_id']);
+        $type = ($data['option_id'] == 1) ? 'box' : 'pallet';
+        if($marking) {
+            if($data['type'] == 1) {
+                PalletSSCC::where(['task_id' => $marking->id, 'status' => 'waiting', 'type' => $type])
+                    ->update(['status' => 'confirmed']);
+            } else {
+                PalletSSCC::where(['task_id' => $marking->id, 'status' => 'waiting', 'type' => $type])
+                    ->update(['status' => 'failed']);
+            }
+
+            return response()->json('success');
+        }
+    }
+
+    public function getSeria($marking_id)
+    {
+        $marking = Mark::findOrFail($marking_id);
+        if($marking) {
+            $marking_details = MarkDetail::where(['marking_id' => $marking_id])
+                    ->selectRaw('id, line3')
+                    ->groupBy('line3')
+                    ->get();
+            return response()->json($marking_details);
+        }
+    }
+
+    public function aggregationPallet(Request $request)
+    {
+        $request->validate([
+            'SSCCPal' => 'required'
+        ]);
+
+        $SSCCPal = PalletSSCC::whereCode($request->input('SSCCPal'))->first();
+        if($SSCCPal) {
+            $aggregation = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id])->first();
+            if($aggregation) {
+
+                return response()->json([
+                    'message' => 'SSCCPal successfully scanned',
+                    'standard' => $SSCCPal->standard,
+                    'lastBox' => MarkAggregation::lastBox($SSCCPal->id),
+                    'fact' => MarkAggregation::factBox($SSCCPal),
+                ]);
+            }
+
+            MarkAggregation::create(['sscc_pallet_id' => $SSCCPal->id]);
+
+            return response()->json([
+                'message' => 'SSCCPal successfully scanned',
+                'standard' => $SSCCPal->standard,
+                'lastBox' => MarkAggregation::lastBox($SSCCPal->id),
+                'fact' => MarkAggregation::factBox($SSCCPal),
+            ]);
+        }
+
+        return response()->json('SSCCPal not found', 403);
+    }
+
+    public function aggregationPalletBox(Request $request)
+    {
+        $request->validate([
+            'SSCCPal' => 'required',
+            'SSCCBox' => 'required'
+        ]);
+
+        $SSCCPal = PalletSSCC::whereCode($request->input('SSCCPal'))->first();
+        $SSCCBox = PalletSSCC::whereCode($request->input('SSCCBox'))->first();
+
+        if(!$SSCCPal) {
+            return response()->json('SSCCPal not found', 403);
+        }
+
+        if(!$SSCCBox) {
+            return response()->json('SSCCBox not found', 403);
+        }
+
+        $aggregationSSCCPal = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id])->first();
+        if(!$aggregationSSCCPal) {
+            return response()->json('SSCCPal not found', 403);
+        }
+
+        if($SSCCBox) {
+            $aggregationSSCCBox = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->first();
+            if($aggregationSSCCBox) {
+                //return response()->json('SSCCBox already scanned', 400);
+                return response()->json([
+                    'message' => 'SSCCBox successfully scanned',
+                    'standardBox' => $SSCCBox->standard,
+                    'standardPallet' => $SSCCPal->standard,
+                    'lastBox' => $SSCCBox->code,
+                    'fact' => MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->whereNotNull('km')->count(),
+                    'factBox' => MarkAggregation::factBox($SSCCPal),
+                    'lastProduct' => MarkAggregation::lastProduct($SSCCPal->id, $SSCCBox->id)
+                ]);
+            }
+
+            $aggregationSSCCBox = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => null])->first();
+
+            if($aggregationSSCCBox) {
+                $aggregationSSCCBox->sscc_box_id = $SSCCBox->id;
+                $aggregationSSCCBox->save();
+            }
+
+            return response()->json([
+                'message' => 'SSCCBox successfully scanned',
+                'standardBox' => $SSCCBox->standard,
+                'fact' => MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->whereNotNull('km')->count(),
+                'lastProduct' => MarkAggregation::lastProduct($SSCCPal->id, $SSCCBox->id),
+
+            ]);
+        }
+    }
+
+    public function aggregationPalletBoxProduct(Request $request)
+    {
+        $request->validate([
+            'SSCCPal' => 'required',
+            'SSCCBox' => 'required',
+            'km' => 'required'
+        ]);
+
+        $SSCCPal = PalletSSCC::whereCode($request->input('SSCCPal'))->first();
+        $SSCCBox = PalletSSCC::whereCode($request->input('SSCCBox'))->first();
+
+        if(!$SSCCPal) {
+            return response()->json('SSCCPal not found', 403);
+        }
+
+        if(!$SSCCBox) {
+            return response()->json('SSCCBox not found', 403);
+        }
+
+        $markAggregation = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id, 'km' => $request->input('km')])->first();
+        if($markAggregation) {
+            return response()->json('km already scanned', 400);
+        }
+
+        $markCode = MarkCode::where(['marking_code' => $request->input('km')])->first();
+        if($markCode) {
+            $markDetail = MarkDetail::findOrFail($markCode->marking_details_id);
+            if(!$markDetail) {
+                return response()->json('mark detail not found', 403);
+            }
+
+            $markAggregation = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id, 'km' => null])->first();
+            if($markAggregation) {
+                $markAggregation->km = $request->input('km');
+                $markAggregation->article = $markDetail->line2;
+                $markAggregation->gtin = $markDetail->gtin;
+                $markAggregation->save();
+            } else {
+                MarkAggregation::create([
+                    'sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id,
+                    'km' => $request->input('km'), 'article' => $markDetail->line2, 'gtin' => $markDetail->gtin
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'km successfully scanned',
+                'standard' => $SSCCBox->standard,
+                'fact' => MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->whereNotNull('km')->count(),
+                'lastProduct' => MarkAggregation::lastProduct($SSCCPal->id, $SSCCBox->id)
+            ]);
+        } else {
+            return response()->json('km not found', 403);
+        }
+    }
+
+    public function aggregationPalletBoxStats(Request $request)
+    {
+        $request->validate([
+            'SSCCPal' => 'required',
+            'SSCCBox' => 'required'
+        ]);
+
+        $SSCCPal = PalletSSCC::whereCode($request->input('SSCCPal'))->first();
+        $SSCCBox = PalletSSCC::whereCode($request->input('SSCCBox'))->first();
+
+        if(!$SSCCPal) {
+            return response()->json('SSCCPal not found', 403);
+        }
+
+        if(!$SSCCBox) {
+            return response()->json('SSCCBox not found', 403);
+        }
+
+        $aggregationSSCCPal = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id])->first();
+        if(!$aggregationSSCCPal) {
+            return response()->json('SSCCPal not found', 403);
+        }
+
+        if($SSCCBox) {
+            $aggregationSSCCBox = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->first();
+            if($aggregationSSCCBox) {
+                //return response()->json('SSCCBox already scanned', 400);
+                return response()->json([
+                    'message' => 'SSCCBox successfully scanned',
+                    'standardBox' => $SSCCBox->standard,
+                    'standardPallet' => $SSCCPal->standard,
+                    'lastBox' => $SSCCBox->code,
+                    'fact' => MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->whereNotNull('km')->count(),
+                    'factBox' => MarkAggregation::factBox($SSCCPal),
+                    'lastProduct' => MarkAggregation::lastProduct($SSCCPal->id, $SSCCBox->id)
+                ]);
+            }
+
+            $aggregationSSCCBox = MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => null])->first();
+
+            if($aggregationSSCCBox) {
+                $aggregationSSCCBox->sscc_box_id = $SSCCBox->id;
+                $aggregationSSCCBox->save();
+            }
+
+            return response()->json([
+                'message' => 'SSCCBox successfully scanned',
+                'standard' => $SSCCBox->standard,
+                'fact' => MarkAggregation::where(['sscc_pallet_id' => $SSCCPal->id, 'sscc_box_id' => $SSCCBox->id])->whereNotNull('km')->count(),
+                'lastProduct' => MarkAggregation::lastProduct($SSCCPal->id, $SSCCBox->id),
+
+            ]);
+        }
+    }
+
+    public function getSSCC(Request $request)
+    {
+        $request->validate([
+            'mark_id' => 'required',
+            'option_id' => 'required',
+        ]);
+
+        $data = $request->all();
+        $type = ($data['option_id'] == 1) ? 'box' : 'pallet';
+        $sscc = PalletSSCC::where(['task_id' => $data['mark_id'], 'type' => $type])->get();
+        return response()->json($sscc);
+    }
+
+    public function printSSCC(Request $request)
+    {
+        $arr = [];
+        $printer = Printer::findOrFail($request->input('printer_id'));
+        foreach(json_decode($request->input('sscc')) as $item) {
+            $sscc = PalletSSCC::findOrFail($item->ID);
+            $sscc_code = $sscc->code;
+            $standard = $sscc->standard;
+            $code = <<<HERE
+^XA^LRN^CI0^XZ
+^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR4,4
+~SD28
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW799
+^LL400
+^LS0
+^BY2,3,91^FT100,349^BCN,,Y,N
+^FH\^FD>:$sscc_code^FS
+^FT40,95^A0N,39,38^FH\^CI28^FDProduct: $standard^FS^CI27
+^FT40,181^A0N,37,38^FH\^CI28^FDSSCC: $sscc_code^FS^CI27
+^FO551,40^GFA,821,4416,24,:Z64:eJzdl0Fu2zAQRUdRCwfpgt10TcAXyA2sHqEbo1fpwrC47K5HKNCle4dauQmXXgoFAgioIFbikNRIHCsm4BZJJpFF/zx9fY0phwJ4dlUcp/XL6aWZldPnslFWziK9snoe6Rr1x+1Qnx+HXztCXpzgtv95p29zHAnkV5Xf5U6okXfvtNfzBvXAZwi6nVD+MAdmuJNqxkOL7Rl5p3eow5zf2dcN+NM7Y8fvRt3xBfnrEMvzeEbPh+Ag7WsTeD+0yf3BMgTHDuQE8ofqQSemu3ApoZ02REt41/4JX1N+vBR7ShHz9jpc+2GjAm+ju/ZbH8fb8xeeh9Bae5xr/0TfkTHV98STMiSzZYKupryE8Vq6A9awP7rxUTGzH++AePbjHXA1/vcaq+u34geO73WYM5P8470z7a1Y4GuGX13o7z/TJX8uz6X+/yL/6YXnp/4vMf/r6f/mTP79Gd4o1j8zFcvnRrP5V6Zm8wvTsP7yoWX7b1T3nfM3UHJ5TAeFYfzLFqTh+AaE56l/WcOK8l7vvwNz1n9YeXD+CrcoP/Cf1xeqE/59v71heFrUnxbNP9EX+BOjL/lzeZb8Of6a+VP9Of4Jf4U1999ifZrnd/8r25l/xui2/07vRl0s8Br+/LRFePSfrAoJP1kVEv+G5WvP7y/2v1N3h4OK/UUl+yVDzEtd9EuM2F/qcoGP/Vecf5//Bm7W60vznxL7o9P7I9R9/9AS+8uqYPMXif0RZ/rz9uOH7fYK+ZP6kzp/0ud/zFt///x4jm9m/hDXM/3+SfJPzd98jevbFZ8XEnk4cKWY8P+n/gK6ZpRi:32FB
+^PQ1,0,1,Y
+^XZ
+HERE;
+            $computer_name = $printer->computer_name;
+            $printer_name = $printer->printer_name;
+
+            //$printer = "\\\\".$computer_name.$printer_name;
+            $printer = '\\\\'.$computer_name.$printer_name;
+            // Open connection to the thermal printer
+            $fp = fopen($printer, "w");
+            if (!$fp){
+                return response([
+                    'data' => [
+                        'message' => 'no connection to printer'
+                    ]
+                ], 401);
+            }
+
+            if (!fwrite($fp,$code)){
+                return response(['data' => 'writing failed'], 403);
+            }
+
+            $arr[] = [
+                'code' => $sscc_code,
+                'status' => 'ok'
+            ];
+        }
+
+        return response()->json($arr);
+    }
+
+    public function printSSCCProduct(Request $request)
+    {
+        //TODO:
+        // 1. Добавить к таблицу 2 поля
+        // 2. Проверить шрифты
+        // 3. НЕ ПУСКАТЬ В ПЕЧАТЬ ВСЕ). Попробовать печатать 500шт
+
+        $pattern_id = $request->input('pattern_id');
+        $marking = Mark::findOrFail($request->input('mark_id'));
+        $printer = Printer::findOrFail($request->input('printer_id'));
+        $marking_detail = MarkDetail::where(['marking_id' => $marking->id, 'line3' => $request->input('seria')])->first();
+        $computer_name = $printer->computer_name;
+        $printer_name = $printer->printer_name;
+        if($marking_detail) {
+            $marking_codes = MarkCode::where(['marking_details_id' => $marking_detail->id, 'status' => 'not_marked'])->get();
+            if($pattern_id == 1) {
+                // размер этикетки на 1,5 на 1,5см
+
+                $data = <<<HERE
+^XA^LRN^CI0^XZ
+^XA
+~TA000
+~JSN
+^LT0
+^MNW
+^MTT
+^PON
+^PMN
+^LH0,0
+^JMA
+^PR3,3
+~SD18
+^JUS
+^LRN
+^CI27
+^PA0,1,1,0
+^XZ
+^XA
+^MMT
+^PW759
+^LL120
+^LS0
+HERE;
+                $arrCodesIds = [];
+                $marking_codes = $marking_codes->toArray();
+                foreach($marking_codes as $marking_code) {
+                    $code = $marking_code['marking_code'];
+                    $arrCodesIds[] = $marking_code['id'];
+                    switch ($this->i) {
+                        case 1:
+                            $data .= <<<HERE
+^FT17,100^BXN,2,200,0,0,1,_,1
+^FH\^FD$code^FS
+HERE;
+                            break;
+
+                        case 2:
+                            $data .= <<<HERE
+^FT177,100^BXN,2,200,0,0,1,_,1
+^FH\^FD$code^FS
+HERE;
+                            break;
+
+                        case 3:
+                            $data .= <<<HERE
+^FT337,100^BXN,2,200,0,0,1,_,1
+^FH\^FD$code^FS
+HERE;
+                            break;
+
+                        case 4:
+                            $data .= <<<HERE
+^FT497,100^BXN,2,200,0,0,1,_,1
+^FH\^FD$code^FS
+HERE;
+                            break;
+
+                        case 5:
+                            $data .= <<<HERE
+^FT656,100^BXN,2,200,0,0,1,_,1
+^FH\^FD$code^FS
+HERE;
+                            break;
+                    }
+
+                    if($marking_code == end($marking_codes)) {
+                        //$r = 5 - $this->i;
+                        $data .= <<<HERE
+
+HERE;
+
+                        $this->i = 5;
+                    }
+
+
+                    if($this->i == 5) {
+                        $data .= <<<HERE
+^PQ1,0,1,Y
+^XZ
+HERE;
+
+                        $printer = '\\\\'.$computer_name.$printer_name;
+                        // Open connection to the thermal printer
+                        $fp = fopen($printer, "w");
+                        if (!$fp){
+                            return response([
+                                'data' => [
+                                    'message' => 'no connection to printer'
+                                ]
+                            ], 401);
+                        }
+
+                        if (!fwrite($fp,$data)){
+                            return response(['data' => 'writing failed'], 403);
+                        }
+
+                        $this->i = 0;
+
+//                    MarkCode::whereIn('id', $arrCodesIds)
+//                        ->update(['status' => 'marked', 'scan_user_id' => Auth::id()]);
+//                    $arrCodesIds = [];
+                    }
+
+                    $this->i++;
+                }
+            } else {
+                $seria = $marking_detail->line3;
+                $from_date = date('m/Y', strtotime($marking_detail->line12)); // Дата изготовление
+                $to_date = date('m/Y', strtotime($marking_detail->line4));
+                $sn = $marking_detail->sn;
+                $gtin = $marking_detail->gtin;
+
+                $printer = '\\\\'.$computer_name.$printer_name;
+                // Open connection to the thermal printer
+                $fp = fopen($printer, "w");
+                if (!$fp){
+                    return response([
+                        'data' => [
+                            'message' => 'no connection to printer'
+                        ]
+                    ], 401);
+                }
+
+
+                foreach($marking_codes as $item) {
+                    $code = $item->marking_code;
+                    $data = <<<HERE
+^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ
+^XA
+^MMT
+^PW440
+^LL0440
+^LS0
+^FT8,57^A0N,25,24^FH\^FDСерия №: ^FS
+^FT8,95^A0N,25,24^FH\^FDДайындалған күні/^FS
+^FT8,126^A0N,25,24^FH\^FDДата пр:     ^FS
+^FT8,157^A0N,25,24^FH\^FDдейiн/до:    ^FS
+^FT8,201^A0N,25,24^FH\^FDGTIN No.:          ^FS
+^FT8,233^A0N,25,24^FH\^FDSR No.    :^FS
+^BY104,104^FT306,142^BXN,4,200,0,0,1,~
+^FH\^FD$code^FS
+^FT192,129^A0N,25,24^FH\^FD$from_date^FS
+^FT192,160^A0N,25,24^FH\^FD$to_date^FS
+^FT146,59^A0N,25,24^FH\^FD$seria^FS
+^FT152,201^A0N,25,24^FH\^FD$gtin^FS
+^FT152,235^A0N,25,24^FH\^FD$sn^FS
+^PQ1,0,1,Y^XZ
+HERE;
+                    if (!fwrite($fp,$data)){
+                        return response(['data' => 'writing failed'], 403);
+                    } else {
+                        $item->scan_user_id = Auth::id();
+                        $item->status = "marked";
+                        $item->save();
+                    }
+                }
+            }
+
+        }
     }
 }

@@ -6,10 +6,18 @@ use App\Http\Resources\ContainerTaskResource;
 use App\Models\Container;
 use App\Models\ContainerAddress;
 use App\Models\ContainerLog;
+use App\Models\ContainerSchedule;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
 use App\Models\ImportLog;
+use App\Models\SpineCode;
+use App\Models\Technique;
+use App\Models\TechniqueLog;
+use App\Models\TechniqueStock;
+use App\Models\TechniqueTask;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Auth;
@@ -113,7 +121,8 @@ class KTController extends Controller
             case 0:
                 $container_tasks = ContainerTask::with('user')
                     ->where(['user_id' => Auth::id()])
-                    ->whereRaw("status != 'closed'")
+//                    ->whereNotIn("status", ['closed', 'ignore', 'failed'])
+                    ->whereIn("status", ['open', 'failed', 'waiting'])
 //                    ->orderByRaw("CASE status
 //                                            WHEN 'open' THEN 1
 //                                            WHEN 'waiting' THEN 1
@@ -189,6 +198,18 @@ class KTController extends Controller
         $container_task->save();
         $container_stocks = $container_task->container_stocks();
         return view('kt.print_task', compact('container_task', 'container_stocks'));
+    }
+
+    public function printTechniqueTask($technique_task_id)
+    {
+        $technique_task = TechniqueTask::with('company', 'agreement')->findOrFail($technique_task_id);
+        $technique_stocks = TechniqueStock::where(['technique_task_id' => $technique_task->id])
+            ->selectRaw('technique_stocks.*, technique_types.name as type_name, technique_places.name as place_name, companies.full_company_name')
+            ->join('technique_types', 'technique_types.id', 'technique_stocks.technique_type_id')
+            ->leftJoin('technique_places', 'technique_places.id', 'technique_stocks.technique_place_id')
+            ->leftJoin('companies', 'companies.id', 'technique_stocks.company_id')
+            ->get();
+        return view('kt.print_technique_task', compact('technique_task', 'technique_stocks'));
     }
 
     public function controller()
@@ -348,7 +369,7 @@ class KTController extends Controller
     }
 
     // Изменяет номер контейнера по подтверждение куратора
-    public function confirmEditPosition(Request $request)
+    public function confirmEditPosition(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->all();
         DB::beginTransaction();
@@ -358,10 +379,16 @@ class KTController extends Controller
             $container_stock = ContainerStock::where(['container_task_id' => $container_task->id, 'container_id' => $container->id, 'status' => 'edit'])->first();
             if ($container_stock) {
                 // Изменяем в справочнике
-                $container->number = $data['new_container_number'];
-                $container->save();
+                $new_container = Container::whereNumber($data['new_container_number'])->first();
+                if(!$new_container) {
+                    $new_container = Container::create([
+                        'number' => $data['new_container_number'], 'container_type' => $container->container_type, 'company' => $container->company,
+                    ]);
+                    //return response()->json($data['new_container_number'] . " нет в справочнике", 404, [], JSON_UNESCAPED_UNICODE);
+                }
 
                 // Меняем статус в стоке
+                $container_stock->container_id = $new_container->id;
                 $container_stock->status = 'incoming';
                 $container_stock->save();
 
@@ -381,9 +408,9 @@ class KTController extends Controller
                 ContainerLog::create($cs);
                 DB::commit();
 
-                return response()->json('Заявка на редактирование выполнено');
+                return response()->json('Заявка на редактирование выполнено', 200, [], JSON_UNESCAPED_UNICODE);
             } else {
-                return response()->json('Ранее удален либо не найдено', 403);
+                return response()->json('Ранее удален либо не найдено', 403,[], JSON_UNESCAPED_UNICODE);
             }
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -391,7 +418,7 @@ class KTController extends Controller
         }
     }
 
-    public function getContainerLogs($container_number)
+    public function getContainerLogs($container_number): \Illuminate\Http\JsonResponse
     {
         $container = Container::where('number', 'like', '%'.$container_number)->first();
         if ($container) {
@@ -403,5 +430,87 @@ class KTController extends Controller
         } else {
             return response()->json('Не найден контейнер', 404);
         }
+    }
+
+    public function getTechniqueLogs($vincode): \Illuminate\Http\JsonResponse
+    {
+        $technique_logs = TechniqueLog::where('vin_code', 'like', '%'.$vincode)
+            ->selectRaw('technique_logs.*, users.full_name, users.phone')
+            ->join('users', 'users.id', 'technique_logs.user_id')
+            ->orderBy('technique_logs.id', 'DESC')
+            ->get();
+        if($technique_logs) {
+            return response()->json($technique_logs);
+        }
+
+        return response()->json('Не найден авто по винкоду: ' . $vincode, 404);
+    }
+
+    public function getSchedule(): \Illuminate\Http\JsonResponse
+    {
+        $schedules = ContainerSchedule::join('users', 'users.id', 'container_schedule.crane_id')
+            ->selectRaw('container_schedule.*, users.full_name as crane_name')
+            ->with('user', 'technique')
+            ->get();
+
+        foreach($schedules as $schedule){
+            if(is_null($schedule->ids)) continue;
+            $ids = explode(',', $schedule->ids);
+            $slingers = [];
+            if(count($ids) == 2) {
+                $result = User::whereIn('id', $ids)->get();
+                foreach($result as $item) {
+                    $slingers[] = [
+                        'id' => $item->id,
+                        'full_name' => $item->full_name,
+                    ];
+                }
+            } else {
+                $result = User::findOrFail($schedule->ids);
+                $slingers[] = [
+                    'id' => $result->id,
+                    'full_name' => $result->full_name,
+                ];
+
+            }
+            $schedule['slinger'] = $slingers;
+        }
+
+        return response()->json($schedules);
+    }
+
+    public function getCraneUsers(): \Illuminate\Http\JsonResponse
+    {
+        $crane_users = User::where(['roles.slug' => 'kt-crane'])
+            ->selectRaw('users.id, users.full_name')
+            ->join('users_roles', 'users_roles.user_id', '=', 'users.id')
+            ->join('roles', 'roles.id', '=', 'users_roles.role_id')
+            ->leftJoin('container_schedule', 'container_schedule.crane_id', 'users.id')
+            ->whereNull('container_schedule.id')
+            ->orderBy('users.full_name', 'ASC')
+            ->get();
+        return response()->json($crane_users);
+    }
+
+    public function getSlingerUsers(): \Illuminate\Http\JsonResponse
+    {
+        $slinger_users = User::whereIn('users.position_id', [91,92,93,153,174])
+            ->whereNotIn('users.id', ContainerSchedule::ids())
+            ->selectRaw('users.id, users.full_name')
+            ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+            ->orderBy('users.full_name', 'ASC')
+            ->havingRaw('status = "works"')
+            ->get();
+
+        return response()->json($slinger_users);
+    }
+
+    public function getTechniques(): \Illuminate\Http\JsonResponse
+    {
+        $techniques = Technique::leftJoin('container_schedule', 'container_schedule.technique_id', 'techniques.id')
+            ->selectRaw('techniques.id, techniques.name')
+            ->whereNull('container_schedule.id')
+            ->get();
+        return response()->json($techniques);
     }
 }

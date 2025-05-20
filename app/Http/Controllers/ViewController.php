@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\CKUDLogs;
 use App\Models\Company;
 use App\Models\Driver;
 use App\Models\Kpp;
@@ -13,6 +14,9 @@ use App\Models\WhiteCarList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use File;
 use Auth;
@@ -22,11 +26,11 @@ class ViewController extends BaseController
     public function index()
     {
         $cur_month = DB::select("SELECT COUNT(*) as cnt FROM permits
-                         WHERE date_in IS NOT NULL AND status='printed'
+                         WHERE date_in IS NOT NULL AND status != 'awaiting_print' AND status != 'deleted'
                          AND MONTH(date_in)=MONTH(CURDATE()) AND YEAR(date_in)=YEAR(CURDATE())");
 
         $pre_month = DB::select("SELECT COUNT(*) as cnt FROM permits
-                         WHERE date_in IS NOT NULL AND status='printed'
+                         WHERE date_in IS NOT NULL AND status != 'awaiting_print' AND status != 'deleted'
                          AND MONTH(date_in)=MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)) AND YEAR(date_in)=YEAR(NOW())");
         $companies = Company::all();
 
@@ -144,13 +148,13 @@ class ViewController extends BaseController
 
         if ($company_id == 0) {
             if($kpp_name == "") {
-                $permits = Permit::where(['status' => 'printed'])
+                $permits = Permit::where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->whereNotNull('date_in')
                     ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
                     ->get();
             } else {
-                $permits = Permit::where(['status' => 'printed'])
+                $permits = Permit::where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->where('kpp_name', '=', $kpp_name)
                     ->whereNotNull('date_in')
@@ -159,13 +163,13 @@ class ViewController extends BaseController
             }
         } else{
             if($kpp_name == "") {
-                $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+                $permits = Permit::where(['company_id' => $company_id])->where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->whereNotNull('date_in')
                     ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
                     ->get();
             } else {
-                $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+                $permits = Permit::where(['company_id' => $company_id])->where('status', '!=', 'awaiting_print')->where('status', '!=', 'deleted')
                     ->where('lc_id', '>', 0)
                     ->where('kpp_name', '=', $kpp_name)
                     ->whereNotNull('date_in')
@@ -272,22 +276,24 @@ class ViewController extends BaseController
         $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
 
         if($kpp_name == "") {
-            $permits = Permit::where(['status' => 'printed'])
-                ->selectRaw('company, SUM(CASE WHEN lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
-                ->where('lc_id', '>', 0)->whereNotNull('date_in')
-                ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
-                ->groupBy('company')
-                ->orderBy('company')
+            $permits = Permit::where('permits.status', '!=', 'awaiting_print')->where('permits.status', '!=', 'deleted')
+                ->selectRaw('companies.short_en_name as company, SUM(CASE WHEN permits.lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN permits.lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN permits.lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN permits.from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
+                ->join('companies', 'companies.id', 'permits.company_id')
+                ->where('permits.lc_id', '>', 0)->whereNotNull('permits.date_in')
+                ->whereRaw("(permits.date_in >= ? AND permits.date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->groupBy('permits.company_id')
+                ->orderBy('permits.company_id')
                 ->get();
         } else {
-            $permits = Permit::where(['status' => 'printed'])
-                ->selectRaw('company, SUM(CASE WHEN lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
-                ->where('lc_id', '>', 0)
-                ->where('kpp_name', '=', $kpp_name)
-                ->whereNotNull('date_in')
-                ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
-                ->groupBy('company')
-                ->orderBy('company')
+            $permits = Permit::where('permits.status', '!=', 'awaiting_print')->where('permits.status', '!=', 'deleted')
+                ->selectRaw('companies.short_en_name as company, SUM(CASE WHEN permits.lc_id = 1 THEN 1 ELSE 0 END) as leg, SUM(CASE WHEN permits.lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN permits.lc_id = 3 THEN 1 ELSE 0 END) as grz, SUM(CASE WHEN permits.from_company = "ЧАСТНИК" THEN 1 ELSE 0 END) as cht')
+                ->join('companies', 'companies.id', 'permits.company_id')
+                ->where('permits.lc_id', '>', 0)
+                ->where('permits.kpp_name', '=', $kpp_name)
+                ->whereNotNull('permits.date_in')
+                ->whereRaw("(permits.date_in >= ? AND permits.date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
+                ->groupBy('permits.company_id')
+                ->orderBy('permits.company_id')
                 ->get();
         }
 
@@ -597,6 +603,282 @@ class ViewController extends BaseController
 
         $writer = new Xlsx($spreadsheet);
         $filename = date('Y_m_d_H_i_s') . '_svods_wcl.xlsx';
+        $path_to_file = '/reports/it/' . $filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+    public function ckud()
+    {
+        return view('ckud_view');
+    }
+
+    public function showCKUDLogs(Request $request)
+    {
+        $data = $request->all();
+
+        switch ($data['report_id']) {
+            case 0:
+                $path_to_file = $this->analysisKpp($data);
+                break;
+
+            case 1:
+                $path_to_file = $this->analysisCompany($data);
+                break;
+        }
+
+        return $path_to_file;
+    }
+
+    public function analysisKpp($data)
+    {
+        $ckud_logs1 = CKUDLogs::whereRaw("ckud_logs.DateTime >= '".$data['to_date']." 06:30:00' AND ckud_logs.DateTime <= '".$data['to_date']." 09:30:00' AND ckud_logs.LogMessageSubType='AccessPointEntryByKey'")
+            ->selectRaw('ckud_logs.DriverID,ckud_logs.DriverName, count(*) as cnt')
+            ->groupBy('ckud_logs.DriverID')
+            ->get();
+
+        $ckud_logs2 = CKUDLogs::whereRaw("ckud_logs.DateTime > '".$data['to_date']." 09:30:00' AND ckud_logs.DateTime <= '".$data['to_date']." 12:30:00' AND ckud_logs.LogMessageSubType='AccessPointEntryByKey'")
+            ->selectRaw('ckud_logs.DriverID,ckud_logs.DriverName, count(*) as cnt')
+            ->groupBy('ckud_logs.DriverID')
+            ->get();
+
+        $ckud_logs3 = CKUDLogs::whereRaw("ckud_logs.DateTime > '".$data['to_date']." 12:30:00' AND ckud_logs.DateTime <= '".$data['to_date']." 14:30:00' AND ckud_logs.LogMessageSubType='AccessPointEntryByKey'")
+            ->selectRaw('ckud_logs.DriverID,ckud_logs.DriverName, count(*) as cnt')
+            ->groupBy('ckud_logs.DriverID')
+            ->get();
+
+        $ckud_logs4 = CKUDLogs::whereRaw("ckud_logs.DateTime > '".$data['to_date']." 14:30:00' AND ckud_logs.DateTime <= '".$data['to_date']." 16:30:00' AND ckud_logs.LogMessageSubType='AccessPointEntryByKey'")
+            ->selectRaw('ckud_logs.DriverID,ckud_logs.DriverName, count(*) as cnt')
+            ->groupBy('ckud_logs.DriverID')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Учет-анализ по КПП');
+        $sheet->mergeCells('A1:I1');
+        $sheet->setCellValue('A1', 'УЧЕТ-АНАЛИЗ');
+        $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
+        $sheet->mergeCells('A2:I2');
+        $sheet->setCellValue('A2', "пешего прохода через КПП DAMU ".$data['to_date']);
+
+
+        $sheet->setCellValue('A3', '№ п/п');
+        $sheet->setCellValue('B3', 'Временной интервал с 06:30 по 09:30');
+        $sheet->setCellValue('C3', 'Количество');
+        $sheet->setCellValue('D3', 'Временной интервал с 09:30 по 12:30');
+        $sheet->setCellValue('E3', 'Количество');
+        $sheet->setCellValue('F3', 'Временной интервал с 12:30 по 14:30');
+        $sheet->setCellValue('G3', 'Количество');
+        $sheet->setCellValue('H3', 'Временной интервал с 14:30 по 16:30');
+        $sheet->setCellValue('I3', 'Количество');
+
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+        $sheet->getColumnDimension('D')->setAutoSize(true);
+        $sheet->getColumnDimension('E')->setAutoSize(true);
+        $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
+        $sheet->getColumnDimension('H')->setAutoSize(true);
+        $sheet->getColumnDimension('I')->setAutoSize(true);
+
+
+        $sum1 = 0;
+        $sum2 = 0;
+        $sum3 = 0;
+        $sum4 = 0;
+
+        $ckud_drivers = [
+            '8b5c94d1-6f24-4ea9-a3e9-9b429d1dc1a6' => ['name' => 'КПП №1', 'cnt' => 0],
+            '83b085f0-8fa6-4fb3-85f9-4513222d7583' => ['name' => 'КПП №3', 'cnt' => 0],
+            '52b32d4c-7e14-47d4-a8a2-c79f9b36d066' => ['name' => 'КПП №4', 'cnt' => 0],
+            '6e335723-5123-40e8-b6f0-4a637c1b103e' => ['name' => 'samsung', 'cnt' => 0],
+        ];
+
+        // $ckud_logs1
+        $current_row = 3;
+        $ckud_logs1 = $ckud_logs1->toArray();
+        foreach($ckud_logs1 as $item) {
+            if(array_key_exists($item['DriverID'], $ckud_drivers)) {
+                $ckud_drivers[$item['DriverID']]['cnt'] = $item['cnt'];
+            }
+        }
+        foreach(array_values($ckud_drivers) as $key=>$ckud_driver) {
+            $current_row++;
+            $sheet->setCellValue('A'.$current_row,$key+1);
+            $sheet->setCellValue('B'.$current_row, $ckud_driver['name']);
+            $sheet->setCellValue('C'.$current_row, $ckud_driver['cnt']);
+            $sum1 += $ckud_driver['cnt'];
+        }
+
+        $current_row++;
+        $sheet->setCellValue('B'.$current_row,'ИТОГО:');
+        $sheet->setCellValue('C'.$current_row,  $sum1);
+
+        // $ckud_logs2
+        $current_row = 3;
+        $ckud_drivers = [
+            '8b5c94d1-6f24-4ea9-a3e9-9b429d1dc1a6' => ['name' => 'КПП №1', 'cnt' => 0],
+            '83b085f0-8fa6-4fb3-85f9-4513222d7583' => ['name' => 'КПП №3', 'cnt' => 0],
+            '52b32d4c-7e14-47d4-a8a2-c79f9b36d066' => ['name' => 'КПП №4', 'cnt' => 0],
+            '6e335723-5123-40e8-b6f0-4a637c1b103e' => ['name' => 'samsung', 'cnt' => 0],
+        ];
+        $ckud_logs2 = $ckud_logs2->toArray();
+        foreach($ckud_logs2 as $item) {
+            if(array_key_exists($item['DriverID'], $ckud_drivers)) {
+                $ckud_drivers[$item['DriverID']]['cnt'] = $item['cnt'];
+            }
+        }
+        foreach(array_values($ckud_drivers) as $key=>$ckud_driver) {
+            $current_row++;
+            $sheet->setCellValue('D'.$current_row, $ckud_driver['name']);
+            $sheet->setCellValue('E'.$current_row, $ckud_driver['cnt']);
+            $sum2 += $ckud_driver['cnt'];
+        }
+
+        $current_row++;
+        $sheet->setCellValue('D'.$current_row,'ИТОГО:');
+        $sheet->setCellValue('E'.$current_row,  $sum2);
+
+        // $ckud_logs3
+        $current_row = 3;
+        $ckud_drivers = [
+            '8b5c94d1-6f24-4ea9-a3e9-9b429d1dc1a6' => ['name' => 'КПП №1', 'cnt' => 0],
+            '83b085f0-8fa6-4fb3-85f9-4513222d7583' => ['name' => 'КПП №3', 'cnt' => 0],
+            '52b32d4c-7e14-47d4-a8a2-c79f9b36d066' => ['name' => 'КПП №4', 'cnt' => 0],
+            '6e335723-5123-40e8-b6f0-4a637c1b103e' => ['name' => 'samsung', 'cnt' => 0],
+        ];
+        $ckud_logs3 = $ckud_logs3->toArray();
+        foreach($ckud_logs3 as $item) {
+            if(array_key_exists($item['DriverID'], $ckud_drivers)) {
+                $ckud_drivers[$item['DriverID']]['cnt'] = $item['cnt'];
+            }
+        }
+        foreach(array_values($ckud_drivers) as $key=>$ckud_driver) {
+            $current_row++;
+            $sheet->setCellValue('F'.$current_row, $ckud_driver['name']);
+            $sheet->setCellValue('G'.$current_row, $ckud_driver['cnt']);
+            $sum3 += $ckud_driver['cnt'];
+        }
+
+        $current_row++;
+        $sheet->setCellValue('F'.$current_row,'ИТОГО:');
+        $sheet->setCellValue('G'.$current_row,  $sum3);
+
+        // $ckud_logs4
+        $current_row = 3;
+        $ckud_drivers = [
+            '8b5c94d1-6f24-4ea9-a3e9-9b429d1dc1a6' => ['name' => 'КПП №1', 'cnt' => 0],
+            '83b085f0-8fa6-4fb3-85f9-4513222d7583' => ['name' => 'КПП №3', 'cnt' => 0],
+            '52b32d4c-7e14-47d4-a8a2-c79f9b36d066' => ['name' => 'КПП №4', 'cnt' => 0],
+            '6e335723-5123-40e8-b6f0-4a637c1b103e' => ['name' => 'samsung', 'cnt' => 0],
+        ];
+        $ckud_logs4 = $ckud_logs4->toArray();
+        foreach($ckud_logs4 as $item) {
+            if(array_key_exists($item['DriverID'], $ckud_drivers)) {
+                $ckud_drivers[$item['DriverID']]['cnt'] = $item['cnt'];
+            }
+        }
+        foreach(array_values($ckud_drivers) as $key=>$ckud_driver) {
+            $current_row++;
+            $sheet->setCellValue('H'.$current_row, $ckud_driver['name']);
+            $sheet->setCellValue('I'.$current_row, $ckud_driver['cnt']);
+            $sum4 += $ckud_driver['cnt'];
+        }
+
+        $current_row++;
+        $sheet->setCellValue('H'.$current_row,'ИТОГО:');
+        $sheet->setCellValue('I'.$current_row,  $sum4);
+
+        $sheet->getStyle('B'.$current_row.':I'.$current_row)->getFont()->setBold(true);
+        $sheet->getStyle('A4:I'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $current_row++;
+
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B3:I3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getStyle('A3:I3')->getFont()->setBold(true);
+
+        $sheet->mergeCells('A'.$current_row.':H'.$current_row);
+        $sheet->setCellValue('A'.$current_row, 'ИТОГО ЗА ДЕНЬ:');
+        $sheet->getStyle('A'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->setCellValue('I'.$current_row, $sum1+$sum2+$sum3+$sum4);
+        $sheet->getStyle('I'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A'.$current_row.':I'.$current_row)->getFont()->setBold(true);
+
+        $sheet->getStyle('A3:I'.$current_row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new Color('00000000'));
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = date('Y_m_d_H_i_s') . '_analysis_kpp.xlsx';
+        $path_to_file = '/reports/it/' . $filename;
+        $writer->save(public_path() . $path_to_file);
+
+        return $path_to_file;
+    }
+
+    public function analysisCompany($data)
+    {
+        $ckud_logs = CKUDLogs::whereRaw("date_format(ckud_logs.DateTime, '%Y-%m-%d') = '".$data['to_date']."' AND ckud_logs.LogMessageSubType='AccessPointEntryByKey'")
+            ->selectRaw('companies.full_company_name, count(*) as cnt')
+            ->join('users', 'users.id', 'ckud_logs.EmployeeTableNumber')
+            ->join('companies', 'companies.id', 'users.company_id')
+            ->groupBy('companies.id')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Учет-анализ по компаниям');
+        $sheet->mergeCells('A1:C1');
+        $sheet->setCellValue('A1', 'УЧЕТ-АНАЛИЗ');
+        $sheet->getStyle("A1")->getFont()->setSize(16)->setBold(true);
+        $sheet->mergeCells('A2:C2');
+        $sheet->setCellValue('A2', "по количеству людей, находящиеся на территории ".$data['to_date']);
+
+
+        $sheet->setCellValue('A3', '№ п/п');
+        $sheet->setCellValue('B3', 'Компания');
+        $sheet->setCellValue('C3', 'Количество');
+
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+
+        $current_row = 3;
+        $sum = 0;
+        foreach($ckud_logs as $key=>$log) {
+            $current_row++;
+            $sheet->setCellValue('A'.$current_row,$key+1);
+            $sheet->setCellValue('B'.$current_row,$log->full_company_name);
+            $sheet->setCellValue('C'.$current_row,$log->cnt);
+            $sheet->getStyle('A'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sum += $log->cnt;
+        }
+
+        $current_row += 2;
+        $sheet->mergeCells('A'.$current_row.':B'.$current_row);
+        $sheet->setCellValue('A'.$current_row,'ИТОГО:');
+        $sheet->setCellValue('C'.$current_row,$sum);
+
+
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3')->getFont()->setBold(true);
+        $sheet->getStyle('B3')->getFont()->setBold(true);
+        $sheet->getStyle('C3')->getFont()->setBold(true);
+        $sheet->getStyle('A'.$current_row)->getFont()->setBold(true);
+        $sheet->getStyle('C'.$current_row)->getFont()->setBold(true);
+        $sheet->getStyle('C'.$current_row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getStyle('A3:C'.$current_row)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new Color('00000000'));
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = date('Y_m_d_H_i_s') . '_analysis_company.xlsx';
         $path_to_file = '/reports/it/' . $filename;
         $writer->save(public_path() . $path_to_file);
 

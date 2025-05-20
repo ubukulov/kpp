@@ -73,6 +73,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
         Route::get('/white-car-list/{company_id}/get-changes', 'WhiteCarController@getWCLChanges');
         Route::get('/white-car-list/import/form', 'WhiteCarController@importForm')->name('admin.wcl.importForm');
         Route::post('/white-car-list/import-execute', 'WhiteCarController@importExecute');
+        Route::get('white-car-list/guest/cars', 'WhiteCarController@guestCars')->name('admin.white-cars.guest.index');
+        Route::get('white-car-list/guest/cars/create', 'WhiteCarController@guestCreate')->name('admin.white-cars.guest.create');
+        Route::post('white-car-list/guest/cars/store', 'WhiteCarController@guestStore')->name('admin.white-cars.guest.store');
 
         # Dashboard statistics
         Route::get('/get-operations-crane-operator-for-today', 'StatController@getOperationCraneOperatorForToday');
@@ -83,6 +86,10 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
             Route::get('/logs', 'WebcontController@logs')->name('admin.webcont.logs');
             Route::get('/get/logs', 'WebcontController@getLogsForAdmin');
             Route::post('/search', 'WebcontController@search');
+            Route::get('reports', 'WebcontController@reports')->name('admin.webcont.reports');
+            Route::post('get-reports', 'WebcontController@getReports');
+            Route::post('get-detail', 'WebcontController@getDetail');
+            Route::post('get-stats-today', 'WebcontController@getStatsToday');
         });
 
         # Авторизация по ид пользователя
@@ -108,5 +115,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
             Route::get('/{company_id}/get-employees', 'KitchenController@getEmployees');
             Route::post('change-ashana-logs', 'KitchenController@changeAshanaLogs');
         });
+
+        # Mark
+        Route::get('/mark/info', 'AdminController@mark');
     });
 });

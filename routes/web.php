@@ -69,8 +69,35 @@ Route::group(['middleware' => ['auth']], function() {
         # Technique - учет техники
         Route::get('/technique-task-create', 'TechniqueController@taskCreate');
         Route::post('/technique/create-task-by-file', 'TechniqueController@createTaskByFile');
+        Route::post('/technique/create-task-by-keyboard', 'TechniqueController@createTaskByKeyboard');
         Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
         Route::get('/technique_task/{id}/show-details', 'TechniqueController@showDetails');
+        Route::get('/technique-task/{id}/print', 'KTController@printTechniqueTask');
+        Route::get('/get-technique-companies', 'TechniqueController@getTechniqueCompanies');
+        Route::get('/technique/{vincode}/get-logs', 'KTController@getTechniqueLogs');
+        Route::get('/technique/{company_id}/get-agreements', 'TechniqueController@getAgreements');
+        Route::post('/technique/{company_id}/store-agreement', 'TechniqueController@storeAgreement');
+        Route::delete('/technique/{company_id}/delete-agreement', 'TechniqueController@deleteAgreement');
+        Route::post('/technique/spine', 'TechniqueController@storeSpine');
+        Route::get('/technique/{spine_id}/print', 'TechniqueController@spinePrintView')->name('spine.printView');
+        Route::post('/technique/get-spine-vincodes', 'TechniqueController@getSpineVincodes');
+        Route::get('get-spines', 'TechniqueController@getSpines');
+
+        # Cargo - учет грузов
+        Route::group(['prefix' => 'cargo'], function(){
+            Route::get('lists', 'CargoController@getCargoTasks');
+            Route::get('get-cargo-companies', 'CargoController@getCargoCompanies');
+            Route::get('get-cargo-names', 'CargoController@getCargoNames');
+            Route::post('store', 'CargoController@store');
+            Route::get('{company_id}/get-cargo-stocks-for-shipment', 'CargoController@getCargoStocksForShipment');
+            Route::post('complete/cargo-task', 'CargoController@completeCargoTask');
+            Route::post('{cargoTaskId}/update', 'CargoController@update');
+            Route::post('spine', 'CargoController@storeSpine');
+            Route::get('{spine_id}/print', 'CargoController@spinePrintView')->name('spine.printView');
+            Route::get('get-spines', 'CargoController@getSpines');
+            Route::get('{company_id}/get-cars', 'CargoController@getCars');
+            Route::get('{company_id}/get-codes', 'CargoController@getCodesForCar');
+        });
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -95,9 +122,12 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('container/getting-containers-in-row', 'ContainerController@getListContainersInRow');
         Route::get('stats/getting-stats-for-me', 'StatController@getStatsForMe');
         Route::post('technique', 'ContainerController@noticeAboutTechnique');
+        Route::get('/get-slingers', 'ContainerController@getSlingers');
+        Route::post('/send-my-settings-to-session', 'ContainerController@sendMySettingsToSession');
+        Route::post('/cancel-my-settings-to-session', 'ContainerController@cancelMySettingsToSession');
     });
 
-    # Контейнерный терминал - контролировщики
+    # Контейнерный терминал - контролировщики - Начальники смены
     Route::group(['prefix' => 'container-controller', 'middleware' => 'role:kt-controller'], function(){
         Route::get('/', 'KTController@controller')->name('kt.controller');
         Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
@@ -107,6 +137,10 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('task/confirm-cancel-position', 'KTController@confirmCancelPosition');
         Route::post('task/reject-edit-position', 'KTController@rejectEditPosition');
         Route::post('task/confirm-edit-position', 'KTController@confirmEditPosition');
+        Route::get('get-schedules', 'KTController@getSchedule'); // получить список расписание крановщиков и стропальщиков
+        Route::get('get-crane-users', 'KTController@getCraneUsers'); // получить список крановщиков которые нет в расписание
+        Route::get('get-slinger-users','KTController@getSlingerUsers'); // получить список стропальщиков которые свободные
+        Route::get('get-techniques', 'KTController@getTechniques'); // список свободных техники
 
         # Учет техники
         Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
@@ -114,7 +148,7 @@ Route::group(['middleware' => ['auth']], function() {
 
     # Учет техники: контроллер
     Route::group(['prefix' => 'technique-controller', 'middleware' => 'role:technique-controller'], function(){
-        Route::get('/', 'TechniqueController@techniqueController');
+        Route::get('/', 'TechniqueController@techniqueController')->name('technique.controller');
         Route::post('/get-information-by-qr-code', 'TechniqueController@getInformationByQRCode');
     });
 
@@ -145,6 +179,16 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/{mark_id}/get-containers', 'MarkController@getContainers');
         Route::post('/command-print', 'MarkController@commandPrint');
         Route::get('/print-using-codes/{printer_id}', 'MarkController@printByUsingCodes'); // только для программиста :)
+        Route::post('generate/sscc', 'MarkController@generateSSCC');
+        Route::post('confirm-generated-sscc', 'MarkController@confirmGeneratedSSCC');
+        Route::get('{marking_id}/get-seria', 'MarkController@getSeria');
+        Route::post('aggregation/pallet', 'MarkController@aggregationPallet');
+        Route::post('aggregation/pallet/box', 'MarkController@aggregationPalletBox');
+        Route::post('aggregation/pallet/box/stats', 'MarkController@aggregationPalletBoxStats');
+        Route::post('aggregation/pallet/box/product', 'MarkController@aggregationPalletBoxProduct');
+        Route::post('get-sscc', 'MarkController@getSSCC');
+        Route::post('aggregation/print', 'MarkController@printSSCC');
+        Route::post('aggregation/print-product', 'MarkController@printSSCCProduct');
     });
 
     # Список белых машинов которые без пропусков заежает и выезжает
@@ -154,8 +198,21 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
     });
 
+    # Груз: Кладовщик
+    Route::group(['prefix' => 'cargo-controller', 'middleware' => 'role:cargo-controller'], function(){
+        Route::get('/', 'CargoController@controller')->name('cargo.controller');
+        Route::get('get-cargo-tasks', 'CargoController@getCargoTasks');
+        Route::get('cargo-task/{id}/show', 'CargoController@showCargoTask');
+        Route::get('cargo-task/{id}-{pos}/start', 'CargoController@startCargoTask');
+        Route::get('cargo-task/{id}-{pos}/edit', 'CargoController@editCargoTask');
+        Route::get('get-techniques', 'CargoController@getTechniques');
+        Route::get('get-employees', 'CargoController@getEmployees');
+        Route::get('get-areas', 'CargoController@getAreas');
+        Route::post('cargo/fix-operations', 'CargoController@fixOperations');
+        Route::post('cargo/tasks/changes', 'CargoController@changeTasks');
+        Route::get('get-cargo-services', 'CargoController@getCargoServices');
+    });
 });
-
 
 # Маршруты для тех водителей которые оформляет себе предварительную пропуск
 Route::get('/driver', 'DriverController@index');
@@ -168,6 +225,9 @@ Route::get('/view-detail-info-permit/get-car-info/{nm}', 'ViewController@getCarI
 Route::get('/view-detail-info-permit/get-driver-info/{nm}', 'ViewController@getDriverInfo');
 Route::post('/view-detail-info-permit/download-permits-for-selected-time', 'ViewController@getPermitsForSelectedTime')->name('download.permits');
 
+Route::get('/view-detail-info-ckud', 'ViewController@ckud');
+Route::post('/view-detail-info-ckud-logs', 'ViewController@showCKUDLogs');
+
 
 
 Route::get('/form4', 'IndexController@form4');
@@ -179,3 +239,8 @@ Route::get('/lv-order-screen', 'LVController@lvOrderScreen')->name('lv.order.scr
 
 Route::get('/scan-qr-code', 'IndexController@scanQR');
 Route::post('/avigilon', 'IndexController@avigilon');
+
+# API routes for Parquor
+Route::post('permit/access-to-entrance', 'KppController@accessToEntrance');
+Route::post('permit/access-to-exit', 'KppController@accessToExit');
+Route::post('permit/completed-to-exit', 'KppController@completedToExit');

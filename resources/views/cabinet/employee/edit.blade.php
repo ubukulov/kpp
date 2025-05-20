@@ -52,11 +52,6 @@
                                 @endforeach
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" value="{{ $employee->email }}" class="form-control" name="email">
-                        </div>
                     </div>
                     <div class="col-md-6">
 
@@ -65,15 +60,10 @@
                             <input type="text" value="{{ $employee->full_name }}" class="form-control" name="full_name" required>
                         </div>
 
-                        <div class="form-group">
+                        {{--<div class="form-group">
                             <label>Телефон</label><span style="color: red;">*</span>
                             <input type="text" required value="{{ $employee->phone }}" class="form-control" name="phone">
-                        </div>
-
-                        <div class="form-group">
-                            <label>ИИН</label><span style="color: red;">*</span>
-                            <input type="text" required value="{{ $employee->iin }}" class="form-control" name="iin">
-                        </div>
+                        </div>--}}
                     </div>
                 </div>
 

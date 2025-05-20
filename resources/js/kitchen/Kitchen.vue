@@ -3,7 +3,7 @@
         <v-main>
             <v-container>
                 <v-row>
-                    <v-col cols="4">
+                    <v-col cols="12">
                         <div v-if="info" v-html="infoHtml"></div>
                         <div class="form-group">
                             <label>Отсканируйте или введите ID пользователя</label><br>
@@ -16,7 +16,7 @@
                         </div>
                     </v-col>
 
-                    <v-col cols="8">
+<!--                    <v-col cols="8">
                         <div v-show="isCameraOpen && isLoading" class="camera-loading">
                             <ul class="loader-circle">
                                 <li></li>
@@ -33,7 +33,7 @@
 
                             <canvas v-show="isPhotoTaken" id="photoTaken" ref="canvas" :width="1280" :height="720"></canvas>
                         </div>
-                    </v-col>
+                    </v-col>-->
 
                 </v-row>
 
@@ -149,6 +149,13 @@
                 </v-dialog>
             </v-container>
         </v-main>
+
+        <v-overlay :value="overlay">
+            <v-progress-circular
+                indeterminate
+                size="64"
+            ></v-progress-circular>
+        </v-overlay>
     </v-app>
 </template>
 
@@ -157,6 +164,7 @@
     export default {
         data(){
             return {
+                overlay: false,
                 dialog: false,
                 info: false,
                 infoHtml: "",
@@ -257,7 +265,6 @@
             getStatistics(){
                 axios.get(`ashana/get-statistics`)
                     .then(res => {
-                        console.log('ss', res.data);
                         this.items = res.data;
                     })
                     .catch(err => {
@@ -265,8 +272,10 @@
                     })
             },
             sumField(key) {
-                // sum data in give key (property)
-                return this.items.reduce((a, b) => parseInt(a) + parseInt((b[key] || 0)), 0)
+                if(this.items && this.items.length !== 0) {
+                    return this.items.reduce((a, b) => parseInt(a) + parseInt((b[key] || 0)), 0)
+                }
+                return 0
             },
             checkScanCode(){
                 let formData = new FormData();
@@ -286,21 +295,14 @@
                             this.takePhoto();
                         })
                         .catch(err => {
-                            console.log(err);
-                            if(err.response.status === 404) {
-                                this.info = true;
-                                this.infoHtml = '<strong style="font-size: 30px; color: red;">' + this.username +'  - не найден</strong>';
-                            }
-                            if(err.response.status === 406) {
-                                this.info = true;
-                                this.infoHtml = '<strong style="font-size: 30px; color: red;">' + err.response.data.message +'</strong>';
-                            }
+                            this.info = true;
+                            this.infoHtml = '<strong style="font-size: 30px; color: red;">' + err.response.data.message +'</strong>';
                         })
                 } else {
                     this.dialog = false
                 }
             },
-            createCameraElement() {
+            /*createCameraElement() {
                 this.isLoading = true;
                 const constraints = (window.constraints = {
                     audio: false,
@@ -342,7 +344,7 @@
                 const context = this.$refs.canvas.getContext('2d');
                 context.drawImage(this.$refs.camera, 0, 0, 1280, 720);
                 this.userImage = this.$refs.canvas.toDataURL("image/jpeg");
-            },
+            },*/
             checkForHandEnter(){
                 console.log(this.username);
                 if(this.username.length === 1) {
@@ -363,11 +365,10 @@
                 this.info = false;
             }
         },
-        mounted(){
-            this.$refs.username.focus();
-            this.isCameraOpen = true;
+        /*mounted(){
+            this.isCameraOpen = false;
             this.createCameraElement();
-        },
+        },*/
         created(){
             this.items = this.getStatistics();
         }

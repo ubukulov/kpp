@@ -29,6 +29,7 @@
                             <th>ID</th>
                             <th>Гос.номер</th>
                             <th>Клиент</th>
+                            <th>ФИО</th>
                             <th>Статус</th>
                             <th>Дата</th>
                             <th>Действие</th>
@@ -40,6 +41,7 @@
                             <td>{{ $wcl->id }}</td>
                             <td>{{ $wcl->gov_number }}</td>
                             <td>{{ $wcl->short_ru_name }}</td>
+                            <td>{{ $wcl->full_name }}</td>
                             <td>
                                 @if($wcl->status == 'ok')
                                     <i style="font-size: 20px; color: green;" class="fa fa-check-circle"></i> Доступ разрешен
@@ -49,9 +51,12 @@
                             </td>
                             <td>{{ date('d.m.Y', strtotime($wcl->created_at)) }}</td>
                             <td>
-                                <a href="{{ route('admin.white-car-list.edit', ['white_car_list' => $wcl->id]) }}">
+                                <a class="btn btn-outline-primary" href="{{ route('admin.white-car-list.edit', ['white_car_list' => $wcl->id]) }}">
                                     <i class="nav-icon fas fa-edit"></i>&nbsp;Ред.
                                 </a>
+                                <button onclick="deleteItem({{$wcl->id}})" type="button" class="btn btn-outline-danger">
+                                    <i class="nav-icon fas fa-cut"></i>&nbsp;Удалить
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -61,6 +66,7 @@
                             <th>ID</th>
                             <th>Гос.номер</th>
                             <th>Клиент</th>
+                            <th>ФИО</th>
                             <th>Статус</th>
                             <th>Дата</th>
                             <th>Действие</th>
@@ -93,5 +99,11 @@
                 order: [[0, 'desc']],
             });
         });
+
+        function deleteItem(id){
+            if(confirm("Вы уверены, что хотите удалить?")) {
+                window.location.href = "/admin/white-car-list/" + id;
+            }
+        }
     </script>
 @endpush

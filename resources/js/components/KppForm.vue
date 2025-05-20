@@ -483,28 +483,28 @@
                         this.errors.push('Укажите номер контейнера правильно. Например (ABCD1234567)');
                     }
                 }
-                /*if (this.operation_type != 3) {
-                    if (this.direction_id == 0) {
+                if (this.operation_type != 3) {
+                    /*if (this.direction_id == 0) {
                         this.errors.push('Укажите маршрут');
-                    }
+                    }*/
                     if (!this.from_company) {
                         this.errors.push('Укажите транспортной компании/частник');
                     }
-                    if (this.direction_id == 6) {
+                    /*if (this.direction_id == 6) {
                         if (!this.to_city) {
                             this.errors.push('Укажите названия маршрута ');
                         }
-                    }
-                }*/
+                    }*/
+                }
 
                 if (this.operation_type > 1) {
                     if (!this.invoice_cmr_number) {
                         this.errors.push('Укажите номер инвойса/CMR');
                     }
-                    /*if (!this.from_company) {
+                    if (!this.from_company) {
                         this.errors.push('Укажите транспортной компании/частник');
                     }
-                    if (this.direction_id == 6) {
+                    /*if (this.direction_id == 6) {
                         if (!this.to_city) {
                             this.errors.push('Укажите названия маршрута ');
                         }

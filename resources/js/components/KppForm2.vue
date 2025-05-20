@@ -67,6 +67,21 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div v-if="operation_type !== 3" class="form-group">
+                                <label>Собственник по техпаспорту/частник</label>
+                                <input type="text" class="form-control" v-model="from_company">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Какая транспортная компания наняла?</label>
+                                <input type="text" class="form-control" v-model="employer_name">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Дата заезда</label>
                         <datetime input-class="form-control" type="datetime" v-model="date_in" format="yyyy-MM-dd HH:mm" value-zone="Asia/Almaty" :phrases="{ok: 'ОК', cancel: 'Отмена'}"></datetime>
@@ -103,7 +118,7 @@
 
                     <div class="form-group">
                         <label>Компания</label>
-                        <v-select
+                        <v-autocomplete
                             :items="companies"
                             class="form-control"
                             :hint="`${companies.id}, ${companies.short_en_name}`"
@@ -111,7 +126,17 @@
                             item-value="id"
                             v-model="company_id"
                             item-text="short_en_name"
-                        ></v-select>
+                        ></v-autocomplete>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Вид операции</label>
+                        <select v-model="operation_type" tabindex="10" name="operation_type" id="type" class="form-control">
+                            <option value="0"></option>
+                            <option value="1">Погрузка</option>
+                            <option value="2">Разгрузка</option>
+                            <option value="3">Другие действия</option>
+                        </select>
                     </div>
                 </div>
 
@@ -217,6 +242,9 @@
                 company_id: 0,
                 capacity_id: 0,
                 bt_id: 0,
+                operation_type: 0,
+                from_company: "",
+                employer_name: ""
             }
         },
         props: [
@@ -289,6 +317,15 @@
                 if (this.bt_id === 0) {
                     this.errors.push('Укажите тип кузова');
                 }
+                if (this.operation_type === 0) {
+                    this.errors.push('Укажите вид операции');
+                }
+                if (!this.employer_name) {
+                    this.errors.push('Какая транспортная компания наняла?');
+                }
+                if (!this.from_company) {
+                    this.errors.push('Собственник по техпаспорту/частник?');
+                }
 
                 if (this.errors.length === 0) {
                     const config = {
@@ -307,6 +344,9 @@
                     formData.append('company_id', this.company_id);
                     formData.append('lc_id', this.capacity_id);
                     formData.append('bt_id', this.bt_id);
+                    formData.append('employer_name', this.employer_name);
+                    formData.append('operation_type', this.operation_type);
+                    formData.append('from_company', this.from_company);
 
                     formData.append('path_docs_fac', $('#path_docs_fac').val());
                     formData.append('path_docs_back', $('#path_docs_back').val());

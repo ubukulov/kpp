@@ -38,6 +38,7 @@
                                         v-model="vin_code"
                                         label="Введите VIN код"
                                         hide-details="auto"
+                                        class="vin_code_input"
                                     ></v-text-field>
                                 </v-col>
 
@@ -52,11 +53,7 @@
                                 </v-col>
 
                                 <v-col cols="12" v-if="scan_qr">
-                                    <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
-                                        <div v-show="showScanConfirmation" class="scan-confirmation">
-
-                                        </div>
-                                    </qrcode-stream>
+                                    <StreamBarcodeReader @decode="onDecode" @loaded="onLoaded"></StreamBarcodeReader>
                                 </v-col>
 
                                 <v-divider></v-divider>
@@ -99,6 +96,16 @@
                                         </v-col>
 
                                         <v-col cols="12">
+                                            <v-checkbox @click="toggleCamera" label="дефекты" v-model="defect"></v-checkbox>
+                                        </v-col>
+
+                                        <v-col v-if="defect" cols="12">
+                                            <v-textarea v-model="defect_note" label="Описание дефекта" variant="solo"></v-textarea>
+                                        </v-col>
+
+
+
+                                        <v-col v-if="defect" cols="12">
                                             <p>Сделаете фото</p>
                                             <div v-if="isCameraOpen" v-show="!isLoading" class="camera-box" :class="{ 'flash' : isShotPhoto }">
 
@@ -115,17 +122,15 @@
                                                 </button>
                                             </div>
 
-                                            <!--<div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
+                                            <div v-if="isPhotoTaken && isCameraOpen" class="camera-download">
                                                 <a id="downloadPhoto" download="my-photo.jpg" class="button" role="button" @click="downloadImage">
                                                     Download
                                                 </a>
-                                            </div>-->
+                                            </div>
                                         </v-col>
 
-                                        <v-col cols="4">
+                                        <v-col cols="12" class="div-buttons">
                                             <button @click="receiveStep()" type="button" class="btn btn-light">Назад</button>
-                                        </v-col>
-                                        <v-col cols="6">
                                             <button @click="receiveTechnique()" type="button" class="btn btn-success">Разместить</button>
                                         </v-col>
                                     </v-row>
@@ -210,11 +215,12 @@
 
 <script>
     import axios from "axios";
-    import dateformat from "dateformat";
-    import {QrcodeStream} from "vue-qrcode-reader";
+    import { StreamBarcodeReader } from "vue-barcode-reader";
 
     export default {
-        components: { QrcodeStream },
+        components: {
+            StreamBarcodeReader
+        },
         data: () => ({
             overlay: false,
             bottom_nav: 'tasks',
@@ -241,7 +247,9 @@
             isPhotoTaken: false,
             isShotPhoto: false,
             isLoading: false,
-            link: '#'
+            link: '#',
+            defect: false,
+            defect_note: ''
         }),
         props: ['name', 'token'],
         methods: {
@@ -265,6 +273,7 @@
                 .then(res => {
                     console.log(res);
                     this.info_container = res.data.message;
+                    this.vin_code = res.data.vin_code;
                     if (res.data.event === 1) {
                         this.is_receive = false;
                         this.is_shipping = true;
@@ -290,34 +299,6 @@
                         this.is_moving = true;
                         this.overlay = false;
                     }
-                })
-            },
-            async onInit (promise) {
-                try {
-                    await promise
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    this.showScanConfirmation = this.camera === "off"
-                }
-            },
-            async onDecode (content) {
-                this.vin_code = content;
-                this.getInformationByQRCode();
-                this.scan_qr = false;
-                this.pause();
-                await this.timeout(500);
-                this.unpause();
-            },
-            unpause () {
-                this.camera = 'auto'
-            },
-            pause () {
-                this.camera = 'off'
-            },
-            timeout (ms) {
-                return new Promise(resolve => {
-                    window.setTimeout(resolve, ms)
                 })
             },
             getTechniquePlaces(){
@@ -349,9 +330,14 @@
 
                 formData.append('technique_place_id', this.technique_place_id);
                 formData.append('vin_code', this.vin_code);
-                const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
-                    .replace("image/jpeg", "image/octet-stream");
-                formData.append('image64', canvas);
+                if(this.defect) {
+                    const canvas = document.getElementById("photoTaken").toDataURL("image/jpeg")
+                        .replace("image/jpeg", "image/octet-stream");
+                    formData.append('image64', canvas);
+                    formData.append('defect', this.defect);
+                    formData.append('defect_note', this.defect_note);
+                }
+
                 axios.post('/api/technique/receive-technique-to-place', formData, config)
                 .then(res => {
                     console.log(res);
@@ -373,11 +359,9 @@
                 if(this.receive_step > 1) {
                     this.buttons = true;
                     this.receive_step = 1;
-                    this.toggleCamera();
                 } else {
                     this.buttons = false;
                     this.receive_step++;
-                    this.toggleCamera();
                 }
             },
             moveStep() {
@@ -437,6 +421,15 @@
                         console.log(err);
                         this.overlay = false;
                     })
+            },
+            onDecode(text) {
+                console.log(`Decode text from QR code is ${text}`);
+                this.vin_code = text;
+                this.getInformationByQRCode();
+                this.scan_qr = false;
+            },
+            onLoaded() {
+                console.log(`Ready to start scanning barcodes`)
             },
             toggleCamera() {
                 if(this.isCameraOpen) {
@@ -513,7 +506,7 @@
     .scan-confirmation {
         position: absolute;
         width: 100%;
-        height: 100%;
+        height: 250px;
 
         background-color: rgba(255, 255, 255, .8);
 
@@ -543,5 +536,15 @@
     }
     .text-field {
         font-size: 20px !important;
+    }
+    #input-5 {
+        font-size: 20px !important;
+    }
+    .btn{
+        font-size: 20px !important;
+    }
+    .div-buttons {
+        display: flex;
+        justify-content: space-between;
     }
 </style>

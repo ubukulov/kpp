@@ -24,6 +24,9 @@ class CreateTableTechniqueLogs extends Migration
             $table->enum('operation_type', ['incoming', 'received', 'in_order', 'shipped', 'completed', 'canceled', 'moved']);
             $table->string('address_from')->nullable();
             $table->string('address_to')->nullable();
+            $table->enum('defect', ['no', 'yes']);
+            $table->string('defect_note')->nullable();
+            $table->string('defect_image')->nullable();
 
             $table->foreign('user_id')
                 ->references('id')->on('users')

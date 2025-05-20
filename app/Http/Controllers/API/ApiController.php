@@ -63,12 +63,21 @@ class ApiController extends Controller
                 ], 401);
             }
 
-            $user = User::where('email', $request->email)->first();
+            if(empty($request->email) || empty($request->password)){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email or Password does not empty.',
+                ], 422);
+            }
+
+            $user = User::where('email', $request->email)->with('company', 'position')->first();
 
             return response()->json([
                 'status' => true,
                 'message' => 'User Logged In Successfully',
-                'token' => $user->createToken("API TOKEN")->plainTextToken
+                'token' => $user->createToken("API TOKEN")->plainTextToken,
+                'user' => $user,
+                'roles' => $user->roles
             ], 200);
 
         } catch (\Throwable $th) {
@@ -77,5 +86,11 @@ class ApiController extends Controller
                 'message' => $th->getMessage()
             ], 500);
         }
+    }
+
+    public function getCompanies()
+    {
+        $companies = Company::selectRaw('id, short_en_name')->get();
+        return response()->json($companies);
     }
 }

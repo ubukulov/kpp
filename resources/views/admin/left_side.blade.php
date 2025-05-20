@@ -157,13 +157,19 @@
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/white-car-list*')) display: block; @else display: none; @endif">
                         <li class="nav-item">
-                            <a href="{{ route('admin.white-car-list.index') }}" class="nav-link @if(request()->is('admin/white-car-list*')) active @endif">
+                            <a href="{{ route('admin.white-car-list.index') }}" class="nav-link @if(request()->is('admin/white-car-list')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Список машин</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('admin.white-car-list.reports') }}" class="nav-link @if(request()->is('admin/white-car-list/reports*')) active @endif">
+                            <a href="{{ route('admin.white-cars.guest.index') }}" class="nav-link @if(request()->is('admin/white-car-list/guest/*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Гости</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.white-car-list.reports') }}" class="nav-link @if(request()->is('admin/white-car-list/report/wcl-changes')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Отчеты</p>
                             </a>
@@ -176,7 +182,7 @@
                         <p>
                             WEBCONT
                             <i class="fas fa-angle-left right"></i>
-                            <span class="badge badge-info right">2</span>
+                            <span class="badge badge-info right">3</span>
                         </p>
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('admin/webcont/*')) display: block; @else display: none; @endif">
@@ -190,6 +196,12 @@
                             <a href="{{ route('admin.webcont.logs') }}" class="nav-link @if(request()->is('admin/webcont/logs*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Logs</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.webcont.reports') }}" class="nav-link @if(request()->is('admin/webcont/reports*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Отчеты</p>
                             </a>
                         </li>
                     </ul>

@@ -8,9 +8,14 @@ require('./bootstrap');
 
 import Vuetify from "vuetify";
 import 'vuetify/dist/vuetify.min.css'
+import Vuex from 'vuex';
 
 window.Vue = require('vue');
 Vue.use(Vuetify);
+Vue.use(Vuex);
+
+import store from "./store/store";
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -31,11 +36,13 @@ Vue.component('scan-go', require('./components/SCANGO.vue').default);
 Vue.component('personal-control', require('./components/PersonalControl.vue').default);
 Vue.component('search', require('./components/SearchComponent.vue').default);
 Vue.component('kt', require('./crane/KT.vue').default);
-Vue.component('kt-operator-task-create', require('./components/KT_OperatorTaskCreate.vue').default);
+//Vue.component('kt-operator-task-create', () => import('./container/KT_OperatorTaskCreate.vue'));
+Vue.component('kt-operator-task-create', require('./container/KT_OperatorTaskCreate.vue').default);
 Vue.component('kt-operator-task-edit', require('./components/KT_OperatorTaskEdit.vue').default);
 Vue.component('kpp', require('./components/KPP.vue').default);
 Vue.component('kpp-form2', require('./components/KppForm2.vue').default);
-Vue.component('kt-operator-task', require('./components/KT_OperatorTask.vue').default);
+//Vue.component('kt-operator-task', () => import('./container/KT_OperatorTask.vue'));
+Vue.component('kt-operator-task', require('./container/KT_OperatorTask.vue').default);
 Vue.component('kt-controller', require('./components/KT_Controller.vue').default);
 Vue.component('kt-controller-logs', require('./components/KT_ControllerLogs.vue').default);
 Vue.component('kt-crane-stats', require('./crane/Stats.vue').default);
@@ -47,6 +54,11 @@ Vue.component('crane', require('./crane/Crane').default);
 Vue.component('mark-manager', require('./mark/Manager').default);
 Vue.component('technique-create-task', require('./technique/CreateTaskTechnique.vue').default);
 Vue.component('technique-controller', require('./technique/TechniqueComponent.vue').default);
+Vue.component('technique-medicine', require('./mark/Medicine.vue').default);
+Vue.component('mark-aggregation', require('./mark/Aggregation.vue').default);
+Vue.component('cargo-controller', require('./container/cargo/CargoController.vue').default);
+Vue.component('cargo-order-show', require('./container/cargo/CargoOrderShow.vue').default);
+Vue.component('cargo-order-position', require('./container/cargo/CargoOrderPosition.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -57,4 +69,5 @@ Vue.component('technique-controller', require('./technique/TechniqueComponent.vu
 const app = new Vue({
     el: '#app',
     vuetify: new Vuetify(),
+    store,
 });
