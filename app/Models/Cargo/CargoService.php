@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Cargo;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CargoTonnage extends Model
+class CargoService extends Model
 {
     use HasFactory;
 
-    protected $table = 'cargo_tonnage_types';
+    protected $table = 'cargo_services';
 
     protected $fillable = [
-        'tonnage', 'name'
+        'name'
     ];
 
     protected $dates = [

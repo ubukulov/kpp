@@ -185,6 +185,8 @@ return [
         App\Providers\RusGuardServiceProvider::class,
         App\Providers\MarkServiceProvider::class,
         App\Providers\ANTServiceProvider::class,
+        App\Providers\ParqourServiceProvider::class,
+        App\Providers\AstelServiceProvider::class,
     ],
 
     /*
@@ -244,6 +246,8 @@ return [
         'CKUD' => App\Facades\CKUD::class,
         'MARK' => App\Facades\Mark::class,
         'ANT' => App\Facades\ANT::class,
+        'PARQOUR' => App\Facades\Parqour::class,
+        'ASTEL' => App\Facades\Astel::class,
     ],
 
 ];

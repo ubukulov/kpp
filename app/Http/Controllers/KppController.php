@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permit;
 use App\Repositories\Interfaces\IBTRepository;
 use App\Repositories\Interfaces\ICarRepository;
 use App\Repositories\Interfaces\ICompanyRepository;
@@ -9,6 +10,8 @@ use App\Repositories\Interfaces\IDirectionRepository;
 use App\Repositories\Interfaces\IDriverRepository;
 use App\Repositories\Interfaces\ILiftCapacityRepository;
 use App\Repositories\Interfaces\IPermitRepository;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Auth;
 use File;
@@ -75,6 +78,7 @@ class KppController extends Controller
             $data['to_city'] = isset($data['to_city']) ? mb_strtoupper($data['to_city']) : null;
         }
 
+        // По просьбе Данияра Балабековича отключили 19.03.2025
         /*$permit = Permit::where(['tex_number' => $data['tex_number'], 'ud_number' => $data['ud_number'], 'status' => 'printed'])
                     ->whereNull('date_out')
                     ->whereDate('date_in', Carbon::now())
@@ -83,6 +87,7 @@ class KppController extends Controller
             return response('Запрещено. Пропуск уже оформлен c такими данными.', 403);
         }*/
 
+        $data['status'] = 'exit_permitted';
         $permit = $this->permitRepository->create($data);
         if(!$permit) {
             abort(500, "Произошло ошибка при создание пропуска.");
@@ -162,7 +167,7 @@ class KppController extends Controller
                 {
                     $message
                         ->from('webcont@dlg.kz')
-                        ->to('propuskkpp@dlg.kz')
+                        ->to(['propuskkpp@dlg.kz', 'b.gulsim@partner.samsung.com', 'r.bekbauva@partner.samsung.com', 'Zhotanova.Dinara@htl.kz'])
                         ->subject('Уведомление о прибытии ТС в ILC');
                 });
             }
@@ -271,5 +276,130 @@ HERE;
         }
 
 
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * 1. Среди сегодняшных пропусков при заезде
+     */
+    public function accessToEntrance(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate([
+                'plateNumber' => 'required',
+                'entryDate' => 'required'
+            ]);
+
+            $data = $request->all();
+
+            $permit = Permit::where('gov_number', $data['plateNumber'])
+                //->whereNotNull('date_in')
+                ->whereDate('created_at', Carbon::today())
+                ->whereNull('date_out')
+                ->latest('id')
+                ->limit(1)
+                ->first();
+            if($permit && is_null($permit->date_out)) {
+                $permit->date_in = $data['entryDate'];
+                $permit->status = 'exit_permitted';
+                $permit->save();
+                return response()->json([
+                    'gov_number' => $data['plateNumber'],
+                    'allowed' => true,
+                    'message' => 'Въезд разрешён'
+                ], 200);
+            }
+
+            return response()->json([
+                'gov_number' => $data['plateNumber'],
+                'allowed' => false,
+                'message' => 'Въезд запрещен'
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 500);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * 1. за последние 7 дней при выезде (18.03.2025)
+     */
+    public function accessToExit(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'plateNumber' => 'required',
+                'entryDate' => 'required',
+            ]);
+
+            $data = $request->all();
+
+            $permit = Permit::where('gov_number', $data['plateNumber'])
+                ->whereBetween('created_at', [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->endOfDay()]) // Последние 7 дней
+                ->whereNotNull('date_in')
+                ->whereNull('date_out')
+                ->where('status', '=', 'exit_permitted')
+                ->latest('id')
+                ->limit(1)
+                ->first();
+            if($permit) {
+
+                return response()->json([
+                    'gov_number' => $data['plateNumber'],
+                    'allowed' => true,
+                    'message' => 'Выезд разрешён'
+                ], 200);
+            }
+
+            return response()->json([
+                'gov_number' => $data['plateNumber'],
+                'allowed' => false,
+                'message' => 'Выезд запрещен'
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 500);
+        }
+    }
+
+    public function completedToExit(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'plateNumber' => 'required',
+                'exitDate' => 'required',
+            ]);
+
+            $data = $request->all();
+
+            $permit = Permit::where('gov_number', $data['plateNumber'])
+                ->whereBetween('created_at', [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->endOfDay()]) // Последние 7 дней
+                ->whereNotNull('date_in')
+                ->whereNull('date_out')
+                ->where('status', '=', 'exit_permitted')
+                ->latest('id')
+                ->limit(1)
+                ->first();
+            if($permit) {
+                $permit->date_out = $data['exitDate'];
+                $permit->status = 'completed';
+                $permit->save();
+                return response()->json([
+                    'gov_number' => $data['plateNumber'],
+                    'allowed' => true,
+                    'message' => 'Выезд завершен'
+                ], 200);
+            }
+
+            return response()->json([
+                'gov_number' => $data['plateNumber'],
+                'allowed' => false,
+                'message' => 'Выезд не завершен'
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 500);
+        }
     }
 }

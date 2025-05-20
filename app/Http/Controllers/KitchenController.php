@@ -61,37 +61,47 @@ class KitchenController extends BaseController
             ], 404);
         }
 
-        $users = User::where(['users.uuid' => $username])->get();
+        $user = User::whereUuid($username)->first();
 
-        if(count($users) == 0) {
+        if(!$user) {
             return response([
                 'message' => 'НЕ НАЙДЕНО. ОБРАЩАЙТЕСЬ В ОТДЕЛ КАДРОВ ЗА ТАЛОНОМ.'
             ], 404);
         }
 
-        foreach($users as $user) {
-            if($user->hasWorkPermission()) {
+        if($user->hasWorkPermission()) {
+            $company = $user->company;
+            $positionIds = [127,161,204,126];
+            $userIds = [484,1371,1407,31,2265,1732,1831,2828,2447]; // для этих сотрудников по просьбе ДБ убираем ограничение
 
-                if($user->company->ashana === 1) {
+            if($company->id == 33 && in_array($user->position_id, $positionIds) && !in_array($user->id, $userIds)) {
+                $countAshanaMonth = $user->countAshanaMonth();
+                if($countAshanaMonth >= 10) {
                     return response([
-                        'message' => 'Для сотрудников этой компании запрещено питаться в столовое'
+                        'message' => 'ВАШ ЛИМИТ ОБЕДОВ ЗА МЕСЯЦ ИСЧЕРПАН. ЗА МЕСЯЦ ПОЛОЖЕНО 10 ТАЛОНОВ.'
                     ], 406);
                 }
-
-                if($user->position_id === 224 && $user->id != 1593) {
-                    return response([
-                        'message' => 'Для гостей запрещено использовать бейджик в столовое'
-                    ], 406);
-                }
-
-                return response([
-                    'full_name' => $user->full_name,
-                    'company_name' => $user->company->short_ru_name,
-                    'count' => $user->countAshanaToday(),
-                    'user_id' => $user->id,
-                    'image' => (file_exists(public_path() . $user->image)) ? $user->image : null
-                ], 200);
             }
+
+            if($company->ashana === 1) {
+                return response([
+                    'message' => 'Для сотрудников этой компании запрещено питаться в столовое'
+                ], 406);
+            }
+
+            if($user->position_id === 224 && $user->id != 1593) {
+                return response([
+                    'message' => 'Для гостей запрещено использовать бейджик в столовое'
+                ], 406);
+            }
+
+            return response([
+                'full_name' => $user->full_name,
+                'company_name' => $company->short_ru_name,
+                'count' => $user->countAshanaToday(),
+                'user_id' => $user->id,
+                'image' => (file_exists(public_path() . $user->image)) ? $user->image : null
+            ], 200);
         }
 
         return response([
@@ -108,7 +118,9 @@ class KitchenController extends BaseController
         $user = User::find($user_id);
         if($user) {
             if($user->company_id == 0) {
-                return response('В штрих-коде отсутствует компания, срочно обратитесь в ИТ', 406);
+                return response([
+                    'message' => 'В штрих-коде отсутствует компания, срочно обратитесь в ИТ'
+                ], 406);
             }
 
             $countAshanaToday = $user->countAshanaToday();
@@ -153,7 +165,9 @@ class KitchenController extends BaseController
                 'count' => $user->countAshanaToday()
             ], 200);
         } else {
-            return response('Не найден пользватель, срочно обратитесь в ИТ', 404);
+            return response([
+                'message' => 'Не найден пользватель, срочно обратитесь в ИТ'
+            ], 404);
         }
     }
 

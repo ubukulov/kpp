@@ -1292,7 +1292,7 @@ class ContainerController extends BaseController
 
     public function getSlingers()
     {
-        $result = User::where(['company_id' => 31])
+        $result = User::whereIn('company_id', [31, 223])
                 ->selectRaw('id, full_name')
                 ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
                 ->whereIn('position_id', [91,92,93,153,174])

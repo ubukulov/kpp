@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use CKUD;
 
 class CompanyController extends Controller
 {
@@ -32,7 +33,8 @@ class CompanyController extends Controller
     public function create()
     {
         $kpp = Kpp::all();
-        return view('admin.company.create', compact('kpp'));
+        $ckud_groups = CKUD::getGroups();
+        return view('admin.company.create', compact('kpp', 'ckud_groups'));
     }
 
     /**
@@ -46,11 +48,11 @@ class CompanyController extends Controller
         try {
             $company = Company::create($request->all());
 
-            // добавление к компанию выбранные КПП
-            foreach($request->input('kpp') as $item) {
+            // добавление к компанию выбранные КПП TODO:: старые коды
+            /*foreach($request->input('kpp') as $item) {
                 $kpp = Kpp::findOrFail($item);
                 $company->kpps()->attach($kpp);
-            }
+            }*/
 
             DB::commit();
             return redirect()->route('company.index');
@@ -82,7 +84,8 @@ class CompanyController extends Controller
     {
         $company = Company::findOrFail($id);
         $kpp = Kpp::all();
-        return view('admin.company.edit', compact('company', 'kpp'));
+        $ckud_groups = CKUD::getGroups();
+        return view('admin.company.edit', compact('company', 'kpp', 'ckud_groups'));
     }
 
     /**
@@ -98,14 +101,14 @@ class CompanyController extends Controller
             $company = Company::findOrFail($id);
             $company->update($request->all());
 
-            // Обновление записей по КПП
-            $company->kpps()->detach();
+            // Обновление записей по КПП - TODO:: устаревшее коды
+            /*$company->kpps()->detach();
             foreach($request->input('kpp') as $item) {
                 $kpp = Kpp::findOrFail($item);
                 if(!$company->hasKpp($kpp->name)) {
                     $company->kpps()->attach($kpp);
                 }
-            }
+            }*/
 
             DB::commit();
             return redirect()->route('company.index');

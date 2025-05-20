@@ -30,7 +30,8 @@
                             <th>Наименование(на русском)</th>
                             <th>БИН</th>
                             <th>Тип</th>
-                            <th>Столовая. Есть договор?</th>
+                            <th>Столовая</th>
+                            <th>Статус</th>
                             <th>Действие</th>
                         </tr>
                         </thead>
@@ -45,8 +46,9 @@
                                 {{ $company->getTypeCompany() }}
                             </td>
                             <td>@if($company->ashana == 0) Да @else Нет @endif</td>
+                            <td>@if($company->status == 'ok') Работает @else Не работает @endif</td>
                             <td>
-                                <a href="{{ route('company.edit', ['company' => $company->id]) }}">Ред.</a>
+                                <a class="btn btn-outline-primary" href="{{ route('company.edit', ['company' => $company->id]) }}">Ред.</a>
                             </td>
                         </tr>
                         @endforeach
@@ -54,8 +56,12 @@
                         <tfoot>
                         <tr>
                             <th>ID</th>
-                            <th>Наименование</th>
-                            <th>Дата</th>
+                            <th>Полное наименование</th>
+                            <th>Наименование(на русском)</th>
+                            <th>БИН</th>
+                            <th>Тип</th>
+                            <th>Столовая</th>
+                            <th>Статус</th>
                             <th>Действие</th>
                         </tr>
                         </tfoot>

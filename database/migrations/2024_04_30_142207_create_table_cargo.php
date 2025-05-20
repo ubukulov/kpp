@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTableCargoWorkTypes extends Migration
+class CreateTableCargo extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,10 @@ class CreateTableCargoWorkTypes extends Migration
      */
     public function up()
     {
-        Schema::create('cargo_work_types', function (Blueprint $table) {
+        Schema::create('cargo', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->tinyInteger('type');
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ class CreateTableCargoWorkTypes extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cargo_work_types');
+        Schema::dropIfExists('cargo');
     }
 }

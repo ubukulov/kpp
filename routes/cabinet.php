@@ -42,6 +42,10 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
     Route::resource('/white-car-list', 'WhiteCarController', ['as' => 'cabinet']);
     Route::get('/white-car-list/{id}/destroy', 'WhiteCarController@destroy')->name('cabinet.wcl.destroy');
 
+    Route::get('white-car-list/guest/cars', 'WhiteCarController@guestCars')->name('cabinet.white-cars.guest.index');
+    Route::get('white-car-list/guest/cars/create', 'WhiteCarController@guestCreate')->name('cabinet.white-cars.guest.create');
+    Route::post('white-car-list/guest/cars/store', 'WhiteCarController@guestStore')->name('cabinet.white-cars.guest.store');
+
     # Position's routes
     Route::resource('/position', 'PositionController', ['as' => 'cabinet']);
 
@@ -82,6 +86,11 @@ Route::group(['prefix' => 'cabinet', 'middleware' => ['auth'], 'namespace' => 'C
         Route::get('bosch/invoices', 'WmsController@boschInvoices')->name('cabinet.wms.boschInvoices');
         Route::post('bosch/invoices', 'WmsController@boschImport')->name('cabinet.wms.boschImport');
         Route::get('bosch/invoice/{id}/print', 'WmsController@boschPrint');
+    });
+
+    # Ком. услуги
+    Route::group(['prefix' => 'utilities'], function(){
+        Route::get('energy', 'UtilityController@energy')->name('cabinet.utilities.energy');
     });
 
     # Ashana

@@ -4,18 +4,22 @@ import axios from "axios";
 export default {
     data() {
         return {
+            cargoTechniques: [],
             rows: [
                 {
                     cargoNameId: null,
                     quantity: 1,
                     weight: null,
                     vin_code: null,
+                    spineId: null
                 },
             ],
+            codes: []
         }
     },
     props: [
-        'cargoNames'
+        'cargoNames',
+        'companyId'
     ],
     methods: {
         addRow() {
@@ -29,6 +33,40 @@ export default {
         removeRow(index) {
             this.rows.splice(index, 1);
         },
+        sendData() {
+            this.$emit('cargo-receive-samoxod', {
+                rows: this.rows
+            });
+        },
+        getCodesForCar(){
+            this.rows = [];
+            axios.get(`/container-terminals/cargo/${this.companyId}/get-codes`)
+                .then(res => {
+                    console.log(res);
+                    res.data.forEach(code => {
+                        this.rows.push({
+                            cargoNameId: null,
+                            quantity: 1,
+                            weight: null,
+                            vin_code: code.vin_code,
+                            spineId: code.spine_id
+                        });
+                    });
+                })
+                .catch(err => {
+                    console.log(err);
+                })
+        }
+    },
+    watch: {
+        rows: {
+            handler: 'sendData',
+            deep: true
+        }
+    },
+    created() {
+        this.cargoTechniques = this.cargoNames.filter(t => t.type === 2)
+        this.getCodesForCar();
     }
 }
 </script>
@@ -39,15 +77,15 @@ export default {
             <span>Позиция №{{ index+1 }}</span>
             <v-col cols="6">
                 <v-select
-                    :items="cargoNames"
+                    :items="cargoTechniques"
                     :return-object="false"
-                    :hint="`${cargoNames.id}, ${cargoNames.name}`"
+                    :hint="`${cargoTechniques.id}, ${cargoTechniques.name}`"
                     item-value="id"
                     v-model="row.cargoNameId"
                     item-text="name"
                     outlined
                     dense
-                    label="Укажите наименование"
+                    label="Укажите технику"
                 ></v-select>
             </v-col>
             <v-col cols="3">
@@ -60,7 +98,7 @@ export default {
             </v-col>
             <v-col cols="3">
                 <v-text-field
-                    label="Вес (в кг)"
+                    label="Общий вес (в кг)"
                     v-model="row.weight"
                     solo
                 ></v-text-field>
@@ -73,12 +111,12 @@ export default {
                 ></v-text-field>
             </v-col>
             <v-col cols="6">
-                <v-btn v-if="index !== 0" @click="removeRow(index)" color="red" outlined>Удалить позицию</v-btn>
+                <v-btn v-if="index !== 0 && !row.spineId" @click="removeRow(index)" color="red" outlined>Убрать позицию</v-btn>
             </v-col>
         </v-row>
         <v-row>
             <v-col cols="12" class="text-right">
-                <v-btn @click="addRow" color="primary" outlined>Добавить позицию</v-btn>
+                <v-btn v-if="rows.length > 0" @click="addRow" color="primary" outlined>Добавить позицию</v-btn>
             </v-col>
         </v-row>
     </div>

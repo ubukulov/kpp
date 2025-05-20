@@ -85,7 +85,7 @@
                     <v-tab-item
                         :value="'tab-3'"
                     >
-                        <CargoOrders></CargoOrders>
+                        <CargoComponent></CargoComponent>
                     </v-tab-item>
                 </v-tabs-items>
             </v-card>
@@ -99,8 +99,10 @@
     import Documents from "./auto/Documents.vue";
     import History from "./auto/History.vue";
     import CargoOrders from "./cargo/CargoOrders.vue";
+    import CargoComponent from "../components/cargo/CargoComponent.vue";
     export default {
         components: {
+            CargoComponent,
             Container,
             Orders,
             Documents,

@@ -58,7 +58,7 @@ class ReportController extends Controller
         $company_id = $data['company_id'];
 
         $company = Company::findOrFail($company_id);
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+        $permits = Permit::where(['company_id' => $company_id])
                         ->selectRaw('id,gov_number,pr_number,mark_car,lc_id,date_in,date_out, FLOOR(TIME_TO_SEC(timediff(date_out,date_in))/3600) AS count_hero')
                         ->where('lc_id', '!=', 0)->whereNotNull('date_in')->whereNotNull('date_out')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
         $leg = 0;
@@ -99,7 +99,7 @@ class ReportController extends Controller
         $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C', 'D');
 
 //        // Создаем новый шит - Перечень пропусков
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+        $permits = Permit::where(['company_id' => $company_id])
             ->selectRaw('id,gov_number,pr_number,mark_car,lc_id,date_in,date_out')
             ->where('lc_id', '!=', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
 
@@ -148,7 +148,7 @@ class ReportController extends Controller
 
         // Вставляем авто размер для колонок
         $this->setAutoSizeColumn($sheet, true, 'A', 'B', 'C');
-        $legs = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+        $legs = Permit::where(['company_id' => $company_id])
             ->selectRaw('DATE(`date_in`) as dt, COUNT(*) as cnt')
             ->where('lc_id', '=', 1)->whereNotNull('date_in')->whereNotNull('date_out')
             ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
@@ -197,7 +197,7 @@ class ReportController extends Controller
         $company_id = $data['company_id'];
 
         $company = Company::findOrFail($company_id);
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+        $permits = Permit::where(['company_id' => $company_id])
             ->selectRaw('DATE(`date_in`) as dt, SUM(CASE WHEN lc_id = 1 THEN 1 ELSE 0 END) as leg,SUM(CASE WHEN lc_id = 2 THEN 1 ELSE 0 END) as d10, SUM(CASE WHEN lc_id = 3 THEN 1 ELSE 0 END) as grz')
             ->where('lc_id', '!=', 0)->whereNotNull('date_in')->whereNotNull('date_out')
             ->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])
@@ -274,7 +274,7 @@ class ReportController extends Controller
         $this->setBoldFontForColumns($sheet, true, 'A3', 'B3', 'C3', 'D3');
 
         // Создаем новый шит - Перечень пропусков
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])
+        $permits = Permit::where(['company_id' => $company_id])
             ->where('lc_id', '!=', 0)->whereNotNull('date_in')->whereNotNull('date_out')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
 
         $spreadsheet->createSheet();
@@ -334,7 +334,7 @@ class ReportController extends Controller
         $company_id = $data['company_id'];
 
         $company = Company::findOrFail($company_id);
-        $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])->where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
+        $permits = Permit::where(['company_id' => $company_id])->where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
 
         $leg = 0;
         $d10 = 0;
@@ -473,10 +473,10 @@ class ReportController extends Controller
         $company_id = $data['company_id'];
 
         if($company_id == 0) {
-            $permits = Permit::where(['status' => 'printed'])->where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
+            $permits = Permit::where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
         } else {
             $company = Company::findOrFail($company_id);
-            $permits = Permit::where(['company_id' => $company_id, 'status' => 'printed'])->where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
+            $permits = Permit::where(['company_id' => $company_id])->where('lc_id', '>', 0)->whereNotNull('date_in')->whereRaw("(date_in >= ? AND date_in <= ?)", [$from_date." 00:00", $to_date." 23:59"])->get();
         }
 
         $leg = 0;

@@ -45,7 +45,7 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        {{--<div class="form-group">
                             <label>Укажите Группу (СКУД система)</label>
                             <select name="ckud_group_id" class="form-control select2bs4" style="width: 100%;">
                                 <option value="0">Не нужно</option>
@@ -53,7 +53,7 @@
                                     <option value="{{ $ckud_group->AcsEmployeeGroupId }}">{{ $ckud_group->name }}</option>
                                 @endforeach
                             </select>
-                        </div>
+                        </div>--}}
                     </div>
 
                     <div class="col-md-6">

@@ -12,6 +12,9 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        '/order-permit-by-driver'
+        '/order-permit-by-driver',
+        '/permit/access-to-entrance',
+        '/permit/access-to-exit',
+        '/permit/completed-to-exit'
     ];
 }

@@ -78,7 +78,8 @@ class TechniqueController extends Controller
 
                         TechniqueLog::create([
                             'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'color' => $color, 'mark' => $mark,
-                            'vin_code' => $vin_code, 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name
+                            'vin_code' => $vin_code, 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name,
+                            'company_id' => $company->id
                         ]);
                     }
                 }
@@ -103,7 +104,8 @@ class TechniqueController extends Controller
 
                         TechniqueLog::create([
                             'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_stock->technique_type->name, 'color' => $technique_stock->color, 'mark' => $technique_stock->mark,
-                            'vin_code' => $vin_code, 'operation_type' => 'in_order', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name, 'owner' => $company->full_company_name
+                            'vin_code' => $vin_code, 'operation_type' => 'in_order', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name, 'owner' => $company->full_company_name,
+                            'company_id' => $company->id
                         ]);
                     }
                 }
@@ -141,7 +143,8 @@ class TechniqueController extends Controller
 
                 TechniqueLog::create([
                     'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_type->name, 'color' => $data['color'], 'mark' => $data['mark'],
-                    'vin_code' => $data['vin_code'], 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name
+                    'vin_code' => $data['vin_code'], 'operation_type' => 'incoming', 'address_from' => 'from file', 'address_to' => 'cloud', 'owner' => $company->full_company_name,
+                    'company_id' => $company->id
                 ]);
             } else {
                 $technique_stock = TechniqueStock::where(['vin_code' => $data['vin_code']])->first();
@@ -156,7 +159,8 @@ class TechniqueController extends Controller
 
                     TechniqueLog::create([
                         'user_id' => Auth::id(), 'technique_task_id' => $technique_task->id, 'technique_type' => $technique_stock->technique_type->name, 'color' => $technique_stock->color, 'mark' => $technique_stock->mark,
-                        'vin_code' => $data['vin_code'], 'operation_type' => 'in_order', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name, 'owner' => $company->full_company_name
+                        'vin_code' => $data['vin_code'], 'operation_type' => 'in_order', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name, 'owner' => $company->full_company_name,
+                        'company_id' => $company->id
                     ]);
                 }
             }
@@ -280,7 +284,7 @@ class TechniqueController extends Controller
                         $tech_place = $technique_stock->technique_place;
                         if(!SpineCode::exists($technique_stock->technique_task_id, $item->code)) {
                             SpineCode::create([
-                                'spine_id' => $spine->id, 'technique_task_id' => $technique_stock->technique_task_id, 'vin_code' => $item->code,
+                                'spine_id' => $spine->id, 'task_id' => $technique_stock->technique_task_id, 'vin_code' => $item->code,
                             ]);
                         }
 
@@ -294,6 +298,7 @@ class TechniqueController extends Controller
                                 'user_id' => Auth::id(), 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                                 'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
                                 'operation_type' => 'completed', 'address_from' => $tech_place->name, 'address_to' => 'completed', 'spine_number' => $spine->spine_number,
+                                'company_id' => $company->id
                             ]);
 
                             $arr_vin[] = [
@@ -396,7 +401,9 @@ class TechniqueController extends Controller
 
     public function getSpines(): \Illuminate\Http\JsonResponse
     {
-        $spines = Spine::orderBy('id', 'DESC')->get();
+        $spines = Spine::where(['kind' => 'auto'])
+            ->orderBy('id', 'DESC')
+            ->get();
         return response()->json($spines);
     }
 }

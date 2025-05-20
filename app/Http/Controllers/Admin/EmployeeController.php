@@ -43,13 +43,13 @@ class EmployeeController extends Controller
                     }
                 }
 
-                Cache::put('ckud_users', $ckud_users_numbers, 18000);
+                Cache::put('ckud_users', $ckud_users_numbers, 3600);
             }
         } else {
             $ckud_users_numbers = [];
         }
 
-        $employees = User::orderBy('id', 'DESC')
+        $employees = User::orderBy('id', 'DESC')->orderBy('users.full_name', 'ASC')
             ->selectRaw('users.*, companies.short_ru_name, positions.title as position_name, departments.title as department_name')
             ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
             ->join('companies', 'companies.id', 'users.company_id')
@@ -83,9 +83,9 @@ class EmployeeController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $data = $request->all();
         $data['password'] = (empty($data['password'])) ? null :bcrypt($data['password']);
@@ -120,7 +120,7 @@ class EmployeeController extends Controller
             }
         }
 
-        if($data['ckud_group_id'] != 0){
+        /*if($data['ckud_group_id'] != 0){
             $data = [
                 'Comment' => $user->position->title,
                 'employeeGroupID' => $data['ckud_group_id'],
@@ -139,7 +139,7 @@ class EmployeeController extends Controller
             $data['SecondName'] = $SecondName;
 
             CKUD::addEmployee($data);
-        }
+        }*/
 
         return redirect()->route('employee.index');
     }
@@ -187,7 +187,7 @@ class EmployeeController extends Controller
             $user = User::findOrFail($id);
             $data = $request->all();
             if(empty($user->password)) {
-                $data['password'] = (empty($data['password'])) ? null :bcrypt($data['password']);
+                $data['password'] = (empty($data['password'])) ? $user->password :bcrypt($data['password']);
             } else {
                 $data['password'] = (empty($data['password'])) ? $user->password :bcrypt($data['password']);
             }

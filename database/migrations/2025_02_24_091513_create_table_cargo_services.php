@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTableCargoTonnageTypes extends Migration
+class CreateTableCargoServices extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,8 @@ class CreateTableCargoTonnageTypes extends Migration
      */
     public function up()
     {
-        Schema::create('cargo_tonnage_types', function (Blueprint $table) {
+        Schema::create('cargo_services', function (Blueprint $table) {
             $table->id();
-            $table->enum('tonnage', ['small', 'large']);
             $table->string('name');
             $table->timestamps();
         });
@@ -28,6 +27,6 @@ class CreateTableCargoTonnageTypes extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cargo_tonnage_types');
+        Schema::dropIfExists('cargo_services');
     }
 }

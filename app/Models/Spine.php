@@ -10,13 +10,18 @@ class Spine extends Model
     use HasFactory;
 
     protected $fillable = [
-        'spine_number', 'company', 'technique_task_number', 'type', 'name', 'container_number', 'car_number',
-        'driver_name', 'user_name'
+        'spine_number', 'company_id', 'company', 'task_number', 'type', 'name', 'container_number', 'car_number',
+        'driver_name', 'user_name', 'kind'
     ];
 
     protected $dates = [
         'created_at', 'updated_at'
     ];
+
+    public function codes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SpineCode::class);
+    }
 
     public static function generateUniqueNumber($type)
     {

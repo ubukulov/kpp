@@ -16,18 +16,29 @@ class CreateTableCargoStocks extends Migration
         Schema::create('cargo_stocks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('cargo_id');
-            $table->unsignedBigInteger('cargo_item_id');
+            $table->unsignedBigInteger('cargo_task_id');
+            $table->unsignedBigInteger('cargo_area_id')->nullable();
+            $table->string('vin_code')->nullable();
+            $table->integer('quantity')->nullable();
+            $table->string('weight')->nullable();
+            $table->string('car_number')->nullable();
             $table->enum('status', [
                 'incoming', 'received', 'in_order', 'shipped'
             ]);
+            $table->string('image')->nullable();
+
             $table->timestamps();
 
             $table->foreign('cargo_id')
                 ->references('id')->on('cargo')
                 ->onDelete('cascade');
 
-            $table->foreign('cargo_item_id')
-                ->references('id')->on('cargo_items')
+            $table->foreign('cargo_task_id')
+                ->references('id')->on('cargo_tasks')
+                ->onDelete('cascade');
+
+            $table->foreign('cargo_area_id')
+                ->references('id')->on('cargo_areas')
                 ->onDelete('cascade');
         });
     }

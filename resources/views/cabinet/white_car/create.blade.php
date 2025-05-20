@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Номер машины <span style="color: red;">*</span></label>
+                    <label>Номер машины (на английском) <span style="color: red;">*</span></label>
                     <input type="text" value="{{ old('gov_number') }}" onkeyup="return no_cirilic(this);" style="text-transform: uppercase;" class="form-control @error('gov_number') is-invalid @enderror" name="gov_number" required>
                 </div>
 

@@ -70,6 +70,7 @@ class TechniqueController extends BaseApiController
                 $data['address_from'] = 'cloud';
                 $data['address_to'] = $technique_stock->technique_place->name;
                 $data['owner'] = $company->full_company_name;
+                $data['company_id'] = $company->id;
 
                 TechniqueLog::create($data);
 
@@ -102,6 +103,8 @@ class TechniqueController extends BaseApiController
         $technique_stock = TechniqueStock::where('vin_code', 'like', '%'.$vin_code.'%')->first();
         if($technique_stock) {
             $vin_code = $technique_stock->vin_code;
+            $color = $technique_stock->color;
+            $mark = $technique_stock->mark;
             if($technique_stock->status == 'incoming') {
                 /*if(SpineCode::exists($technique_stock->technique_task_id, $vin_code)) {
                     return response([
@@ -115,7 +118,7 @@ class TechniqueController extends BaseApiController
                     ], 404);
                 }*/
                 return response([
-                    'message' => "Техника: <span style='color: red;'>".$vin_code."<br> </span> необходимо <span style='color: green;'>РАЗМЕСТИТЬ.</span>",
+                    'message' => "Техника: <span style='color: red;'>".$vin_code."<br> </span> необходимо <span style='color: green;'>РАЗМЕСТИТЬ.</span><br></br>ЦВЕТ: <span style='color: red;'>$color</span><br>МАРКА: <span style='color: red; font-size: 12px;'>$mark</span>",
                     'event' => 1,
                     'vin_code' => $technique_stock->vin_code
                 ]);
@@ -123,7 +126,7 @@ class TechniqueController extends BaseApiController
 
             if($technique_stock->status == 'received') {
                 return response([
-                    'message' => "Техника: <span style='color: red;'>".$vin_code."</span>.<br> Адрес: " . $technique_stock->technique_place->name,
+                    'message' => "Техника: <span style='color: red;'>".$vin_code."</span>.<br> Адрес: " . $technique_stock->technique_place->name . "<br>ЦВЕТ: <span style='color: red;'>$color</span><br>МАРКА: <span style='color: red; font-size: 12px;'>$mark</span>",
                     'event' => 2,
                     'technique_stock' => $technique_stock,
                     'vin_code' => $technique_stock->vin_code
@@ -132,7 +135,7 @@ class TechniqueController extends BaseApiController
 
             if($technique_stock->status == 'in_order') {
                 return response([
-                    'message' => "Техника: <span style='color: red;'>".$vin_code."</span>.<br> Адрес: " . $technique_stock->technique_place->name,
+                    'message' => "Техника: <span style='color: red;'>".$vin_code."</span>.<br> Адрес: " . $technique_stock->technique_place->name . "<br>ЦВЕТ: <span style='color: red;'>$color</span><br>МАРКА: <span style='color: red; font-size: 14px;'>$mark</span>",
                     'event' => 3,
                     'technique_stock' => $technique_stock,
                     'vin_code' => $technique_stock->vin_code
@@ -193,7 +196,8 @@ class TechniqueController extends BaseApiController
                 TechniqueLog::create([
                     'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
-                    'operation_type' => 'moved', 'address_from' => $technique_place->name, 'address_to' => $technique_stock->technique_place->name
+                    'operation_type' => 'moved', 'address_from' => $technique_place->name, 'address_to' => $technique_stock->technique_place->name,
+                    'company_id' => $company->id
                 ]);
 
                 DB::commit();
@@ -228,7 +232,8 @@ class TechniqueController extends BaseApiController
                 TechniqueLog::create([
                     'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
-                    'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name
+                    'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name,
+                    'company_id' => $company->id
                 ]);
 
                 DB::commit();
@@ -283,14 +288,16 @@ class TechniqueController extends BaseApiController
                 TechniqueLog::create([
                     'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                     'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
-                    'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name
+                    'operation_type' => 'shipped', 'address_from' => $technique_place->name, 'address_to' => $technique_place->name,
+                    'company_id' => $company->id
                 ]);
 
                 if($technique_task->canClose()) {
                     TechniqueLog::create([
                         'user_id' => $user->id, 'technique_task_id' => $technique_stock->technique_task_id, 'owner' => $company->full_company_name,
                         'technique_type' => $technique_stock->technique_type->name, 'mark' => $technique_stock->mark, 'vin_code' => $technique_stock->vin_code,
-                        'operation_type' => 'completed', 'address_from' => $technique_place->name, 'address_to' => 'completed'
+                        'operation_type' => 'completed', 'address_from' => $technique_place->name, 'address_to' => 'completed',
+                        'company_id' => $company->id
                     ]);
 
                     $technique_stock->delete();

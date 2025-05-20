@@ -6,12 +6,14 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Kpp;
+use App\Models\Permit;
 use App\Models\WclCompany;
 use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Auth;
+use PARQOUR;
 
 class WhiteCarController extends BaseController
 {
@@ -22,10 +24,11 @@ class WhiteCarController extends BaseController
      */
     public function index()
     {
-        $white_car_lists = WhiteCarList::orderBy('white_car_lists.id', 'DESC')
-            ->selectRaw('wcl_companies.id,wcl_companies.wcl_id,white_car_lists.gov_number, companies.short_ru_name, wcl_companies.status, wcl_companies.created_at')
+        $white_car_lists = WhiteCarList::where('white_car_lists.pass_type', '!=', 3)
+            ->selectRaw('wcl_companies.id,wcl_companies.wcl_id,white_car_lists.gov_number, companies.short_ru_name, wcl_companies.status, wcl_companies.created_at, white_car_lists.full_name')
             ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
             ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
+            ->orderBy('white_car_lists.id', 'DESC')
             //->paginate();
             ->get();
 
@@ -62,6 +65,7 @@ class WhiteCarController extends BaseController
         try {
             $gov_number = trim($data['gov_number']);
             $company_id = trim($data['company_id']);
+            $company = Company::findOrFail($company_id);
             //$kpp_id = trim($data['kpp_id']);
             $data['gov_number'] = $gov_number;
             //$kpp = Kpp::findOrFail($kpp_id);
@@ -88,6 +92,17 @@ class WhiteCarController extends BaseController
                 'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status
             ]);
 
+            // отправка в систему Parquor
+            $comment = (!is_null($white_car_list->full_name)) ? $company->short_en_name . "|" . $white_car_list->full_name : $company->short_en_name;
+            $params = [
+                'plateNumber' => $white_car_list->gov_number,
+                'comment' => $comment,
+                'groupName' => $company->short_en_name,
+                'fullName' => $white_car_list->full_name,
+            ];
+
+            PARQOUR::addToWhiteList($params);
+
             DB::commit();
             return redirect()->route('admin.white-car-list.index');
         } catch (\Exception $exception) {
@@ -104,7 +119,8 @@ class WhiteCarController extends BaseController
      */
     public function show($id)
     {
-        //
+        $this->destroy($id);
+        return redirect()->route('admin.white-car-list.index');
     }
 
     /**
@@ -167,8 +183,7 @@ class WhiteCarController extends BaseController
      */
     public function destroy($id)
     {
-        WhiteCarList::destroy($id);
-        return redirect()->route('admin.white-car-list.index');
+        WclCompany::destroy($id);
     }
 
     public function getWCLReports()
@@ -276,5 +291,67 @@ class WhiteCarController extends BaseController
         }
 
         return response()->json($importResults);
+    }
+
+    public function guestCars()
+    {
+        /*$white_car_lists = WhiteCarList::where(['white_car_lists.pass_type' => 3]) // 3 для гостевых машин
+            ->selectRaw('wcl_companies.id,wcl_companies.wcl_id,white_car_lists.gov_number, companies.short_ru_name, wcl_companies.status, wcl_companies.created_at, white_car_lists.full_name')
+            ->join('wcl_companies', 'wcl_companies.wcl_id', '=', 'white_car_lists.id')
+            ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
+            ->orderBy('white_car_lists.id', 'DESC')
+            ->get();*/
+        $white_car_lists = Permit::where(['type' => 'guest'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('admin.white_car.guests', compact('white_car_lists'));
+    }
+
+    public function guestCreate()
+    {
+        $companies = Company::orderBy('short_en_name')->get();
+        return view('admin.white_car.guest-create', compact('companies'));
+    }
+
+    public function guestStore(Request $request)
+    {
+        $data = $request->all();
+        $company_id = $data['company_id'];
+        $company = Company::findOrFail($company_id);
+        $data['company'] = $company->short_en_name;
+        $data['status'] = 'exit_permitted';
+        $data['type'] = 'guest';
+        $data['planned_arrival_date'] = date("Y-m-d H:i:s", strtotime($request->input('planned_arrival_date')));
+        Permit::create($data);
+
+        return redirect()->route('admin.white-cars.guest.index');
+
+        /*DB::beginTransaction();
+        try {
+            $wcl = WhiteCarList::create([
+                'gov_number' => $gov_number, 'pass_type' => 3
+            ]);
+
+            WclCompany::create([
+                'wcl_id' => $wcl->id, 'company_id' => $company_id, 'status' => 'ok'
+            ]);
+
+            // отправка в систему Parquor
+            $params = [
+                'plateNumber' => $wcl->gov_number,
+                'comment' => $company->short_en_name,
+                'groupName' => "Гостевой",
+                'fullName' => "Гость"
+            ];
+
+            PARQOUR::addToWhiteList($params);
+
+            DB::commit();
+
+            return redirect()->route('admin.white-cars.guest.index');
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return response()->json(['status' => 'error', 'message' => $exception->getMessage()]);
+        }*/
     }
 }

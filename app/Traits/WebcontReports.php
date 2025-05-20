@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Auth;
 
 trait WebcontReports
 {
@@ -974,15 +975,22 @@ trait WebcontReports
 
     public function getReportsCar(Request $request)
     {
+        $company = Auth::user()->company;
         $data = $request->all();
         $from_date = $data['from_date'];
         if($data['report_id'] == 0) {
             $technique_stocks = TechniqueStock::where('technique_stocks.status', '!=', 'exit_pass')->where('technique_stocks.status', '!=', 'incoming')/*whereDate('technique_stocks.created_at', '>=', $from_date)*/
                 ->selectRaw('technique_stocks.*, companies.short_en_name, technique_places.name as technique_place_name')
                 ->join('companies', 'companies.id', '=', 'technique_stocks.company_id')
-                ->join('technique_places', 'technique_places.id', '=', 'technique_stocks.technique_place_id')
+                ->join('technique_places', 'technique_places.id', '=', 'technique_stocks.technique_place_id');
                 //->where('technique_stocks.status', '!=', 'shipped')
-                ->get();
+                //->get();
+
+            if($company->type_company != 'damu_group') {
+                $technique_stocks->where('technique_stocks.company_id', '=', $company->id);
+            }
+
+            $technique_stocks = $technique_stocks->get();
 
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
@@ -1042,8 +1050,15 @@ trait WebcontReports
                 ->selectRaw('technique_logs.*, spines.created_at as spineDate')
                 ->leftJoin('spines', 'spines.spine_number', '=', 'technique_logs.spine_number')
                 ->whereDate('technique_logs.created_at', '>=', $from_date)
-                ->orderBy('technique_logs.id')
-                ->get();
+                ->orderBy('technique_logs.id');
+                //->get();
+
+            if($company->type_company != 'damu_group') {
+                $technique_logs->where('technique_logs.company_id', '=', $company->id);
+            }
+
+            $technique_logs = $technique_logs->get();
+
 
             $arr = [];
 
