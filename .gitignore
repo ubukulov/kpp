@@ -20,3 +20,5 @@ yarn-error.log
 /public/task_files
 /public/marking_files
 /public/images
+/public/technique_files
+/public/cargo_files
