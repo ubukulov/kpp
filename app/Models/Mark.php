@@ -31,4 +31,12 @@ class Mark extends Model
                     ->get();
         return count($free_codes);
     }
+
+    public function getStats()
+    {
+        return MarkCode::where(['marking_details.marking_id' => $this->id])
+            ->selectRaw("SUM(marking_codes.status='marked') as markedCount, COUNT(*) as allCount")
+            ->join('marking_details', 'marking_details.id', 'marking_codes.marking_details_id')
+            ->first();
+    }
 }

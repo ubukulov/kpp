@@ -26,7 +26,7 @@ export default {
         }
     },
     methods: {
-        ...mapActions(['showModal']),
+        ...mapActions(['showCargoModal']),
         convertDateToOurFormat(dt){
             return dateformat(dt, 'dd.mm.yyyy HH:MM');
         },
@@ -68,7 +68,7 @@ export default {
                 single-line
             ></v-text-field>
             <v-spacer></v-spacer>
-            <v-btn @click="showModal">
+            <v-btn @click="showCargoModal">
                 Создать Корешок
             </v-btn>
         </v-card-title>

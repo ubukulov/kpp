@@ -8,7 +8,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="kt">
-                @include('partials.kt_header')
+                {{--@include('partials.kt_header')
 
                 <div class="row">
                     <div class="col-md-3">
@@ -24,9 +24,9 @@
                         <p style="margin-bottom: 0px;"><a class="btn btn-success" href="{{ route('logout') }}">Выйти</a></p>
                         <br>
                     </div>
-                </div>
+                </div>--}}
 
-                <kt-operator-task :user="{{ json_encode(Auth::user()) }}"></kt-operator-task>
+                <kt-operator-task :user="{{ json_encode(Auth::user()->load(['position', 'roles'])) }}"></kt-operator-task>
             </div>
         </div>
     </div>

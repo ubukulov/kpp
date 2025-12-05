@@ -73,10 +73,24 @@
         $(function () {
             $("#example1").DataTable({
                 "responsive": true,
-                "autoWidth": false,
+                "autoWidth": true,
                 "language": {
                     "url": "/dist/Russian.json"
                 },
+                pagingType: "full_numbers",
+                drawCallback: function () {
+                    let pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate ul.pagination');
+                    let maxButtons = 4;
+                    let totalPages = pagination.children('li:not(.previous, .next)').length;
+
+                    if (totalPages > maxButtons) {
+                        pagination.children('li:not(.previous, .next)').each(function (i) {
+                            if (i >= maxButtons) $(this).hide();
+                        });
+                    }
+
+                    $(this).closest('.dataTables_wrapper').find('.paginate_button.first').hide();
+                }
             });
         });
     </script>

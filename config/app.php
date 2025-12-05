@@ -187,6 +187,7 @@ return [
         App\Providers\ANTServiceProvider::class,
         App\Providers\ParqourServiceProvider::class,
         App\Providers\AstelServiceProvider::class,
+        Milon\Barcode\BarcodeServiceProvider::class,
     ],
 
     /*
@@ -248,6 +249,8 @@ return [
         'ANT' => App\Facades\ANT::class,
         'PARQOUR' => App\Facades\Parqour::class,
         'ASTEL' => App\Facades\Astel::class,
+        'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
+        'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
     ],
 
 ];

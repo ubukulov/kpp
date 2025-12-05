@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AshanaAccessException;
 use App\Models\AshanaLog;
 use App\Models\Company;
 use App\Models\User;
@@ -71,7 +72,7 @@ class KitchenController extends BaseController
 
         if($user->hasWorkPermission()) {
             $company = $user->company;
-            $positionIds = [127,161,204,126];
+            /*$positionIds = [127,161,204,126];
             $userIds = [484,1371,1407,31,2265,1732,1831,2828,2447]; // для этих сотрудников по просьбе ДБ убираем ограничение
 
             if($company->id == 33 && in_array($user->position_id, $positionIds) && !in_array($user->id, $userIds)) {
@@ -81,7 +82,35 @@ class KitchenController extends BaseController
                         'message' => 'ВАШ ЛИМИТ ОБЕДОВ ЗА МЕСЯЦ ИСЧЕРПАН. ЗА МЕСЯЦ ПОЛОЖЕНО 10 ТАЛОНОВ.'
                     ], 406);
                 }
+            }*/
+
+            if($company->food_limit > 0) {
+                $countAshanaMonth = $user->countAshanaMonth();
+                $hasLimit = false;
+
+                if($countAshanaMonth >= $company->food_limit) {
+                    $hasLimit = true;
+                }
+
+                $hasExceptionUser = AshanaAccessException::where(['company_id' => $company->id, 'user_id' => $user->id])->exists();
+
+                if($hasExceptionUser) {
+                    $hasLimit = false;
+                }
+
+                $hasExceptionPosition = AshanaAccessException::where(['company_id' => $company->id, 'position_id' => $user->position_id])->exists();
+
+                if($hasExceptionPosition) {
+                    $hasLimit = false;
+                }
+
+                if($hasLimit) {
+                    return response([
+                        'message' => "ВАШ ЛИМИТ ОБЕДОВ ЗА МЕСЯЦ ИСЧЕРПАН. ЗА МЕСЯЦ ПОЛОЖЕНО {$company->food_limit} ТАЛОНОВ."
+                    ], 406);
+                }
             }
+
 
             if($company->ashana === 1) {
                 return response([
@@ -156,7 +185,7 @@ class KitchenController extends BaseController
 
             AshanaLog::create([
                 'user_id' => $user->id, 'company_id' => $user->company_id, 'din_type' => $din_type,
-                'cashier_id' => $cashier_id, 'path_to_image' => $pathToImage
+                'cashier_id' => $cashier_id, //'path_to_image' => $pathToImage
             ]);
 
             return response([

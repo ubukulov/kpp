@@ -1,9 +1,9 @@
-@extends('layouts.app')
+@extends('cabinet.cabinet-vue')
 @section('content')
     <div class="container">
         <div class="row" data-app>
-            <div class="col-md-12" style="padding: 0px;">
-                @include('partials.kt_header')
+            <div class="col-md-12">
+                <img src="/img/cont.png" alt="container" style="width: 100%;">
             </div>
 
             <kt-controller-logs

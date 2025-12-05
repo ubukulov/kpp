@@ -14,3 +14,10 @@ const mix = require('laravel-mix');
 mix.js('resources/js/app.js', 'public/js')
     .sass('resources/sass/app.scss', 'public/css')
     .sass('resources/sass/style.scss', 'public/css/style.css');
+
+if (mix.inProduction()) {
+    const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+    mix.webpackConfig({
+        plugins: [new BundleAnalyzerPlugin()]
+    });
+}

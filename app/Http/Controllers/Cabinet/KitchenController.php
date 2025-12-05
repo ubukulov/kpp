@@ -3,18 +3,23 @@
 namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
+use App\Models\AshanaAccessException;
 use App\Models\AshanaLog;
 use App\Models\Company;
+use App\Models\Position;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use File;
+use Illuminate\Support\Facades\File;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use App\Traits\ExcelHelpers;
 
 class KitchenController extends Controller
 {
+    use ExcelHelpers;
+
     public function ashana()
     {
         $user = Auth::user();
@@ -99,13 +104,13 @@ class KitchenController extends Controller
         }
     }
 
-    public function generateReports(Request $request)
+    public function generateReports(Request $request): string
     {
         $data = $request->all();
         return ($data['cashier_id'] == 1099) ? $this->akmuratov($data) : $this->cargoTraffic($data);
     }
 
-    public function akmuratov($data)
+    public function akmuratov($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -191,7 +196,7 @@ class KitchenController extends Controller
         return $path_to_file;
     }
 
-    public function cargoTraffic($data)
+    public function cargoTraffic($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -294,20 +299,50 @@ class KitchenController extends Controller
         return $path_to_file;
     }
 
-
-    // метод установливает выравнение (горизантально) по ячейке в зависимости от заданного условия
-    public function setHorizontal($sheet, $position, ...$columns)
+    public function exceptions()
     {
-        foreach($columns as $column) {
-            $sheet->getStyle($column)->getAlignment()->setHorizontal($position);
-        }
+        $user_exceptions = AshanaAccessException::where(['ashana_access_exceptions.company_id' => Auth::user()->company_id])
+            ->selectRaw('ashana_access_exceptions.*, users.full_name, positions.title as position_name')
+            ->join('users', 'ashana_access_exceptions.user_id', '=', 'users.id')
+            ->join('positions', 'users.position_id', '=', 'positions.id')
+            ->get();
+        return view('cabinet.ashana.exceptions', compact('user_exceptions'));
     }
 
-    // метод установливает авто размер в зависимости от заданного условия
-    public function setAutoSizeColumn($sheet, $boolean = false, ...$columns)
+    public function exceptionCreate()
     {
-        foreach($columns as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize($boolean);
+        $employees = User::where(['company_id' => Auth::user()->company_id])
+                ->selectRaw('users.*')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                ->having('status', 'works')
+                ->get();
+        $positions = Position::all();
+        return view('cabinet.ashana.exception_create', compact('employees', 'positions'));
+    }
+
+    public function exceptionStore(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $company_id = Auth::user()->company_id;
+        $created_by = Auth::user()->id;
+
+        if(!empty($request->input('user_ids'))) {
+            foreach($request->input('user_ids') as $user_id){
+                AshanaAccessException::create(['user_id' => $user_id, 'company_id' => $company_id, 'created_by' => $created_by]);
+            }
         }
+
+        if(!empty($request->input('position_ids'))) {
+            foreach ($request->input('position_ids') as $position_id){
+                AshanaAccessException::create(['position_id' => $position_id, 'company_id' => $company_id, 'created_by' => $created_by]);
+            }
+        }
+
+        return redirect()->route('cabinet.ashana.exceptions');
+    }
+
+    public function exceptionDelete($exceptionId): \Illuminate\Http\RedirectResponse
+    {
+        AshanaAccessException::destroy($exceptionId);
+        return redirect()->route('cabinet.ashana.exceptions');
     }
 }

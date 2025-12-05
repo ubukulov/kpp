@@ -13,7 +13,7 @@ class AstelServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('astel', Astel::class);
+        $this->app->singleton('astel', Astel::class);
     }
 
     /**

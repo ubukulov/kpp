@@ -97,6 +97,28 @@ export default {
 
         <CargoTaskCompleteModal v-if="dialog" :dialog="dialog" :cargo-task="cargoTask" @update:dialog="dialog = $event"></CargoTaskCompleteModal>
 
+        <v-card-title class="d-flex align-center pe-2">
+            <v-icon icon="mdi-video-input-component"></v-icon> &nbsp;
+            Список заявки
+
+            <v-spacer></v-spacer>
+
+            <v-text-field
+                v-model="search"
+                density="compact"
+                label="Search"
+                prepend-inner-icon="mdi-magnify"
+                variant="solo-filled"
+                flat
+                hide-details
+                single-line
+            ></v-text-field>
+            <v-spacer></v-spacer>
+            <v-btn>
+                Фильтр
+            </v-btn>
+        </v-card-title>
+
         <v-data-table
             :headers="technique_headers"
             :items="cargo_tasks"

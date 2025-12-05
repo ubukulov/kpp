@@ -1,4 +1,4 @@
-@extends('cabinet.cabinet')
+@extends('cabinet.cabinet-vue')
 @push('cabinet_styles')
     <!-- DataTables -->
     {{--    <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">--}}
@@ -25,54 +25,7 @@
 @section('content')
     <input type="hidden" id="report_name" value="{{ "Report_".date("H")."_".date("i")."_".date('s') }}">
     <div id="barcode_sam">
-        <v-app>
-            <v-main>
-                <v-container>
-                    <v-row>
-                        <v-col cols="6">
-                            <!-- general form elements -->
-                            <div class="card card-primary">
-                                <div class="card-header">
-                                    <h3 class="card-title">Распечатать этикетки</h3>
-                                </div>
-                                <!-- /.card-header -->
-                                <!-- form start -->
-                                <div class="card-body">
-									<label>Выберите заказ</label>
-                                    <div class="form-group">
-                                        <v-autocomplete
-                                            :search-input.sync="searchInput"
-                                            :items="orders"
-                                            item-value="ord_Code"
-                                            v-model="order_code"
-                                            item-text="ord_Code"
-                                        ></v-autocomplete>
-                                    </div>
-{{--                                    <div class="form-group">--}}
-{{--                                        <select v-model="order_code" class="form-control">--}}
-{{--                                            <option v-for="(item, index) in orders" :key="index" :value="item.ord_Code">@{{ item.ord_Code }}</option>--}}
-{{--                                        </select>--}}
-{{--                                    </div>--}}
-
-                                    <div class="form-group">
-										<label>Выберите количество упаковок(этикеток)</label>
-										<select class="form-control" v-model="count">
-                                            @for($i=1; $i<=60; $i++)
-											<option value="{{$i}}">{{$i}}</option>
-                                            @endfor
-										</select>
-                                    </div>
-                                </div>
-
-                                <div class="card-footer">
-                                    <button @click="commandPrint()" type="button" class="btn btn-success">Печать</button>
-                                </div>
-                            </div>
-                        </v-col>
-                    </v-row>
-                </v-container>
-            </v-main>
-        </v-app>
+        <barcode-component></barcode-component>
     </div>
 @stop
 
@@ -100,7 +53,7 @@
         });
     </script>
 
-    <script>
+    {{--<script>
         new Vue({
             el: '#barcode_sam',
             vuetify: new Vuetify(),
@@ -160,5 +113,5 @@
                 this.getOrders();
             }
         })
-    </script>
+    </script>--}}
 @endpush

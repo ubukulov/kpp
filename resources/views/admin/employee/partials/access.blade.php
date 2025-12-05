@@ -4,21 +4,21 @@
             <p>Укажите роли и разрешение к ним</p>
             <div class="form-group">
                 <label>Выберите ролей</label>
-                <select name="roles[]" class="form-control" multiple>
+                <select name="roles[]" class="form-control js-example-basic-multiple" multiple>
                     @foreach($roles as $role)
                         <option @if($employee->hasRole($role->slug)) selected @endif value="{{$role->id}}">{{$role->name}}</option>
                     @endforeach
                 </select>
             </div>
 
-            <div class="form-group">
+            {{--<div class="form-group">
                 <label>Укажите разрешение</label>
                 <select name="permissions[]" class="form-control" multiple>
                     @foreach($permissions as $permission)
                         <option @if($employee->hasPermission($permission->slug)) selected @endif value="{{$permission->id}}">{{$permission->name}}</option>
                     @endforeach
                 </select>
-            </div>
+            </div>--}}
         </div>
         <div class="col-md-6">
             <p>Для операторов КПП указать обязательно. Остальным пользователям не нужно</p>

@@ -5,20 +5,19 @@ namespace App\Http\Controllers\Cabinet;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Permit;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use File;
+use Illuminate\Support\Facades\File;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Illuminate\Support\Facades\Gate;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        if(\Gate::allows('posmotret-otchet')) {
+        if (Gate::allows('posmotret-otchet')) {
             $companies = Company::orderBy('short_en_name')->get();
             return view('cabinet.report.bux', compact('companies'));
         } else{
@@ -51,7 +50,7 @@ class ReportController extends Controller
         return response($file_link);
     }
 
-    public function generateReportForMagnum($data)
+    public function generateReportForMagnum($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -190,7 +189,7 @@ class ReportController extends Controller
         return $path_to_file;
     }
 
-    public function generateReportForKcell($data)
+    public function generateReportForKcell($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -327,7 +326,7 @@ class ReportController extends Controller
         return $path_to_file;
     }
 
-    public function generateReportForMechta($data)
+    public function generateReportForMechta($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -466,7 +465,7 @@ class ReportController extends Controller
         return $path_to_file;
     }
 
-    public function generateReportForOther($data)
+    public function generateReportForOther($data): string
     {
         $from_date = $data['from_date'];
         $to_date = $data['to_date'];
@@ -596,7 +595,7 @@ class ReportController extends Controller
         }
     }
 
-    public function returnGrzName($number)
+    public function returnGrzName($number): string
     {
         if ($number == 1) {
             $grz = 'Легковые';

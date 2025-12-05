@@ -18,19 +18,19 @@ export default {
             return dateformat(dt, 'dd.mm.yyyy HH:MM');
         },
         handleStartPosition(id){
-            window.location.href = `/cargo-controller/cargo-task/${this.cargoTask.id}-${id}/start`;
+            window.location.href = `/cabinet/webcont/cargo-controller/cargo-task/${this.cargoTask.id}-${id}/start`;
         },
         handleEditPosition(id){
-            window.location.href = `/cargo-controller/cargo-task/${this.cargoTask.id}-${id}/edit`;
+            window.location.href = `/cabinet/webcont/cargo-controller/cargo-task/${this.cargoTask.id}-${id}/edit`;
         },
         saveChanges(){
             let formData = new FormData();
             formData.append('cargoTaskId', this.cargoTask.id);
             formData.append('comments', this.comments);
             formData.append('cargoServiceIds', JSON.stringify(this.cargoServiceIds));
-            axios.post('/cargo-controller/cargo/tasks/changes', formData)
+            axios.post('/cabinet/webcont/cargo-controller/cargo/tasks/changes', formData)
                 .then(res => {
-                    window.location.href = `/cargo-controller/cargo-task/${this.cargoTask.id}/show`;
+                    window.location.href = `/cabinet/webcont/cargo-controller/cargo-task/${this.cargoTask.id}/show`;
                 })
                 .catch(err => {
                     console.log(err);
@@ -46,7 +46,7 @@ export default {
                 cargoStock.status === 'received';
         },
         getCargoServices(){
-            axios.get('/cargo-controller/get-cargo-services')
+            axios.get('/cabinet/webcont/cargo-controller/get-cargo-services')
                 .then(res => {
                     this.cargoServices = res.data;
                 })
@@ -73,11 +73,11 @@ export default {
             <v-row>
                 <div class="card-flex mb-1">
                     <div>
-                        <a class="btn btn-outline-primary" href="/cargo-controller">Назад</a>
+                        <a class="btn btn-outline-primary" href="/cabinet/webcont/cargo-controller">Назад</a>
                     </div>
 
                     <div>
-                        <a class="btn btn-outline-primary" href="/logout">Выйти</a>
+
                     </div>
                 </div>
                 <v-col cols="12" style="border: 1px dashed;">

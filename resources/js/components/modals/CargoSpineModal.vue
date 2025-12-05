@@ -1,5 +1,5 @@
 <template>
-    <v-dialog style="z-index: 99999; position: relative; margin-top: 2% !important;" v-model="isModalVisible" persistent max-width="1000px">
+    <v-dialog style="z-index: 99999; " v-model="isCargoModalVisible" persistent max-width="1000px">
         <v-card>
             <v-card-title>
                 <span class="headline" style="font-size: 40px !important;">Окно корешок</span>
@@ -212,7 +212,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['isModalVisible'])
+        ...mapGetters(['isCargoModalVisible'])
     },
     methods: {
         hideModal() {
@@ -220,7 +220,7 @@ export default {
             this.errors = [];
             this.company_id = null;
             this.type = null;
-            this.$store.dispatch('hideModal');
+            this.$store.dispatch('hideCargoModal');
             this.$emit('cargo-spine-modal');
         },
         getCargoCompanies(){

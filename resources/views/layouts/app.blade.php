@@ -20,6 +20,12 @@
     <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
     <title>КПП - разрешение на въезд</title>
     @stack('styles')
+    <script>
+        window.App = {
+            user: @json(Auth::user() ? Auth::user()->load('roles', 'position') : null),
+            shifts: @json(Auth::check() ? session()->get("shifts.user_".Auth::id()) : [])
+        }
+    </script>
 </head>
 <body>
 <div id="app">

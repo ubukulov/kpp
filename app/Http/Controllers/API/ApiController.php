@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\BT;
 use App\Models\Company;
 use App\Models\Driver;
+use App\Models\LiftCapacity;
 use App\Models\Permit;
 use App\Models\PermitStatus;
+use App\Models\Printer;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -88,9 +92,29 @@ class ApiController extends Controller
         }
     }
 
-    public function getCompanies()
+    public function getCompanies(): \Illuminate\Http\JsonResponse
     {
-        $companies = Company::selectRaw('id, short_en_name')->get();
+        $companies = Company::get();
         return response()->json($companies);
+    }
+
+    public function getBt(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(BT::all());
+    }
+
+    public function getLiftCapacity()
+    {
+        return response()->json(LiftCapacity::all());
+    }
+
+    public function getAllRoles(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(Role::select('name', 'slug')->get());
+    }
+
+    public function getPrinters(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(Printer::all());
     }
 }

@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\WmsConnection;
+use App\Services\WmsConnectionService;
 
 class BaseWmsController extends Controller
 {
-    use WmsConnection;
+    protected WmsConnectionService $connectionService;
+
+    public function __construct(WmsConnectionService $connectionService)
+    {
+        $this->connectionService = $connectionService;
+    }
 }

@@ -31,6 +31,12 @@ class CreateTableCargoLogs extends Migration
                 'incoming', 'received', 'moved', 'in_order', 'shipped', 'completed', 'canceled', 'ignore'
             ]);
 
+            $table->enum('ramp', ['ok', 'not'])->nullable();
+            $table->string('technique_ids', 255)->nullable();
+            $table->string('user_ids', 255)->nullable();
+            $table->string('square', 255)->nullable();
+            $table->string('count_operations', 255)->nullable();
+
             /*
              * incoming - когда заявка на прием
              * received - когда приняли и размещен

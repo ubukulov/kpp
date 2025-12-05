@@ -11,7 +11,7 @@ class MarkCode extends Model
 
     protected $table = 'marking_codes';
     protected $fillable = [
-        'marking_details_id', 'scan_user_id', 'status', 'marking_code', 'box_number'
+        'marking_details_id', 'scan_user_id', 'status', 'marking_code', 'box_number', 'size'
     ];
 
     protected $dates = [

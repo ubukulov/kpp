@@ -17,6 +17,8 @@ use Image;
 use Auth;
 use CKUD;
 use Cache;
+use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -27,6 +29,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
+        //Cache::forget('ckud_users');
         if(env('APP_ENV') == 'production') {
             if(Cache::has('ckud_users')) {
                 $ckud_users_numbers = Cache::get('ckud_users');
@@ -34,12 +37,14 @@ class EmployeeController extends Controller
                 $ckud_users_numbers = [];
                 for($i=0; $i<10; $i++) {
                     $ckud_users = CKUD::getEmployees($i, 100);
-                    if($ckud_users->result == 0) {
+                    if(!is_null($ckud_users) && $ckud_users->result == 0) {
                         foreach($ckud_users->data as $datum) {
                             if(!array_key_exists($datum->Number, $ckud_users_numbers)) {
                                 $ckud_users_numbers[$datum->Number] = $datum->ID;
                             }
                         }
+                    } else {
+                        abort(403, "CKUD не доступен");
                     }
                 }
 
@@ -48,6 +53,7 @@ class EmployeeController extends Controller
         } else {
             $ckud_users_numbers = [];
         }
+
 
         $employees = User::orderBy('id', 'DESC')->orderBy('users.full_name', 'ASC')
             ->selectRaw('users.*, companies.short_ru_name, positions.title as position_name, departments.title as department_name')
@@ -198,6 +204,10 @@ class EmployeeController extends Controller
                 $data['uuid'] = $user->generateUniqueRandomNumber();
             }
 
+            if($data['kpp_id'] != 0) {
+                $data['kpp_name'] = Kpp::find($data['kpp_id'])->name;
+            }
+
             $user->update($data);
 
             // Зафиксируем статусы
@@ -327,5 +337,110 @@ class EmployeeController extends Controller
         }
 
         return view('admin.employee.badges', compact('users'));
+    }
+
+    public function list(Request $request)
+    {
+        try {
+            if(env('APP_ENV') == 'production') {
+                if(Cache::has('ckud_users')) {
+                    $ckud_users_numbers = Cache::get('ckud_users');
+                } else {
+                    $ckud_users_numbers = [];
+                    for($i=0; $i<10; $i++) {
+                        $ckud_users = CKUD::getEmployees($i, 100);
+                        if($ckud_users->result == 0) {
+                            foreach($ckud_users->data as $datum) {
+                                if(!array_key_exists($datum->Number, $ckud_users_numbers)) {
+                                    $ckud_users_numbers[$datum->Number] = $datum->ID;
+                                }
+                            }
+                        }
+                    }
+
+                    Cache::put('ckud_users', $ckud_users_numbers, 3600);
+                }
+            } else {
+                $ckud_users_numbers = [];
+            }
+
+            $query = User::orderBy('users.id', 'DESC')->orderBy('users.full_name', 'ASC')
+                ->selectRaw('users.*, companies.short_ru_name, positions.title as position_name, departments.title as department_name')
+                ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
+                ->join('companies', 'companies.id', '=', 'users.company_id')
+                ->join('positions', 'positions.id', '=', 'users.position_id')
+                ->leftJoin('departments', 'departments.id', '=', 'users.department_id')
+                ->groupBy('users.id');
+
+            return DataTables::of($query)
+                ->filterColumn('short_ru_name', function($query, $keyword) {
+                    $query->where('companies.short_ru_name', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('position_name', function($query, $keyword) {
+                    $query->where('positions.title', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('department_name', function($query, $keyword) {
+                    $query->where('departments.title', 'like', "%{$keyword}%");
+                })
+                ->addColumn('checkbox', function ($employee) {
+                    return '<input type="checkbox" v-model="ids" name="'.$employee->id.'" value="'.$employee->id.'">';
+                })
+                ->addColumn('skud', function ($employee) use ($ckud_users_numbers) {
+                    if (array_key_exists($employee->id, $ckud_users_numbers)) {
+                        return '<i class="fa fa-check-circle" style="color: green; font-size: 20px;"></i>';
+                    } else {
+                        return '<i class="fa fa-minus" style="color: red; font-size: 20px;"></i>';
+                    }
+                })
+                ->addColumn('status', function ($employee) {
+                    return trans("words.".$employee->status);
+                })
+                ->addColumn('badge', function ($employee) {
+                    $icons = '';
+                    if (strlen($employee->uuid) == 7) {
+                        $icons .= '<i class="fa fa-id-card" style="color: green; font-size: 20px;"></i>&nbsp;';
+                    }
+                    $icons .= '<a target="_blank" href="'.route('admin.employee.badge', ['id' => $employee->id]).'"><i class="fa fa-print"></i></a>';
+                    if ($employee->badge == 1) {
+                        $icons .= '&nbsp;&nbsp;<i class="fa fa-check-circle" style="color: green; font-size: 20px;"></i>';
+                    }
+                    return $icons;
+                })
+                ->addColumn('action', function ($employee) {
+                    return '<a href="'.route('employee.edit', ['employee' => $employee->id]).'">Ред.</a>
+                        &nbsp;&nbsp;
+                        <button type="button" class="btn btn-success" onclick="window.open(\'/admin/employee/'.$employee->id.'/auth\', \'_blank\')">Войти</button>';
+                })
+                ->rawColumns(['checkbox', 'skud', 'badge', 'action']) // чтобы HTML не экранировался
+                ->filter(function ($query) use ($request) {
+                    if ($request->search['value']) {
+                        $search = $request->search['value'];
+
+                        $query->where(function ($q) use ($search) {
+                            $q->where('users.full_name', 'like', "%{$search}%")
+                                ->orWhere('companies.short_ru_name', 'like', "%{$search}%")
+                                ->orWhere('positions.title', 'like', "%{$search}%")
+                                ->orWhere('departments.title', 'like', "%{$search}%")
+                                ->orWhereRaw('(SELECT users_histories.status
+                               FROM users_histories
+                               WHERE users_histories.user_id = users.id
+                               ORDER BY users_histories.id DESC LIMIT 1) like ?', ["%{$search}%"]);
+                        });
+                    }
+
+                    // ФИЛЬТР ПО СТАТУСУ
+                    if ($request->has('emp_status') && is_array($request->emp_status)) {
+
+                        $statuses = $request->emp_status;
+                        $placeholders = implode(",", array_fill(0, count($statuses), '?'));
+
+                        $query->havingRaw("status IN ($placeholders)", $statuses);
+                    }
+                })
+                ->make(true);
+        } catch (\Throwable $e) {
+            Log::error("DataTable error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

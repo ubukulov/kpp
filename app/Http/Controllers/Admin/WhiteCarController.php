@@ -149,6 +149,7 @@ class WhiteCarController extends BaseController
         DB::beginTransaction();
         try {
             $data = $request->except('_token');
+            $company = Company::findOrFail($data['company_id']);
             $white_car_list = WhiteCarList::findOrFail($id);
             $white_car_list->update($data);
 
@@ -167,6 +168,17 @@ class WhiteCarController extends BaseController
                 'gov_number' => $white_car_list->gov_number, 'status' => $wcl_company->status
             ]);
 
+            // отправка в систему Parquor
+            $comment = (!is_null($white_car_list->full_name)) ? $company->short_en_name . "|" . $white_car_list->full_name : $company->short_en_name;
+            $params = [
+                'plateNumber' => $white_car_list->gov_number,
+                'comment' => $comment,
+                'groupName' => $company->short_en_name,
+                'fullName' => $white_car_list->full_name,
+            ];
+
+            PARQOUR::addToWhiteList($params);
+
             DB::commit();
             return redirect()->route('admin.white-car-list.index');
         } catch (\Exception $exception) {
@@ -183,6 +195,8 @@ class WhiteCarController extends BaseController
      */
     public function destroy($id)
     {
+        $wcl_company = WclCompany::findOrFail($id);
+        PARQOUR::removeFromWhiteList($wcl_company->wcl->gov_number);
         WclCompany::destroy($id);
     }
 
@@ -319,7 +333,7 @@ class WhiteCarController extends BaseController
         $company_id = $data['company_id'];
         $company = Company::findOrFail($company_id);
         $data['company'] = $company->short_en_name;
-        $data['status'] = 'exit_permitted';
+        $data['status'] = 'printed';
         $data['type'] = 'guest';
         $data['planned_arrival_date'] = date("Y-m-d H:i:s", strtotime($request->input('planned_arrival_date')));
         Permit::create($data);

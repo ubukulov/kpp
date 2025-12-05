@@ -145,7 +145,7 @@
                             <p>Укажите роли и разрешение к ним</p>
                             <div class="form-group">
                                 <label>Выберите ролей</label>
-                                <select name="roles[]" class="form-control" multiple>
+                                <select name="roles[]" class="form-control js-example-basic-multiple" multiple>
                                     @foreach($roles as $role)
                                         <option value="{{$role->id}}">{{$role->name}}</option>
                                     @endforeach
@@ -205,6 +205,14 @@
             //Initialize Select2 Elements
             $('.select2bs4').select2({
                 theme: 'bootstrap4'
+            });
+
+            $('.js-example-basic-multiple').select2({
+                theme: 'bootstrap4',
+                tags: "true",
+                placeholder: "Выберите",
+                allowClear: true,
+                closeOnSelect: false,
             });
 
             $('#start_date, #end_date').datetimepicker({

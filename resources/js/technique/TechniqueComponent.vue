@@ -8,29 +8,6 @@
                 >
                     <v-container>
                         <v-row dense>
-                            <v-col cols="12">
-                                <v-container>
-                                    <v-row style="background: whitesmoke;padding: 10px;">
-                                        <div style="width: 80%">
-                                            {{ name }}
-                                        </div>
-                                        <div style="width: 20%;">
-                                <span style="float: right; font-size: 14px;">
-                                    <a href="/logout">Выйти</a>
-                                </span>
-                                        </div>
-                                    </v-row>
-                                </v-container>
-                            </v-col>
-
-                            <v-col
-                                class="d-flex mb-3"
-                                cols="12"
-                                sm="6"
-                                v-if="bottom_nav ==='tasks'"
-                            >
-
-                            </v-col>
 
                             <v-row v-if="bottom_nav ==='tasks'">
                                 <v-col cols="9">
@@ -39,12 +16,12 @@
                                         label="Введите VIN код"
                                         hide-details="auto"
                                         class="vin_code_input"
+                                        solo
                                     ></v-text-field>
                                 </v-col>
 
                                 <v-col cols="3">
                                     <v-btn
-                                        depressed
                                         color="primary"
                                         @click="startQR()"
                                     >
@@ -52,14 +29,14 @@
                                     </v-btn>
                                 </v-col>
 
+                                <v-divider></v-divider>
+
                                 <v-col cols="12" v-if="scan_qr">
                                     <StreamBarcodeReader @decode="onDecode" @loaded="onLoaded"></StreamBarcodeReader>
                                 </v-col>
 
-                                <v-divider></v-divider>
-
                                 <v-col cols="12">
-                                    <div v-if="info_container != ''" style="font-size: 20px;
+                                    <div v-if="info_container !== ''" style="font-size: 20px;
                         line-height: 20px;
                         margin-bottom: 30px;
                         font-weight: bold;
@@ -72,13 +49,13 @@
                                 <v-container>
                                     <v-row v-if="buttons">
                                         <v-col cols="12">
-                                            <button @click="receiveStep()" style="width: 100%;" :disabled="is_receive" :class="[is_receive == true ? 'btn-light' : 'btn-success']" type="button" class="btn">Размещение</button>
+                                            <button @click="receiveStep()" style="width: 100%;" :disabled="is_receive" :class="[is_receive === true ? 'btn-light' : 'btn-success']" type="button" class="btn">Размещение</button>
                                         </v-col>
                                         <v-col cols="12">
-                                            <button @click="shipTechnique()" style="width: 100%;" type="button" :disabled="is_shipping" class="btn" :class="[is_shipping == true ? 'btn-light' : 'is_shipping']">Выдача</button>
+                                            <button @click="shipTechnique()" style="width: 100%;" type="button" :disabled="is_shipping" class="btn" :class="[is_shipping === true ? 'btn-light' : 'is_shipping']">Выдача</button>
                                         </v-col>
                                         <v-col cols="12">
-                                            <button @click="moveStep()" style="width: 100%;" type="button" :disabled="is_moving" class="btn" :class="[is_moving == true ? 'btn-light' : 'is_moving']">Перемещение</button>
+                                            <button @click="moveStep()" style="width: 100%;" type="button" :disabled="is_moving" class="btn" :class="[is_moving === true ? 'btn-light' : 'is_moving']">Перемещение</button>
                                         </v-col>
                                     </v-row>
 
@@ -176,6 +153,10 @@
                             <v-row class="mt-2" v-if="bottom_nav ==='search'">
 
                             </v-row>
+
+                            <v-row class="mt-2" v-if="bottom_nav ==='stats'">
+
+                            </v-row>
                         </v-row>
 
                         <v-overlay :value="overlay">
@@ -203,7 +184,7 @@
                     <v-icon>mdi-search-web</v-icon>
                 </v-btn>
 
-                <v-btn value="nearby">
+                <v-btn value="stats">
                     <span style="font-size: 12px;">Статистика</span>
 
                     <v-icon>mdi-margin</v-icon>
@@ -530,10 +511,7 @@
         font-size: 24px !important;
         font-weight: normal !important;
     }
-    .v-dialog__content {
-        top: 30% !important;
-        position: absolute !important;
-    }
+
     .text-field {
         font-size: 20px !important;
     }

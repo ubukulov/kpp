@@ -11,7 +11,7 @@ use App\Models\WhiteCarList;
 use App\Models\WhiteCarLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use PARQOUR;
 
 class WhiteCarController extends Controller
@@ -19,7 +19,7 @@ class WhiteCarController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\Response
      */
     public function index()
     {
@@ -36,7 +36,7 @@ class WhiteCarController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\Response
      */
     public function create()
     {
@@ -50,7 +50,7 @@ class WhiteCarController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $data = $request->except('_token');
         $data['company_id'] = Auth::user()->company_id;
@@ -125,7 +125,7 @@ class WhiteCarController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\Response
      */
     public function edit($id)
     {
@@ -141,7 +141,7 @@ class WhiteCarController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
@@ -193,7 +193,7 @@ class WhiteCarController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy($id)
     {
@@ -235,13 +235,13 @@ class WhiteCarController extends Controller
         return view('cabinet.white_car.guest-create');
     }
 
-    public function guestStore(Request $request)
+    public function guestStore(Request $request): \Illuminate\Http\RedirectResponse
     {
         $data = $request->all();
         $company = Company::findOrFail(Auth::user()->company_id);
         $data['company'] = $company->short_en_name;
         $data['company_id'] = $company->id;
-        $data['status'] = 'exit_permitted';
+        $data['status'] = 'printed';
         $data['type'] = 'guest';
         $data['planned_arrival_date'] = date("Y-m-d H:i:s", strtotime($request->input('planned_arrival_date')));
         Permit::create($data);

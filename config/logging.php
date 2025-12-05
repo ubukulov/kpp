@@ -41,6 +41,12 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'astel' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/astel.log'),
+            'level' => 'info',
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

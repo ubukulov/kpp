@@ -2,21 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Services\WmsConnectionService;
+use Illuminate\View\View;
 
 class LVController extends BaseWmsController
 {
-    public function __construct()
+    public function __construct(WmsConnectionService $connectionService)
     {
-        $this->database = 'LV_savage';
-        parent::__construct();
-        if(!$this->conn){
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
-        }
+        parent::__construct($connectionService);
     }
 
-    public function lvOrderScreen()
+    public function lvOrderScreen(): View
     {
         $sql = "select convert(varchar,ord_InputDate, 110) AS ord_InputDate, ord_Code, orc_Address, Status,ord_ID
                 --,sum(ori_Quantity) as 'кол-во_товара_указанного_артикула'
@@ -39,7 +36,14 @@ class LVController extends BaseWmsController
                 --ori_Quantity,ori_QuantitySU
                 order by Направление ASC";
 
-        $logs = $this->query($sql);
+        try {
+            $logs = $this->connectionService->select($sql, [], 'LV_savage');
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV orders', [
+                'exception' => $runtimeException
+            ]);
+            return view('lv-order-screen')->with('logs', []);
+        }
 
         return view('lv-order-screen', compact('logs'));
     }

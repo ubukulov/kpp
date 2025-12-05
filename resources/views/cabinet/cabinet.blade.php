@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -82,9 +83,9 @@
         </div>
     </div>
 
-@include('cabinet.left_side')
+    @include('cabinet.left_side')
 
-<!-- Content Wrapper. Contains page content -->
+    <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
         {{--<!-- Content Header (Page header) -->
         <div class="content-header">

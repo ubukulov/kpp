@@ -14,9 +14,9 @@ class UserController extends BaseApiController
         return response()->json($user);
     }
 
-    public function getUserRoles()
+    public function getUserRoles(): \Illuminate\Http\JsonResponse
     {
-        $roles = $this->user->roles;
+        $roles = $this->user->roles()->select('name', 'slug')->get()->makeHidden('pivot');
         return response()->json($roles);
     }
 }

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\BaseWmsController;
-use App\Http\Controllers\Controller;
 use App\Models\Bosch;
 use App\Models\PalletSSCC;
 use Illuminate\Http\Request;
-use Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class WmsController extends BaseWmsController
 {
@@ -47,7 +47,15 @@ class WmsController extends BaseWmsController
                     AND pav_attributeID = 12
                     --and ord_ID in ({results})
                     ORDER BY 1,2,4";
-        $logs = $this->query($sql);
+
+        try {
+            $logs = $this->connectionService->select($sql, []);
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_orders', [
+                'exception' => $runtimeException
+            ]);
+            return view('cabinet.wms.index')->with('logs', []);
+        }
 
         return view('cabinet.wms.index', compact('logs'));
     }
@@ -66,7 +74,15 @@ class WmsController extends BaseWmsController
                     GROUP BY
                     loc_Description
                     ";
-        $logs = $this->query($sql);
+
+        try {
+            $logs = $this->connectionService->select($sql, []);
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_Location', [
+                'exception' => $runtimeException
+            ]);
+            return view('cabinet.wms.boxes')->with('logs', []);
+        }
 
         return view('cabinet.wms.boxes', compact('logs'));
     }
@@ -106,9 +122,17 @@ class WmsController extends BaseWmsController
             and rav_AttributeID = 88
 
             order by DateInsert DESC";
-        $items = $this->query($sql);
-        $items2 = $this->query($sql2);
-        $itemsReturn = $this->query($returnSql);
+
+        try {
+            $items = $this->connectionService->select($sql, []);
+            $items2 = $this->connectionService->select($sql2, []);
+            $itemsReturn = $this->connectionService->select($returnSql, []);
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch', [
+                'exception' => $runtimeException
+            ]);
+        }
+
         $logs = [];
         $ships = [];
         $returns = [];
@@ -164,7 +188,14 @@ WHERE
 order by loc_Description, substring(loc_Code,1,2), loc_SectorCode, loc_ColumnCode, loc_LevelCode
                     ";
 
-        $logs = $this->query($sql);
+        try {
+            $logs = $this->connectionService->select($sql, []);
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_Location', [
+                'exception' => $runtimeException
+            ]);
+            return view('cabinet.wms.estore')->with('logs', []);
+        }
 
         return view('cabinet.wms.estore', compact('logs'));
     }
@@ -176,7 +207,8 @@ order by loc_Description, substring(loc_Code,1,2), loc_SectorCode, loc_ColumnCod
 WHERE
 ReceiptID in ($receiptID)";
 
-            sqlsrv_query($this->conn, $sql);
+            //sqlsrv_query($this->conn, $sql);
+            $this->connectionService->execute($sql, []);
         }
 
         if($type == '7_2') {
@@ -184,7 +216,8 @@ ReceiptID in ($receiptID)";
 WHERE
 ReceiptID in ($receiptID)";
 
-            sqlsrv_query($this->conn, $sql);
+            //sqlsrv_query($this->conn, $sql);
+            $this->connectionService->execute($sql, []);
         }
 
         return back();
@@ -198,7 +231,8 @@ ReceiptID in ($receiptID)";
                     OrderID in ($shipID)
                     ";
 
-            sqlsrv_query($this->conn, $sql);
+            //sqlsrv_query($this->conn, $sql);
+            $this->connectionService->execute($sql, []);
         }
 
         if($type == '7_2') {
@@ -207,7 +241,8 @@ ReceiptID in ($receiptID)";
                     OrderID in ($shipID)
                     ";
 
-            sqlsrv_query($this->conn, $sql);
+            //sqlsrv_query($this->conn, $sql);
+            $this->connectionService->execute($sql, []);
         }
 
         return back();
@@ -220,7 +255,8 @@ ReceiptID in ($receiptID)";
 
                     ";
 
-        sqlsrv_query($this->conn, $sql);
+        //sqlsrv_query($this->conn, $sql);
+        $this->connectionService->execute($sql, []);
 
         return back();
     }
@@ -232,7 +268,8 @@ select oav_Value from LV_OrderAttributesValues
 where oav_AttributeID = 21
 and oav_OrderID = $OrderID )";
 
-        sqlsrv_query($this->conn, $sql);
+        //sqlsrv_query($this->conn, $sql);
+        $this->connectionService->execute($sql, []);
 
         return back();
     }
@@ -243,7 +280,8 @@ and oav_OrderID = $OrderID )";
 
 where ReceiptID in ($receiptID)";
 
-        sqlsrv_query($this->conn, $sql);
+        //sqlsrv_query($this->conn, $sql);
+        $this->connectionService->execute($sql, []);
 
         return back();
     }
@@ -253,14 +291,15 @@ where ReceiptID in ($receiptID)";
         $sql = "update ant_importackans set status=0 where MessageNumber in
 (select rav_Value from LV_ReceiptAttributesValues where  rav_AttributeID=88 and rav_ReceiptID = $receiptID)";
 
-        sqlsrv_query($this->conn, $sql);
+        //sqlsrv_query($this->conn, $sql);
+        $this->connectionService->execute($sql, []);
 
         return back();
     }
 
     public function barcodeForWmsBoxes()
     {
-        $connInfo = [
+        /*$connInfo = [
             'Database' => 'LVISION5', 'UID' => $this->username, 'PWD' => $this->password,
             'CharacterSet' => 'UTF-8',
         ];
@@ -278,14 +317,27 @@ where ReceiptID in ($receiptID)";
         $clients = [];
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $clients[] = $row;
+        }*/
+
+        $clientsSQL = "SELECT dep_ID, dep_Code FROM LV_Depositor";
+        $boxesSQL = "SELECT loc_SectorCode FROM LV_Location
+                     GROUP BY loc_SectorCode ORDER BY loc_SectorCode";
+
+        try {
+            $clients = $this->connectionService->select($clientsSQL, [], 'LVISION5');
+            $boxes = $this->connectionService->select($boxesSQL, [], 'LVISION5');
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV orders', [
+                'exception' => $runtimeException
+            ]);
+            return view('lv-order-screen')->with('logs', []);
         }
 
 
 
-        $boxesSQL = "SELECT loc_SectorCode FROM LV_Location
-                     GROUP BY loc_SectorCode ORDER BY loc_SectorCode";
 
-        $stmt = sqlsrv_query($conn, $boxesSQL);
+
+        /*$stmt = sqlsrv_query($conn, $boxesSQL);
         if ($stmt === false) {
             die(print_r(sqlsrv_errors(), true));
         }
@@ -293,7 +345,7 @@ where ReceiptID in ($receiptID)";
         $boxes = [];
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $boxes[] = $row;
-        }
+        }*/
 
         return view('cabinet.barcode.jti', compact('clients', 'boxes'));
     }
@@ -303,7 +355,7 @@ where ReceiptID in ($receiptID)";
         $client_id = $request->input('client_id');
         $box_id = $request->input('box_id');
 
-        $connInfo = [
+        /*$connInfo = [
             'Database' => 'LVISION5', 'UID' => $this->username, 'PWD' => $this->password,
             'CharacterSet' => 'UTF-8',
         ];
@@ -322,6 +374,17 @@ where ReceiptID in ($receiptID)";
         $clients = [];
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $clients[] = $row;
+        }*/
+
+        $clientsSQL = "select top 300 loc_Code from LV_Location
+                       where loc_DepositorID='$client_id' AND loc_SectorCode='$box_id'";
+
+        try {
+            $clients = $this->connectionService->select($clientsSQL, [], 'LVISION5');
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV orders', [
+                'exception' => $runtimeException
+            ]);
         }
 
         return $clients;
@@ -329,7 +392,7 @@ where ReceiptID in ($receiptID)";
 
     public function getClientBoxes($dep_ID)
     {
-        $connInfo = [
+        /*$connInfo = [
             'Database' => 'LVISION5', 'UID' => $this->username, 'PWD' => $this->password,
             'CharacterSet' => 'UTF-8',
         ];
@@ -349,6 +412,18 @@ where ReceiptID in ($receiptID)";
         $boxes = [];
         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             $boxes[] = $row;
+        }*/
+
+        $clientsSQL = "select loc_SectorCode from LV_Location
+                        where loc_DepositorID = $dep_ID
+                        group by loc_SectorCode";
+
+        try {
+            $boxes = $this->connectionService->select($clientsSQL, [], 'LVISION5');
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV orders', [
+                'exception' => $runtimeException
+            ]);
         }
 
         return $boxes;

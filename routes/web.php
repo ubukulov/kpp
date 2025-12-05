@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,11 @@ Route::get('/login', 'AuthController@loginForm')->name('login');
 Route::post('/login', 'AuthController@authenticate')->name('authenticate');
 Route::get('/logout', 'AuthController@logout')->name('logout');
 
+# Bitrix24
+Route::post('bitrix24/install', 'Bitrix24Controller@install')->name('bitrix24.install');
+Route::get('bitrix24/events', 'Bitrix24Controller@events')->name('bitrix24.events');
+Route::get('bitrix24/create', 'Bitrix24Controller@createAccount')->name('bitrix24.createAccount');
+
 Route::group(['middleware' => ['auth']], function() {
     Route::get('/', 'IndexController@welcome')->name('home');
     Route::get('/get-user-info/{id}', 'IndexController@getUserInfo');
@@ -30,7 +36,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::post('/get-info-for-container', 'ContainerController@getInfoForContainer');
 
     # КПП Оператор
-    Route::group(['middleware' => 'role:kpp-operator'], function(){
+    Route::group(['middleware' => ['web', 'auth' /*, 'role:kpp-operator'*/]], function(){
         Route::get('/security-kpp', 'KppController@index')->name('security.kpp');
         Route::post('/search/permit', 'IndexController@searchPermit')->name('search.permit');
         Route::get('/get-prev-permits-for-today', 'IndexController@getPrevPermitsForToday');
@@ -50,7 +56,7 @@ Route::group(['middleware' => ['auth']], function() {
     });
 
     # Контейнерный терминал - оператор
-    Route::group(['prefix' => 'container-terminals','middleware' => 'role:kt-operator'], function(){
+    Route::group(['prefix' => 'container-terminals','middleware' => ['web', 'auth'/*, 'role:kt-operator'*/]], function(){
         Route::get('/', 'KTController@operator')->name('kt.kt_operator');
         Route::get('/create-task', 'KTController@createTask')->name('o.create.task');
         Route::post('/container/receive-container-by-operator', 'ContainerController@receiveContainerByOperator')->name('receive.container');
@@ -98,6 +104,23 @@ Route::group(['middleware' => ['auth']], function() {
             Route::get('{company_id}/get-cars', 'CargoController@getCars');
             Route::get('{company_id}/get-codes', 'CargoController@getCodesForCar');
         });
+
+        # ППЖТ - учет вагонов
+        Route::group(['prefix' => 'wagon'], function(){
+            Route::get('get-wagon-tasks', 'WagonController@getWagonTasks');
+            Route::post('create-wagon-task', 'WagonController@createWagonTask');
+            Route::get('get-wagon-stocks', 'WagonController@getWagonStocks');
+            Route::get('get-wagon-tracks', 'WagonController@getWagonTracks');
+            Route::post('update-wagon-stock', 'WagonController@updateWagonStock');
+            Route::post('update-wagons-stock', 'WagonController@updateWagonsStock');
+            Route::post('cleaning-request-wagon', 'WagonController@cleaningRequestWagon');
+            Route::delete('detach-container-from-wagon/{id}', 'WagonController@detachContainerFromWagon');
+            Route::post('attach-container-to-wagon', 'WagonController@attachContainerToWagon');
+            Route::get('print-wagons', 'WagonController@printWagons');
+            Route::get('get-wagon-employees', 'WagonController@getWagonEmployees');
+            Route::post('update-wagon-shifts', 'WagonController@updateWagonShifts');
+            Route::post('generate-and-download-report', 'WagonController@generateAndDownloadReport');
+        });
     });
 
     # Контейнерный терминал - крановщик (стропольщик)
@@ -128,7 +151,7 @@ Route::group(['middleware' => ['auth']], function() {
     });
 
     # Контейнерный терминал - контролировщики - Начальники смены
-    Route::group(['prefix' => 'container-controller', 'middleware' => 'role:kt-controller'], function(){
+    /*Route::group(['prefix' => 'container-controller', 'middleware' => 'role:kt-controller'], function(){
         Route::get('/', 'KTController@controller')->name('kt.controller');
         Route::get('/get-container-tasks/{filter_id}', 'KTController@getContainerTasks');
         Route::get('/task/{id}/container-logs', 'KTController@showTaskContainerLogs2')->name('show.task-container-logs');
@@ -144,13 +167,13 @@ Route::group(['middleware' => ['auth']], function() {
 
         # Учет техники
         Route::get('/get-technique-tasks', 'TechniqueController@getTechniqueTasks');
-    });
+    });*/
 
-    # Учет техники: контроллер
+    /*# Учет техники: контроллер
     Route::group(['prefix' => 'technique-controller', 'middleware' => 'role:technique-controller'], function(){
         Route::get('/', 'TechniqueController@techniqueController')->name('technique.controller');
         Route::post('/get-information-by-qr-code', 'TechniqueController@getInformationByQRCode');
-    });
+    });*/
 
     # Столовая
     Route::group(['prefix' => 'ashana', 'middleware' => 'role:ashana'], function(){
@@ -189,6 +212,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('get-sscc', 'MarkController@getSSCC');
         Route::post('aggregation/print', 'MarkController@printSSCC');
         Route::post('aggregation/print-product', 'MarkController@printSSCCProduct');
+        Route::get('generate-label-pdf', 'MarkController@generateLabelPDF');
     });
 
     # Список белых машинов которые без пропусков заежает и выезжает
@@ -198,7 +222,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('/{id}/fix-date-in-time', 'ViewController@fixDateInTime');
     });
 
-    # Груз: Кладовщик
+    /*# Груз: Кладовщик
     Route::group(['prefix' => 'cargo-controller', 'middleware' => 'role:cargo-controller'], function(){
         Route::get('/', 'CargoController@controller')->name('cargo.controller');
         Route::get('get-cargo-tasks', 'CargoController@getCargoTasks');
@@ -211,7 +235,7 @@ Route::group(['middleware' => ['auth']], function() {
         Route::post('cargo/fix-operations', 'CargoController@fixOperations');
         Route::post('cargo/tasks/changes', 'CargoController@changeTasks');
         Route::get('get-cargo-services', 'CargoController@getCargoServices');
-    });
+    });*/
 });
 
 # Маршруты для тех водителей которые оформляет себе предварительную пропуск

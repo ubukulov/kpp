@@ -10,6 +10,7 @@ use App\Models\TechniqueLog;
 use App\Models\TechniqueStock;
 use App\Models\TechniqueTask;
 use App\Models\TechniqueType;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use File;
@@ -17,11 +18,6 @@ use Auth;
 
 class TechniqueController extends Controller
 {
-    public function techniqueController()
-    {
-        return view('technique.technique_controller');
-    }
-
     public function taskCreate()
     {
         $technique_types = TechniqueType::all();
@@ -180,6 +176,7 @@ class TechniqueController extends Controller
         $technique_tasks = TechniqueTask::where('technique_tasks.status', '!=', 'canceled')->orderBy('id', 'DESC')
             ->selectRaw('technique_tasks.*, companies.short_en_name')
             ->leftJoin('companies', 'companies.id', 'technique_tasks.company_id')
+            ->where('technique_tasks.created_at', '>=', Carbon::now()->subMonths(3))
             ->get();
 
         $tasks = [];
@@ -322,7 +319,7 @@ class TechniqueController extends Controller
                     ->where('status', '!=', 'incoming')
                     ->get();
 
-                $emails = ['Nursultan.Amangeldiyev@htl.kz', 'kairat.ubukulov@htl.kz'];
+                $emails = ['Nursultan.Amangeldiyev@htl.kz'];
                 /*if($company->id == 172) {
                     $emails[] = 'S.maratuly1990@gmail.com';
                 }*/
@@ -402,6 +399,7 @@ class TechniqueController extends Controller
     public function getSpines(): \Illuminate\Http\JsonResponse
     {
         $spines = Spine::where(['kind' => 'auto'])
+            ->where('created_at', '>=', Carbon::now()->subMonths(3))
             ->orderBy('id', 'DESC')
             ->get();
         return response()->json($spines);

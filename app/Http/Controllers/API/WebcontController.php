@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ContainerTaskResource;
 use App\Models\Container;
 use App\Models\ContainerAddress;
 use App\Models\ContainerStock;
+use App\Models\ContainerTask;
 use App\Models\Session;
 use App\Models\Technique;
 use App\Models\User;
@@ -197,5 +199,41 @@ class WebcontController extends BaseApiController
                 'full_name' => $arr[0]. " " . mb_substr($arr[1],0,1) . "."
             ];
         }
+    }
+
+    public function getContainerTasks(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+    {
+        $container_tasks = ContainerTask::with('user')
+            ->where(['status' => 'open'])
+            ->orderBy('id', 'DESC');
+
+        if($request->has('page')) {
+            $container_tasks = $container_tasks->paginate(50, ['*'], 'page', $request->get('page'));
+        } else {
+            $container_tasks = $container_tasks->paginate(50);
+        }
+
+        foreach($container_tasks as $task) {
+            $task['allow'] = $task->allowCloseThisTask();
+            $task['number'] = $task->getNumber();
+            $task['type'] = $task->getType();
+            $task['trans'] = $task->getTransType();
+            $task['stat'] = $task->getCountCompletedItems() . ' из ' .$task->getCountItems();
+            $task['hasAnyPositionCancelOrEdit'] = $task->checkingForCancelOrEditAnyPosition();
+        }
+
+        return ContainerTaskResource::collection($container_tasks);
+    }
+
+    public function getContainerTaskDetails($containerTaskId): \Illuminate\Http\JsonResponse
+    {
+        $containerTaskId = (int) $containerTaskId;
+        $container_task = ContainerTask::findOrFail($containerTaskId);
+        $import_logs = $container_task->import_logs;
+        foreach($import_logs as $import_log) {
+            $import_log['address'] = $import_log->getContainerAddress($containerTaskId);
+            $import_log['position'] = $import_log->isPositionCancelOrEdit();
+        }
+        return response()->json($container_task);
     }
 }

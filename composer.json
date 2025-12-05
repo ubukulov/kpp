@@ -8,10 +8,11 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.2.5",
+        "php": "^7.4",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mysqli": "*",
+        "barryvdh/laravel-dompdf": "^2.2",
         "chillerlan/php-qrcode": "^4.3",
         "cviebrock/eloquent-sluggable": "^8.0",
         "fideloper/proxy": "^4.2",
@@ -22,8 +23,11 @@
         "laravel/sanctum": "^2.15",
         "laravel/tinker": "^2.0",
         "laravel/ui": "^3.0",
+        "milon/barcode": "^12.0",
         "phpoffice/phpspreadsheet": "^1.16",
-        "snowfire/beautymail": "^1.1"
+        "snowfire/beautymail": "^1.1",
+        "yajra/laravel-datatables-oracle": "^9.21",
+        "ext-sqlsrv": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.5",

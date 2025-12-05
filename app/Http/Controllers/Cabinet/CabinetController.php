@@ -5,15 +5,11 @@ namespace App\Http\Controllers\Cabinet;
 use App\Models\Driver;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CabinetController extends BaseController
 {
-    protected $username = 'ScanGo';
-    protected $password = '128500';
-    protected $server   = '10.1.0.18\DLSQL';
-    protected $database = 'SCANGO';
-
     public function cabinet()
     {
         return view('cabinet.index');
@@ -42,35 +38,20 @@ class CabinetController extends BaseController
 
     public function get100Logs()
     {
-        $connInfo = [
-            'Database' => $this->database, 'UID' => $this->username, 'PWD' => $this->password,
-            'CharacterSet' => 'UTF-8',
-        ];
-
-        $conn = sqlsrv_connect($this->server, $connInfo);
-
-        if ($conn) {
-            $sql = "SELECT TOP 100
+        $sql = "SELECT TOP 100
                         CONVERT(VARCHAR, DATE_SCAN,120) AS [VALUE-1]
                         ,ORDER_CODE AS [VALUE-2]
                     FROM LOG_SCAN
                     WHERE DEPOSITOR_CODE = 'SAMSUNG'
                     ORDER BY DATE_SCAN DESC";
-            $stmt = sqlsrv_query($conn, $sql);
-            if ($stmt === false) {
-                die(print_r(sqlsrv_errors(), true));
-            }
-            $logs = [];
-            $i = 1;
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                $row['index'] = $i;
-                $logs[] = $row;
-                $i++;
-            }
+
+        try {
+            $logs = $this->wmsConnectionService()->selectWithIndex($sql, [], 'SCANGO');
             return response()->json($logs);
-        } else {
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LOG_SCAN', [
+                'exception' => $runtimeException
+            ]);
         }
     }
 
@@ -78,36 +59,20 @@ class CabinetController extends BaseController
     {
         $document = $request->input('document');
 
-        $connInfo = [
-            'Database' => $this->database, 'UID' => $this->username, 'PWD' => $this->password,
-            'CharacterSet' => 'UTF-8',
-        ];
-
-        $conn = sqlsrv_connect($this->server, $connInfo);
-
-        if ($conn) {
-            $sql = "SELECT TOP 1
+        $sql = "SELECT TOP 1
                         CONVERT(VARCHAR, DATE_SCAN,120) AS [VALUE-1]
                         ,ORDER_CODE AS [VALUE-2]
                     FROM LOG_SCAN
                     WHERE DEPOSITOR_CODE = 'SAMSUNG' AND ORDER_CODE like '%$document%'
                     ORDER BY DATE_SCAN DESC";
 
-            $stmt = sqlsrv_query($conn, $sql);
-            if ($stmt === false) {
-                die(print_r(sqlsrv_errors(), true));
-            }
-            $logs = [];
-            $i = 1;
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                $row['index'] = $i;
-                $logs[] = $row;
-                $i++;
-            }
+        try {
+            $logs = $this->wmsConnectionService()->selectWithIndex($sql, [], 'SCANGO');
             return response()->json($logs);
-        } else {
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LOG_SCAN', [
+                'exception' => $runtimeException
+            ]);
         }
     }
 
@@ -123,186 +88,97 @@ class CabinetController extends BaseController
 
     public function getOrders()
     {
-        $connInfo = [
-            'Database' => 'LV_SAMSUNG', 'UID' => $this->username, 'PWD' => $this->password,
-            'CharacterSet' => 'UTF-8',
-        ];
-
-        $conn = sqlsrv_connect($this->server, $connInfo);
-
-        if ($conn) {
-            /*$sql = "SELECT TOP 1500
-
-                        LV_Order.ord_Code,
-                        LV_OrderStatus.*
-                    FROM LV_Order
-                    INNER JOIN LV_OrderStatus ON LV_OrderStatus.ors_ID=LV_Order.ord_StatusID
-                    WHERE ord_DepositorID = 11 AND LV_Order.ord_TypeID=25 ORDER BY ord_ID DESC";*/
-
-
-            /*$sql = "SELECT TOP 1500
-                    LV_Order.ord_Code,
-                    isnull(LV_OrderAttributesValues.oav_Value,'no address') as address,
-                    LV_OrderStatus.*
-                    FROM
-                    LV_Order
-                    INNER JOIN LV_OrderStatus ON LV_OrderStatus.ors_ID=LV_Order.ord_StatusID
-                    left outer join LV_OrderAttributesValues on LV_OrderAttributesValues.oav_OrderID = LV_Order.ord_ID
-                    WHERE
-                    ord_DepositorID = 11
-                    AND LV_Order.ord_TypeID=25
-                    AND LV_OrderAttributesValues.oav_AttributeID = 117
-                    ORDER BY
-                    ord_ID DESC";*/
-
-            /*$sql = "SELECT TOP 1500
+        $sql = "
+            SELECT TOP 1500
                  LV_Order.ord_Code,
-		 av.oav_Value as KASPI_DO,
+                 av.oav_Value as KASPI_DO,
+                 case
+                 when ord_DepositorDocument = '0005992782' then h.hbo_URLAct
+                 when ord_DepositorDocument = '0004954354' then 'https://mc.shop.kaspi.kz/mc/api/merchant/kaspi-delivery/waybill/?orderCode=' + av.oav_Value + '&_m=133445566' ELSE NULL END as KASPI_URL,
                  LV_Order.ord_CustomerOrderCode,
                  isnull(LV_OrderAttributesValues.oav_Value,'no address') as address,
                  LV_OrderStatus.*
                  FROM
                  LV_Order
-                 INNER JOIN LV_OrderStatus ON LV_OrderStatus.ors_ID=LV_Order.ord_StatusID
+                 left join LV_OrderShipment ON ost_OrderID = ord_ID
+                 left join LV_OrderStatus ON LV_OrderStatus.ors_ID=ost_StatusID
                  left outer join LV_OrderAttributesValues on LV_OrderAttributesValues.oav_OrderID = LV_Order.ord_ID and LV_OrderAttributesValues.oav_AttributeID = 117
-				  left outer join LV_OrderAttributesValues av on av.oav_OrderID = LV_Order.ord_ID and av.oav_AttributeID = 126
+		         left outer join LV_OrderAttributesValues av on av.oav_OrderID = LV_Order.ord_ID and av.oav_AttributeID = 126
+                 left outer join WMS_HalykOrder h on h.hbo_OrderID = ord_ID
                  WHERE
                  ord_DepositorID = 11
                  AND LV_Order.ord_TypeID=25
-                 ORDER BY
-                 ord_ID DESC";*/
+                 and ord_StatusID <> 4
+                 and ost_StatusID <> 11
+                 ORDER BY ord_ID DESC
+            ";
 
-            $sql = "SELECT TOP 1500
-                 LV_Order.ord_Code,
-		         av.oav_Value as KASPI_DO,
-				 'https://mc.shop.kaspi.kz/mc/api/merchant/kaspi-delivery/waybill/?orderCode=' + av.oav_Value + '&_m=133445566'  as KASPI_URL,
-                 LV_Order.ord_CustomerOrderCode,
-                 isnull(LV_OrderAttributesValues.oav_Value,'no address') as address,
-                 LV_OrderStatus.*
-                 FROM
-                 LV_Order
-                 INNER JOIN LV_OrderStatus ON LV_OrderStatus.ors_ID=LV_Order.ord_StatusID
-                 left outer join LV_OrderAttributesValues on LV_OrderAttributesValues.oav_OrderID = LV_Order.ord_ID and LV_OrderAttributesValues.oav_AttributeID = 117
-		 left outer join LV_OrderAttributesValues av on av.oav_OrderID = LV_Order.ord_ID and av.oav_AttributeID = 126
-
-                 WHERE
-                 ord_DepositorID = 11
-                 AND LV_Order.ord_TypeID=25
-                 ORDER BY
-                 ord_ID DESC";
-
-
-
-            $stmt = sqlsrv_query($conn, $sql);
-            if ($stmt === false) {
-                die(print_r(sqlsrv_errors(), true));
-            }
-            $logs = [];
-            $i = 1;
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                $row['index'] = $i;
-                $logs[] = $row;
-                $i++;
-            }
+        try {
+            $logs = $this->wmsConnectionService()->selectWithIndex($sql);
             return response()->json($logs);
-        } else {
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_Order', [
+                'exception' => $runtimeException
+            ]);
         }
     }
 
     public function getOrdersForBosch()
     {
-        $connInfo = [
-            'Database' => 'LV_SAVAGE', 'UID' => $this->username, 'PWD' => $this->password,
-            'CharacterSet' => 'UTF-8',
-        ];
+        $sql = "SELECT ord_Code,
+                     COUNT(*) AS Count,
+                     orc_FullName as ADDRES
+                FROM LV_Order
+                LEFT JOIN LV_OrderShipment ON ost_OrderID = ord_ID
+                LEFT JOIN LV_ShipContainer ON ost_ID = shc_OrderShipmentID
+                LEFT JOIN LV_OrderCustomer ON orc_OrderID = ord_ID
+                WHERE ost_StatusID = 8 -- Статус Упакован
+                AND ord_DepositorID = 18
+                AND ord_StatusID = 2
+                AND ord_TypeID = 26
+                AND shc_ContainerID IS NOT NULL
+                GROUP BY ord_Code, orc_FullName";
 
-        $conn = sqlsrv_connect($this->server, $connInfo);
-
-        if ($conn) {
-
-            $sql = "SELECT ord_Code,
-     COUNT(*) AS Count,
-     orc_FullName as ADDRES
-FROM LV_Order
-LEFT JOIN LV_OrderShipment ON ost_OrderID = ord_ID
-LEFT JOIN LV_ShipContainer ON ost_ID = shc_OrderShipmentID
-LEFT JOIN LV_OrderCustomer ON orc_OrderID = ord_ID
-WHERE ost_StatusID = 8 -- Статус Упакован
-AND ord_DepositorID = 18
-AND ord_StatusID = 2
-AND ord_TypeID = 26
-AND shc_ContainerID IS NOT NULL
-GROUP BY ord_Code, orc_FullName";
-
-
-
-            $stmt = sqlsrv_query($conn, $sql);
-            if ($stmt === false) {
-                die(print_r(sqlsrv_errors(), true));
-            }
-            $logs = [];
-            $i = 1;
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                $row['index'] = $i;
-                $logs[] = $row;
-                $i++;
-            }
+        try {
+            $logs = $this->wmsConnectionService()->selectWithIndex($sql, [], 'LV_SAVAGE');
             return response()->json($logs);
-        } else {
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_Order', [
+                'exception' => $runtimeException
+            ]);
         }
     }
 
     public function getSSCC(Request $request)
     {
         $order_code = $request->input('order_code');
-        $connInfo = [
-            'Database' => 'LV_SAVAGE', 'UID' => $this->username, 'PWD' => $this->password,
-            'CharacterSet' => 'UTF-8',
-        ];
 
-        $conn = sqlsrv_connect($this->server, $connInfo);
+        $sql = "SELECT
+                       orc_FullName AS ADDRES,
+                       ord_Code + '; BRT ' + CAST(CAST(stk.stc_GrossWeight AS DECIMAL(18, 3)) AS VARCHAR) + '; QTY ' + CAST(SUM(CAST(stc.stk_CUQuantity AS DECIMAL(18, 0))) AS VARCHAR) AS BARCODE,
+                       stk.stc_SSCC,
+                       stc_ID
+                FROM LV_Order
+                LEFT JOIN LV_OrderShipment ON ost_OrderID = ord_ID
+                LEFT JOIN LV_ShipContainer ON ost_ID = shc_OrderShipmentID
+                LEFT JOIN LV_StockContainer stk ON stk.stc_ID = shc_ContainerID
+                LEFT JOIN LV_Stock stc ON stc.stk_ContainerID = stk.stc_ID
+                LEFT JOIN LV_OrderCustomer ON orc_OrderID = ord_ID
+                WHERE ost_StatusID = 8
+                  AND ord_DepositorID = 18
+                  AND ord_StatusID = 2
+                  AND ord_TypeID = 26
+                  AND shc_ContainerID IS NOT NULL
+                 and ord_Code like '%$order_code%'  -- Условие на выборку ord_Code
+                GROUP BY stc_ID,ord_Code, orc_FullName, stk.stc_GrossWeight,ord_ID,stk.stc_SSCC";
 
-        if ($conn) {
-
-            $sql = "SELECT
-       orc_FullName AS ADDRES,
-       ord_Code + '; BRT ' + CAST(CAST(stk.stc_GrossWeight AS DECIMAL(18, 3)) AS VARCHAR) + '; QTY ' + CAST(SUM(CAST(stc.stk_CUQuantity AS DECIMAL(18, 0))) AS VARCHAR) AS BARCODE,
-	   stk.stc_SSCC,
-	   stc_ID
-FROM LV_Order
-LEFT JOIN LV_OrderShipment ON ost_OrderID = ord_ID
-LEFT JOIN LV_ShipContainer ON ost_ID = shc_OrderShipmentID
-LEFT JOIN LV_StockContainer stk ON stk.stc_ID = shc_ContainerID
-LEFT JOIN LV_Stock stc ON stc.stk_ContainerID = stk.stc_ID
-LEFT JOIN LV_OrderCustomer ON orc_OrderID = ord_ID
-WHERE ost_StatusID = 8
-  AND ord_DepositorID = 18
-  AND ord_StatusID = 2
-  AND ord_TypeID = 26
-  AND shc_ContainerID IS NOT NULL
- and ord_Code like '%$order_code%'  -- Условие на выборку ord_Code
-GROUP BY stc_ID,ord_Code, orc_FullName, stk.stc_GrossWeight,ord_ID,stk.stc_SSCC
-";
-
-            $stmt = sqlsrv_query($conn, $sql);
-            if ($stmt === false) {
-                die(print_r(sqlsrv_errors(), true));
-            }
-            $logs = [];
-            $i = 1;
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                $row['index'] = $i;
-                $logs[] = $row;
-                $i++;
-            }
+        try {
+            $logs = $this->wmsConnectionService()->selectWithIndex($sql, [], 'LV_SAVAGE');
             return response()->json($logs);
-        } else {
-            echo "Connection could not be established.<br />";
-            die( print_r( sqlsrv_errors(), true));
+        } catch (\RuntimeException $runtimeException) {
+            Log::error('WMS failed to fetch LV_Order', [
+                'exception' => $runtimeException
+            ]);
         }
     }
 
@@ -312,9 +188,7 @@ GROUP BY stc_ID,ord_Code, orc_FullName, stk.stc_GrossWeight,ord_ID,stk.stc_SSCC
         $order_code = $request->input('order_code');
         $ord_CustomerOrderCode = $request->input('ord_CustomerOrderCode');
         $KASPI_DO = $request->input('KASPI_DO');
-        //$direction = utf8_encode($request->input('direction'));
         $direction = $request->input('direction');
-        //dd($direction);
 
         if ($count == 1) {
             $this->print($order_code, $count, 0, $direction, $ord_CustomerOrderCode, $KASPI_DO);
@@ -333,8 +207,6 @@ GROUP BY stc_ID,ord_Code, orc_FullName, stk.stc_GrossWeight,ord_ID,stk.stc_SSCC
     {
         $order_code = $request->input('order_code');
         $sscc_codes = json_decode($request->input('sscc_codes'));
-        //dd($sscc_codes[0]->ADDRES);
-        //dd(json_decode($sscc_codes));
 
         $index = 1;
 

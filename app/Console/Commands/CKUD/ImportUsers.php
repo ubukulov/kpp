@@ -40,10 +40,9 @@ class ImportUsers extends Command
      */
     public function handle()
     {
-        Cache::forget('ckud_users');
         $ckud_users_numbers = Cache::get('ckud_users') ?? [];
 
-        $users = User::whereRaw('LENGTH(users.uuid) = 7')/*->where('users.company_id', 13)*/
+        $users = User::whereRaw('LENGTH(users.uuid) = 7')/*->where('users.company_id', 250)*/
                 ->selectRaw('users.*, companies.full_company_name, companies.type_company, positions.title as position_name, companies.ckud_group_id')
                 ->selectRaw("CONCAT('https://kpp.dlg.kz:8900/', REGEXP_REPLACE(users.image, 'f', 'l')) as photo_http")
                 ->selectRaw('(SELECT users_histories.status FROM users_histories WHERE users_histories.user_id=users.id ORDER BY users_histories.id DESC LIMIT 1) as status')
@@ -69,7 +68,7 @@ class ImportUsers extends Command
                         break;
                 }*/
 
-                if(!is_null($user->ckud_group_id)) {
+                if(!is_null($user->ckud_group_id) && $user->ckud_group_id != 0) {
                     $employeeGroupID = $user->ckud_group_id;
                 } else {
                     $employeeGroupID = 'f6e6250b-69f4-4f4a-9c4b-2bc357645d6b';

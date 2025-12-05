@@ -249,6 +249,7 @@
                     {id: 5, name: "3 x 2 (табак: штуки)"},
                     {id: 6, name: "5 x 2 (табак: блок)"},
                     {id: 7, name: "7 x 4 (табак: ящик)"},
+                    {id: 8, name: "2 x 2"},
                 ],
                 errors: [],
                 container_number: '',

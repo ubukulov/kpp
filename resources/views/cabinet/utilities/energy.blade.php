@@ -15,7 +15,9 @@
                         </div>
 
                         <div class="col-6 text-right">
-
+                            <a href="{{ asset('files/instructions/ЛК.Инструкция по проверке показаний приборов учета.pdf') }}" target="_blank">
+                                <i class="fa fa-download"></i>&nbsp;Скачать инструкцию
+                            </a>
                         </div>
                     </div>
 
@@ -31,22 +33,22 @@
                             <th>Модель ПУ</th>
                             <th>Название ТУ</th>
                             <th>Номер ПУ</th>
-                            <th>Время получения</th>
                             <th>Показания счетчика</th>
+                            <th>Время получения</th>
                             <th>Коэффицент</th>
                             <th>Общее потребление</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($records as $record)
-                            @if($record->personalAccount == Auth::user()->company->bin)
+                            @if($record['personalAccount'] == Auth::user()->company->bin)
                             <tr>
-                                <td>{{ $record->metringParametr }}</td>
-                                <td>{{ $record->metringDevice }}</td>
-                                <td>{{ $record->namePoint }}</td>
-                                <td>{{ $record->serialNumberMetringDevice }}</td>
-                                <td>{{ $record->endTlm }}</td>
-                                <td>{{ \Carbon\Carbon::parse($record->timeStamp)->setTimezone('Asia/Aqtobe')->format('d.m.Y, H:i') }}</td>
+                                <td>{{ $record['metringParametr'] }}</td>
+                                <td>{{ $record['metringDevice'] }}</td>
+                                <td>{{ $record['namePoint'] }}</td>
+                                <td>{{ $record['serialNumberMetringDevice'] }}</td>
+                                <td>{{ $record['endTlm'] }}</td>
+                                <td>{{ \Carbon\Carbon::parse($record['timeStamp'])->setTimezone('Asia/Aqtobe')->format('d.m.Y, H:i') }}</td>
                             </tr>
                             @endif
                         @endforeach
@@ -57,8 +59,8 @@
                             <th>Модель ПУ</th>
                             <th>Название ТУ</th>
                             <th>Номер ПУ</th>
-                            <th>Время получения</th>
                             <th>Показания счетчика</th>
+                            <th>Время получения</th>
                             <th>Коэффицент</th>
                             <th>Общее потребление</th>
                         </tr>
@@ -116,13 +118,13 @@
                             </thead>
                             <tbody>
                             @foreach($records_for_period as $record)
-                                @if($record->personalAccount == Auth::user()->company->bin)
+                                @if($record['personalAccount'] == Auth::user()->company->bin)
                                     <tr>
-                                        <td>{{ $record->counterAgentName }}</td>
-                                        <td>{{ $record->serialNumberMetringDevice }}</td>
-                                        <td>{{ $record->startTlm }}</td>
-                                        <td>{{ $record->endTlm }}</td>
-                                        <td>{{ $record->consumption }}</td>
+                                        <td>{{ $record['counterAgentName'] }}</td>
+                                        <td>{{ $record['serialNumberMetringDevice'] }}</td>
+                                        <td>{{ $record['startTlm'] }}</td>
+                                        <td>{{ $record['endTlm'] }}</td>
+                                        <td>{{ $record['consumption'] }}</td>
                                     </tr>
                                 @endif
                             @endforeach

@@ -16,7 +16,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'company_id', 'position_id', 'department_id', 'full_name', 'phone', 'iin', 'email', 'password',
-        'computer_name', 'printer_name', 'kpp_name', 'remember_token', 'uuid', 'image', 'badge', 'settings'
+        'computer_name', 'printer_name', 'kpp_name', 'remember_token', 'uuid', 'image', 'badge', 'settings', 'fcm_token'
     ];
 
     protected $dates = [

@@ -47,7 +47,7 @@ export default {
     methods: {
         ...mapActions(['showModal']),
         getSchedules(){
-            axios.get('/container-controller/get-schedules')
+            axios.get('/cabinet/webcont/container-controller/get-schedules')
                 .then(res => {
                     this.items = res.data;
                 })

@@ -9,7 +9,7 @@
                     <v-container>
                         <v-row style="background: whitesmoke;padding: 10px;">
                             <div style="width: 20%">
-                                <a href="/container-controller">Назад</a>
+                                <a href="/cabinet/webcont/container-controller">Назад</a>
                             </div>
                             <div style="width: 80%;">
                                 <span style="float: right; font-size: 14px;">
@@ -144,7 +144,7 @@
             getContainerTaskLogs(){
                 this.import_logs = [];
                 this.overlay = true;
-                axios.get('/container-controller/task/'+this.container_task.id+'/import-logs')
+                axios.get('/cabinet/webcont/container-controller/task/'+this.container_task.id+'/import-logs')
                     .then(res => {
                         console.log(res);
                         this.import_logs = res.data;
@@ -159,7 +159,7 @@
                 formData.append('container_task_id', container_task_id);
                 formData.append('container_number', container_number);
                 this.overlay = true;
-                axios.post('/container-controller/task/reject-cancel-position', formData)
+                axios.post('/cabinet/webcont/container-controller/task/reject-cancel-position', formData)
                 .then(res => {
                     this.overlay = false;
                     console.log(res);
@@ -176,7 +176,7 @@
                 formData.append('container_number', container_number);
                 formData.append('import_log_id', import_log_id);
                 this.overlay = true;
-                axios.post('/container-controller/task/confirm-cancel-position', formData)
+                axios.post('/cabinet/webcont/container-controller/task/confirm-cancel-position', formData)
                     .then(res => {
                         this.overlay = false;
                         console.log(res);
@@ -192,7 +192,7 @@
                 formData.append('container_task_id', container_task_id);
                 formData.append('container_number', container_number);
                 this.overlay = true;
-                axios.post('/container-controller/task/reject-edit-position', formData)
+                axios.post('/cabinet/webcont/container-controller/task/reject-edit-position', formData)
                     .then(res => {
                         this.overlay = false;
                         console.log(res);
@@ -210,7 +210,7 @@
                 formData.append('new_container_number', new_container_number);
                 formData.append('import_log_id', import_log_id);
                 this.overlay = true;
-                axios.post('/container-controller/task/confirm-edit-position', formData)
+                axios.post('/cabinet/webcont/container-controller/task/confirm-edit-position', formData)
                     .then(res => {
                         this.overlay = false;
                         console.log(res);

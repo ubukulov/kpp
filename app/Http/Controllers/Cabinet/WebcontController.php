@@ -4,20 +4,17 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Container;
-use App\Models\ContainerLog;
 use App\Models\ContainerStock;
 use App\Models\ContainerTask;
 use App\Models\User;
-use App\Traits\WebcontReports;
+use App\Traits\WebcontReports as WebcontReportsTrait;
+use App\Traits\WebcontContainerController as WebcontControllerTrait;
+use App\Traits\WebcontTechniqueController as WebcontTechniqueControllerTrait;
 use Illuminate\Http\Request;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class WebcontController extends Controller
 {
-    use WebcontReports;
+    use WebcontReportsTrait, WebcontControllerTrait, WebcontTechniqueControllerTrait;
 
     public function index()
     {
@@ -65,7 +62,7 @@ class WebcontController extends Controller
         $container_number = $request->input('container_number');
         $container = Container::where('number', 'like', '%'.$container_number)->first();
         if($container){
-            $container_stock = ContainerStock::where(['container_id' => $container->id])->first();
+            /*$container_stock = ContainerStock::where(['container_id' => $container->id])->first();
             if ($container_stock) {
                 $container_address = $container_stock->container_address;
                 return response([
@@ -75,7 +72,13 @@ class WebcontController extends Controller
                 return response([
                     'text' => "Контейнер №".$container->number." отсутствует в остатке. <br> (Владелец: $container->company, $container->container_type футовый)</span>",
                 ], 200);
+            }*/
+            $container_logs = $container->logs;
+            foreach($container_logs as $container_log){
+                $container_log['user'] = $container_log->user;
+                $container_log['container_type'] = $container->container_type;
             }
+            return response()->json($container_logs);
         } else {
             return response([
                 'text' => "Контейнер №".$container_number." не найден"

@@ -16,6 +16,18 @@ Vue.use(Vuex);
 
 import store from "./store/store";
 
+Vue.config.devtools = false;
+Vue.config.productionTip = false;
+
+if (window.App && window.App.user) {
+    store.dispatch('login', window.App.user);
+}
+
+if (window.App && window.App.shifts && window.App.shifts.length > 0) {
+    store.commit('SET_SHIFTS', window.App.shifts);
+    sessionStorage.setItem('shifts', JSON.stringify(window.App.shifts));
+}
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -59,6 +71,7 @@ Vue.component('mark-aggregation', require('./mark/Aggregation.vue').default);
 Vue.component('cargo-controller', require('./container/cargo/CargoController.vue').default);
 Vue.component('cargo-order-show', require('./container/cargo/CargoOrderShow.vue').default);
 Vue.component('cargo-order-position', require('./container/cargo/CargoOrderPosition.vue').default);
+Vue.component('barcode-component', require('./components/BarcodeComponent.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

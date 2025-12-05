@@ -8,21 +8,6 @@
                 >
                     <v-container>
                         <v-row dense>
-                            <v-col cols="12">
-                                <v-container>
-                                    <v-row style="background: whitesmoke;padding: 10px;">
-                                        <div style="width: 80%">
-                                            {{ name }}
-                                        </div>
-                                        <div style="width: 20%;">
-                                <span style="float: right; font-size: 14px;">
-                                    <a href="/logout">Выйти</a>
-                                </span>
-                                        </div>
-                                    </v-row>
-                                </v-container>
-                            </v-col>
-
                             <v-col
                                 class="d-flex mb-3"
                                 cols="12"
@@ -68,11 +53,11 @@
                                                 <v-row>
                                                     <div style="width: 33%">
                                         <span v-if="item.status==='open'" class="subheading mr-2">
-                                            В работе <a :href="'/container-controller/task/'+item.id+'/container-logs'">
+                                            В работе <a :href="'/cabinet/webcont/container-controller/task/'+item.id+'/container-logs'">
                                             <i :class="[{ allow: item.allow}]" style="font-size: 20px;" class="fa fa-history"></i></a>
                                         </span>
                                                         <span v-else class="subheading mr-2">
-                                            Выполнен <a :href="'/container-controller/task/'+item.id+'/container-logs'">
+                                            Выполнен <a :href="'/cabinet/webcont/container-controller/task/'+item.id+'/container-logs'">
                                             <i style="font-size: 20px;" class="fa fa-history"></i></a>
                                         </span>
                                                     </div>
@@ -102,10 +87,6 @@
                                         </v-card-subtitle>
 
                                         <v-card-text>
-
-                                        </v-card-text>
-
-                                        <v-card-text>
                                             <v-container>
                                                 <v-row>
                                                     <div style="width: 50%">
@@ -131,7 +112,7 @@
                                                 <a class="page-link" v-on:click="getContainerTasks(pagination.prev_page_url)" href="#" tabindex="-1">Предыдущая</a>
                                             </li>
                                             <li class="page-item" v-for="page in pagination.last_page" v-bind:class="[{ disabled: page === pagination.current_page}]">
-                                                <a class="page-link" v-if="page <= 3" href="#" v-on:click="getContainerTasks('/container-controller/get-container-tasks/'+filter_id+'?page='+page)">
+                                                <a class="page-link" v-if="page <= 3" href="#" v-on:click="getContainerTasks('/cabinet/webcont/container-controller/get-container-tasks/'+filter_id+'?page='+page)">
                                                     {{ page }}
                                                     <span v-if="page === pagination.current_page" class="sr-only">(current)</span>
                                                 </a>
@@ -146,17 +127,17 @@
                             </v-row>
 
                             <v-row class="mt-2" v-if="bottom_nav ==='search'">
-                                <v-col cols="8">
+                                <v-col cols="9">
                                     <v-text-field
                                         v-model="container_number"
                                         label="Номер контейнера"
                                         hide-details="auto"
+                                        solo
                                     ></v-text-field>
                                 </v-col>
 
-                                <v-col cols="4">
+                                <v-col cols="3">
                                     <v-btn
-                                        depressed
                                         color="primary"
                                         @click="getInfoForContainer()"
                                     >
@@ -267,7 +248,7 @@
                 let pagination;
                 this.container_tasks = [];
                 this.overlay = true;
-                url = url || "/container-controller/get-container-tasks/" + this.filter_id;
+                url = url || "/cabinet/webcont/container-controller/get-container-tasks/" + this.filter_id;
                 axios.get(url)
                     .then(res => {
                         console.log(res);
@@ -292,7 +273,7 @@
                 return dateformat(dt, 'dd.mm.yyyy HH:MM');
             },
             print_r(id){
-                window.location.href = '/container-terminals/task/'+id+'/print'
+                window.location.href = '/cabinet/webcont/container-terminals/task/'+id+'/print'
             },
             whatClassBeUsed(task_type, hasAnyPositionCancelOrEdit){
                 if (hasAnyPositionCancelOrEdit) {
@@ -331,5 +312,9 @@
 <style scoped>
     .v-card__title {
         justify-content: space-between;
+    }
+    .v-btn:not(.v-btn--round).v-size--default {
+        height: 100%;
+        padding: 0;
     }
 </style>

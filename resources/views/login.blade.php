@@ -20,7 +20,6 @@
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
-
     <style>
         .hidden {
             display: none !important;
@@ -71,6 +70,8 @@
                 </div>
             </form>
 
+
+
             <div class="d-flex justify-content-center hidden">
                 <div class="spinner-border text-success" role="status">
                     <span class="sr-only">Loading...</span>
@@ -91,11 +92,19 @@
                 <div class="alert alert-danger mt-2">{{ session('message') }}</div>
             @endif
 
+
             {{--<p class="mb-1">
                 <a href="{{ route('cab.forget-password') }}">Я забыль пароль</a>
             </p>--}}
         </div>
+
+
         <!-- /.login-card-body -->
+    </div>
+
+    <div style="display: flex; justify-content: center;">
+        <a href="https://www.gogetssl.com" rel="nofollow" title="GoGetSSL Site Seal Logo" ><div id="gogetssl-animated-seal" style="width:180px; height:58px;"></div></a>
+        <script src="https://gogetssl-cdn.s3.eu-central-1.amazonaws.com/site-seals/gogetssl-seal.js"></script>
     </div>
 </div>
 <!-- /.login-box -->

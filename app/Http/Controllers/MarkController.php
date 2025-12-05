@@ -16,6 +16,7 @@ use File;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Http;
 
 class MarkController extends BaseController
 {
@@ -167,7 +168,8 @@ class MarkController extends BaseController
                     }
 
                     MarkCode::create([
-                        'marking_details_id' => $mark_detail->id, 'status' => 'not_marked', 'marking_code' => $line11, 'box_number' => $line10
+                        'marking_details_id' => $mark_detail->id, 'status' => 'not_marked', 'marking_code' => $line11, 'box_number' => $line10,
+                        'size' => $line3
                     ]);
                 }
             }
@@ -199,7 +201,7 @@ class MarkController extends BaseController
 
     public function getMarkings()
     {
-        return response()->json(Mark::selectRaw('id, CONCAT("№", id) as number')->where(['status' => 'new'])->orWhere(['status' => 'processing'])->get());
+        return response()->json(Mark::selectRaw('id, CONCAT("№", id) as number')->where(['status' => 'new'])->orWhere(['status' => 'processing'])->orderBy('id', 'DESC')->get());
     }
 
     public function getContainers($mark_id)
@@ -456,18 +458,15 @@ HERE;
     public function commandPrint(Request $request)
     {
         $data = $request->all();
-        $marking = Mark::findOrFail($data['mark_id']);
-        if($data['mark_id'] >= 180 AND $data['mark_id'] <= 181) {
-            $mark_detail = MarkDetail::where(['gtin' => $data['gtin_number']])->whereIn('marking_id', [180,181])->first();
-        } else {
-            $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
-        }
+        $mark = Mark::findOrFail($data['mark_id']);
+        $markStat = $mark->getStats();
+        $statTxt = "Статистика по заявке: Распечатано " . $markStat->markedCount . " из " .$markStat->allCount;
 
-//        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+        $mark_detail = MarkDetail::where(['marking_id' => $data['mark_id'], 'gtin' => $data['gtin_number']])->first();
+
         if($mark_detail) {
             $mark_code = MarkCode::where(['marking_details_id' => $mark_detail->id, 'status' => 'not_marked'])->first();
             if($mark_code) {
-                $mark = Mark::findOrFail($data['mark_id']);
                 if($mark->free_codes() > 0) {
                     $mark->status = 'processing';
                     $mark->save();
@@ -489,7 +488,7 @@ HERE;
                 $line8 = Str::limit($mark_detail->line8, 45, '');
                 //$line9 = Str::limit($mark_detail->line9, 45, '');
                 $line9 = Str::limit($mark_detail->line9, 110, '');
-                if($marking->type == 1) {
+                if($mark->type == 1) {
                     $line10 = Str::limit($mark_detail->line10, 45, '');
                     $line11 = Str::limit($mark_detail->line11, 45, '');
                     $marking_code = $mark_code->marking_code;
@@ -519,7 +518,7 @@ HERE;
 
                 $mark_code->status = 'marked';
                 $mark_code->scan_user_id = Auth::user()->id;
-                if($marking->type == 1) {
+                if($mark->type == 1) {
                     $mark_code->box_number = $data['box_number'];
                 }
 
@@ -535,12 +534,12 @@ HERE;
 
                 if($mark_detail->mc == 'Y') {
                     $mc = "^BY20,20^FT380,270^BXN,4,200,0,0,1,~^FH\^FD$marking_code^FS";
-                    $mc .= ($marking->type == 2) ? "^FT20,295^A0N,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^A0N,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
+                    $mc .= ($mark->type == 2) ? "^FT20,295^A0N,17,17^FH\^CI28^FD$line10^FS^CI27^FT415,295^A0N,17,17^FH\^CI28^FD$barcode^FS^CI27" : "";
                 } else {
                     $mc = '';
                 }
 
-                if($marking->type == 1) {
+                if($mark->type == 1) {
                     $data = <<<HERE
 ^XA^LRN^CI0^XZ
 ^XA^CWZ,E:TT0003M_^FS^XZ
@@ -685,42 +684,68 @@ $mc
 ^PQ1,0,1,Y^XZ
 HERE;
 
-                    //return $data;
 
-                }
+                    # новый размер 7на4 (вертикальный)
+                    $boxNumber = $mark_code->box_number;
+                    $code = $mark_code->marking_code;
+                    $artikul = $mark_detail->line2;
+                    $gtin = $mark_detail->gtin;
+                    $line4 = $mark_detail->line4;
+                    $line1 = $mark_detail->line1;
+                    $line8 = $mark_detail->line8;
 
 
-
-                /*$data = <<<HERE
-^XA^LRN^CI0^XZ
-^XA^CWZ,E:tt0003m_^FS^XZ
+                    $data = <<<HERE
+^XA
+^CWZ,E:ARIALKZ.FNT^FS^XZ
+^MMT
+^PW344
+^LL0200
+^LS0
 ^XA
 ^MMT
-^PW559
-^LL0320
+^PW440
+^LL0440
 ^LS0
-^FT20,35^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,58^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line1^FS^CI0
-^FT20,81^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line3^FS^CI0
-^FT20,102^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line4^FS^CI0
-^FT20,128^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line5^FS^CI0
-^FT20,152^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line6^FS^CI0
-^FT20,179^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line7^FS^CI0
-^FT20,205^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line8^FS^CI0
-^FT20,231^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line9^FS^CI0
-^FT20,257^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line10^FS^CI0
-^FT20,281^A0N,17,16,TT0003M_^FH\^CI17^F8^FD$line11^FS^CI0
-$eac
-$mc
+^BY120,120^FT185,150^BXB,3,200,0,0,1,~
+^FH\^FD$code^FS
+^FT240,140^AZB,12,13,ARIALKZ^FH\^CI28^FDНаим. товара^FS
+^FT255,184^AZB,6,7,ARIALKZ^FH\^CI28^FD$line1^FS
+^FT270,188^AZB,12,13,ARIALKZ^FH\^CI28^FDМатериал:$line4^FS
+^FT285,188^AZB,12,13,ARIALKZ^FH\^CI28^FDСтрана изг. : $line8^FS
+^FT300,188^AZB,12,13,ARIALKZ^FH\^CI28^FDGTIN: $gtin^FS
+^FT315,188^AZB,12,13,ARIALKZ^FH\^CI28^FDАртикул : $artikul^FS
+^FT330,188^AZB,10,11,ARIALKZ^FH\^CI28^FDИмпортёр : ТОО «LPP Kazakhstan»,^FS
+^FT340,188^AZB,10,11,ARIALKZ^FH\^CI28^FD(LPP Kazakhstan), г.Алматы, ^FS
+^FT350,188^AZB,4,4,ARIALKZ^FH\^CI28^FDМедеуский р, ул Хаджи Мукана 22/5^FS
+^FT205,190^AZB,10,11,ARIALKZ^FH\^CI28^FD$boxNumber^FS
 ^PQ1,0,1,Y^XZ
-HERE;*/
+HERE;
+
+                }
 
                 if (!fwrite($fp,$data)){
                     return response(['data' => 'writing failed'], 403);
                 }
 
-                return response('Success', 200);
+                return response()->json([
+                    'message' => 'Успешно распечатано. GTIN ' . $mark_detail->gtin,
+                    'success' => true,
+                    'stats' => $statTxt
+                ], 200, [], JSON_UNESCAPED_UNICODE);
+            } else {
+                return response()->json([
+                    'message' => 'Все коды КМ были распечатаны.',
+                    'success' => false,
+                    'stats' => $statTxt
+                ], 400, [], JSON_UNESCAPED_UNICODE);
             }
+        } else {
+            return response()->json([
+                'message' => 'GTIN ' .$data['gtin_number']. ' не найден в этой заявке',
+                'success' => false,
+                'stats' => $statTxt
+            ], 400, [], JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1343,5 +1368,46 @@ HERE;
             }
 
         }
+    }
+
+    public function generateLabelPDF()
+    {
+        $data['boxNumber'] = '0105907232667740213SV(+<X:WJVo5';
+        $data['code'] = '0105907232667740213SV(+<X:WJVo591KZF092RgEEjHGFsQIDxA1Z5m7NtB3ZHAg=RgEEjHGFsQIDxA1Z5m7NtB3ZHAg=RgEEjHGFsQIDxA1Z5m7NtB3ZHAg=RgEE';
+        $data['artikul'] = '160FA-30X';
+        $data['gtin'] = '5907232667740';
+        $data['line4'] = '100% ПОЛИЭСТЕР';
+        $data['line1'] = 'САПОГИ ДЛЯ ДЕВОЧЕК';
+        $data['line8'] = 'Китай';
+
+
+        /*$data['zpl'] = <<<HERE
+        ^XA
+        ^CWZ,E:ARIALKZ.FNT^FS^XZ
+        ^MMT
+        ^PW344
+        ^LL0200
+        ^LS0
+        ^XA
+        ^MMT
+        ^PW440
+        ^LL0440
+        ^LS0
+        ^BY120,120^FT185,150^BXB,3,200,0,0,1,~
+        ^FH\^FD$code^FS
+        ^FT240,140^AZB,12,13,ARIALKZ^FH\^CI28^FDНаим. товара^FS
+        ^FT255,184^AZB,6,7,ARIALKZ^FH\^CI28^FD$line1^FS
+        ^FT270,188^AZB,12,13,ARIALKZ^FH\^CI28^FDМатериал:$line4^FS
+        ^FT285,188^AZB,12,13,ARIALKZ^FH\^CI28^FDСтрана изг. : $line8^FS
+        ^FT300,188^AZB,12,13,ARIALKZ^FH\^CI28^FDGTIN: $gtin^FS
+        ^FT315,188^AZB,12,13,ARIALKZ^FH\^CI28^FDАртикул : $artikul^FS
+        ^FT330,188^AZB,10,11,ARIALKZ^FH\^CI28^FDИмпортёр : ТОО «LPP Kazakhstan»,^FS
+        ^FT340,188^AZB,10,11,ARIALKZ^FH\^CI28^FD(LPP Kazakhstan), г.Алматы, ^FS
+        ^FT350,188^AZB,4,4,ARIALKZ^FH\^CI28^FDМедеуский р, ул Хаджи Мукана 22/5^FS
+        ^FT205,190^AZB,10,11,ARIALKZ^FH\^CI28^FD$boxNumber^FS
+        ^PQ1,0,1,Y^XZ
+HERE;*/
+
+        return view('label', compact('data'));
     }
 }

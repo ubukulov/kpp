@@ -4,17 +4,14 @@ export default {
     data() {
         return {
             techniques: [],
-            techniqueIds: [],
             users: [],
-            userIds: [],
             square: null,
-            count_operations: null,
             areas: [],
             area_id: null,
-            ramp: false,
             errors: [],
             file: null,
-            previewUrl: null
+            previewUrl: null,
+            services: []
         }
     },
     props: [
@@ -28,7 +25,7 @@ export default {
             return dateformat(dt, 'dd.mm.yyyy HH:MM');
         },
         getTechniques(){
-            axios.get('/cargo-controller/get-techniques')
+            axios.get('/cabinet/webcont/cargo-controller/get-techniques')
                 .then(res => {
                     this.techniques = res.data;
                 })
@@ -37,7 +34,7 @@ export default {
                 })
         },
         getUsers(){
-            axios.get('/cargo-controller/get-employees')
+            axios.get('/cabinet/webcont/cargo-controller/get-employees')
                 .then(res => {
                     this.users = res.data;
                 })
@@ -46,7 +43,7 @@ export default {
                 })
         },
         getAreas(){
-            axios.get('/cargo-controller/get-areas')
+            axios.get('/cabinet/webcont/cargo-controller/get-areas')
                 .then(res => {
                     this.areas = res.data;
                 })
@@ -73,64 +70,49 @@ export default {
                     this.errors.push('Укажите площадку');
                 }
 
-                formData.append('cargoAreaId', this.area_id);
-
-                if(this.cargoStock.car_number) {
-                    // сборная
-                    if (this.techniqueIds.length === 0) {
-                        this.errors.push('Укажите технику');
-                    }
-
-                    if (this.userIds.length === 0) {
-                        this.errors.push('Укажите сотрудников');
-                    }
-
-                    if (!this.square) {
-                        this.errors.push('Укажите кв.м');
-                    }
-
-                    if (!this.count_operations) {
-                        this.errors.push('Укажите кол-во операции');
-                    }
-
-                    formData.append('techniqueIds', this.techniqueIds);
-                    formData.append('userIds', this.userIds);
-                    formData.append('square', this.square);
-                    formData.append('count_operations', this.count_operations);
-                } else {
-                    // самоход
-                    formData.append('ramp', this.ramp);
+                if (!this.square) {
+                    this.errors.push('Укажите кв.м');
                 }
+
+                formData.append('cargoAreaId', this.area_id);
+                formData.append('square', this.square);
+                formData.append('services', JSON.stringify(this.services));
             } else {
                 // выдача
-                if(this.cargoStock.cargo_type === 1) {
-                    if (this.techniqueIds.length === 0) {
-                        this.errors.push('Укажите технику');
-                    }
-
-                    if (this.userIds.length === 0) {
-                        this.errors.push('Укажите сотрудников');
-                    }
-
-                    if (!this.count_operations) {
-                        this.errors.push('Укажите кол-во операции');
-                    }
-
-                    formData.append('techniqueIds', this.techniqueIds);
-                    formData.append('userIds', this.userIds);
-                    formData.append('count_operations', this.count_operations);
-                } else {
-                    formData.append('ramp', this.ramp);
-                }
+                formData.append('services', JSON.stringify(this.services));
             }
 
+            if(this.services.length === 0) {
+                this.errors.push('Укажите услуги');
+            } else {
+                this.services.forEach((row, i) => {
+                    const position = i + 1;
+
+                    if(!row.techniqueId) {
+                        this.errors.push(`Укажите технику. Позиция №${position}`);
+                    }
+
+                    if(this.getService(row.techniqueId)?.slug !== 'ramp' && this.getService(row.techniqueId)?.slug !== 'self' && this.getService(row.techniqueId)?.slug !== 'without_unloading') {
+                        if(row.userId.length === 0) {
+                            this.errors.push(`Укажите сотрудника. Позиция №${position}`);
+                        }
+                    }
+
+                    if(!row.count_operations && this.getService(row.techniqueId)?.slug !== 'ramp' && this.getService(row.techniqueId)?.slug !== 'self' && this.getService(row.techniqueId)?.slug !== 'without_unloading') {
+                        this.errors.push(`Укажите кол-во операции. Позиция №${position}`);
+                    }
+                })
+            }
+
+
             if (this.errors.length === 0) {
-                axios.post('/cargo-controller/cargo/fix-operations', formData, {
+                axios.post('/cabinet/webcont/cargo-controller/cargo/fix-operations', formData, {
                     headers: { "Content-Type": "multipart/form-data" }
                 })
                     .then(res => {
                         console.log(res)
-                        window.location.href = `/cargo-controller/cargo-task/${this.cargoTask.id}/show`;
+                        //window.location.href = `/cabinet/webcont/cargo-controller/cargo-task/${this.cargoTask.id}/show`;
+                        window.location.href = `/cabinet/webcont/cargo-controller`;
                     })
                     .catch(err => {
                         console.log(err)
@@ -145,13 +127,38 @@ export default {
                 this.file = file;
                 this.previewUrl = window.URL.createObjectURL(file);
             }
+        },
+        addRow() {
+            this.services.push({
+                techniqueId: null,
+                userId: [],
+                count_operations: null,
+            });
+        },
+        removeRow(index) {
+            this.services.splice(index, 1);
+        },
+        getService(techniqueId){
+            return this.techniques.find(item => item.id === techniqueId);
+        }
+    },
+    watch: {
+        services: {
+            handler(newServices) {
+                newServices.forEach((service) => {
+                    if (Array.isArray(service.userId) && service.userId.length > 3) {
+                        service.userId = service.userId.slice(0, 3);
+                    }
+                });
+            },
+            deep: true
         }
     },
     created() {
         this.getTechniques();
         this.getUsers();
         this.getAreas();
-        if(this.cargoLog) {
+        /*if(this.cargoLog) {
             this.techniqueIds = this.cargoLog.technique_ids
                 ? this.cargoLog.technique_ids.split(',').map(Number)
                 : [];
@@ -163,7 +170,7 @@ export default {
             this.square = this.cargoLog.square;
             this.count_operations = this.cargoLog.count_operations;
             this.previewUrl = this.cargoStock.image;
-        }
+        }*/
 
     }
 }
@@ -176,11 +183,11 @@ export default {
                 <v-row>
                     <v-col cols="12" class="card-flex mb-1">
                         <div>
-                            <a class="btn btn-outline-primary" :href="`/cargo-controller/cargo-task/${cargoTask.id}/show`">Назад</a>
+                            <a class="btn btn-outline-primary" :href="`/cabinet/webcont/cargo-controller/cargo-task/${cargoTask.id}/show`">Назад</a>
                         </div>
 
                         <div>
-                            <a class="btn btn-outline-primary" href="/logout">Выйти</a>
+
                         </div>
                     </v-col>
                     <v-col cols="12" style="border: 1px dashed;">
@@ -212,40 +219,64 @@ export default {
 
                 </v-row>
 
-                <v-row v-if="cargoStock.cargo_type === 1">
-                    <v-col
-                        cols="12"
-                    >
+                <v-row style="border-bottom: 1px dashed #0c525d;" v-for="(item, index) in services" :key="index">
+                    <span class="service-span">Услуга №{{index+1}}. {{ getService(item.techniqueId)?.name || '' }}</span>
+                    <v-col cols="8">
                         <v-autocomplete
                             :items="techniques"
                             :return-object="false"
                             :hint="`${techniques.id}, ${techniques.name}`"
                             item-value="id"
-                            v-model="techniqueIds"
+                            v-model="item.techniqueId"
                             item-text="name"
-                            multiple
                             solo
+                            dense
                             variant="solo-filled"
                             label="Укажите технику"
                         ></v-autocomplete>
                     </v-col>
 
+                    <v-col cols="4">
+                        <v-text-field
+                            v-if="getService(item.techniqueId)?.slug !== 'ramp' && getService(item.techniqueId)?.slug !== 'self' && getService(item.techniqueId)?.slug !== 'without_unloading'"
+                            label="Кол-во операции"
+                            v-model="item.count_operations"
+                            solo
+                            dense
+                        ></v-text-field>
+                    </v-col>
+
                     <v-col cols="12">
                         <v-autocomplete
+                            v-if="getService(item.techniqueId)?.slug !== 'ramp' && getService(item.techniqueId)?.slug !== 'self' && getService(item.techniqueId)?.slug !== 'without_unloading'"
                             :items="users"
                             :return-object="false"
                             :hint="`${users.id}, ${users.full_name}`"
                             item-value="id"
-                            v-model="userIds"
+                            v-model="item.userId"
                             item-text="full_name"
-                            multiple
                             solo
+                            dense
+                            multiple
                             variant="solo-filled"
                             label="Укажите сотрудников"
                         ></v-autocomplete>
                     </v-col>
 
-                    <v-col v-if="cargoTask.type === 'receive'" cols="12">
+                    <v-col cols="12" class="text-right">
+                        <v-btn @click="removeRow(index)" color="pink pink-lighten-4" outlined>Убрать</v-btn>
+                    </v-col>
+
+                </v-row>
+
+                <v-row>
+                    <v-col cols="12" class="text-right">
+                        <v-btn @click="addRow" color="green green-accent-1" outlined>Добавить услугу</v-btn>
+                    </v-col>
+                </v-row>
+
+                <v-row v-if="cargoTask.type === 'receive'">
+                    <v-col cols="7">
                         <v-select
                             :items="areas"
                             :return-object="false"
@@ -259,40 +290,13 @@ export default {
                         ></v-select>
                     </v-col>
 
-                    <v-col v-if="cargoTask.type === 'receive'" cols="6">
+                    <v-col cols="5">
                         <v-text-field
                             label="Укажите кв.м"
                             v-model="square"
                             solo
-                        ></v-text-field>
-                    </v-col>
-
-                    <v-col cols="6">
-                        <v-text-field
-                            label="Кол-во операции"
-                            v-model="count_operations"
-                            solo
-                        ></v-text-field>
-                    </v-col>
-                </v-row>
-
-                <v-row v-else>
-                    <v-col cols="12">
-                        <v-switch label="Пандус" v-model="ramp"></v-switch>
-                    </v-col>
-
-                    <v-col v-if="cargoTask.type === 'receive'" cols="12">
-                        <v-select
-                            :items="areas"
-                            :return-object="false"
-                            :hint="`${areas.id}, ${areas.name}`"
-                            item-value="id"
-                            v-model="area_id"
-                            item-text="name"
-                            outlined
                             dense
-                            label="Укажите площадку"
-                        ></v-select>
+                        ></v-text-field>
                     </v-col>
                 </v-row>
 
@@ -328,7 +332,7 @@ export default {
     </v-app>
 </template>
 
-<style scoped>
+<style>
 .w100 {
     width: 100%;
 }
@@ -342,5 +346,20 @@ export default {
     width: 100%;
     padding: 10px;
     font-size: 16px !important;
+}
+/*.v-text-field input {
+    font-size: 14px !important;
+}*/
+.v-text-field .v-label {
+    font-size: 13px;
+}
+.v-input--selection-controls {
+    margin-top: 0px !important;
+}
+.v-text-field__details {
+    display: none;
+}
+.service-span {
+    margin-top: 10px;
 }
 </style>

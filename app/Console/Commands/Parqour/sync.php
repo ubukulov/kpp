@@ -44,7 +44,7 @@ class sync extends Command
                 ->join('companies', 'companies.id', '=', 'wcl_companies.company_id')
                 ->join('white_car_lists', 'white_car_lists.id', '=', 'wcl_companies.wcl_id')
                 //->whereIn('wcl_companies.company_id', [45])
-                ->where(['wcl_companies.company_id' => 113])
+                ->where(['wcl_companies.company_id' => 236])
                 //->whereIn('wcl_companies.company_id', [80,151,224,63,56,33])
                 ->get();
         foreach($wcls as $wcl){

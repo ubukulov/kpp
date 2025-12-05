@@ -14,7 +14,7 @@ class RusGuardServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('ckud', RusGUARD::class);
+        $this->app->singleton('ckud', RusGUARD::class);
     }
 
     /**

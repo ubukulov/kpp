@@ -39,7 +39,7 @@ class ImportLog extends Model
                     if ($container_stock) {
                         return $container_stock->container_address->name;
                     } else {
-                        return '';
+                        return 'нет в стоке';
                     }
                 } else {
                     return '';

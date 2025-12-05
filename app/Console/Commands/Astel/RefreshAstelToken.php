@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Astel;
 
 use Illuminate\Console\Command;
-use Cache;
 use ASTEL;
 
 class RefreshAstelToken extends Command
@@ -20,7 +19,7 @@ class RefreshAstelToken extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Обновляет ASTEL токен (действует 24 часа)';
 
     /**
      * Create a new command instance.
@@ -39,12 +38,13 @@ class RefreshAstelToken extends Command
      */
     public function handle()
     {
-        $response = ASTEL::getToken();
+        $token = ASTEL::refreshToken();
 
-        if($response->getStatusCode() == 200) {
-            $responseContent = json_decode($response->getContent());
-            Cache::put('astel_token', $responseContent->token);
-            $this->info("Token: " . Cache::get('astel_token'));
+        if ($token) {
+            $this->info("New token successfully saved.");
+            $this->line("Token: " . $token);
+        } else {
+            $this->error("Error when updating token.");
         }
     }
 }

@@ -4,28 +4,22 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Http\Controllers\Controller;
 use ASTEL;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 
 class UtilityController extends Controller
 {
     public function energy()
     {
-        $records = [];
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate   = $_GET['end_date'] ?? null;
         $records_for_period = [];
 
-        if(isset($_GET['start_date']) && isset($_GET['end_date'])){
-            $response = ASTEL::getData($_GET['start_date'], $_GET['end_date']);
-            if ($response->getStatusCode() == 200) {
-                $responseContent = json_decode($response->getContent());
-                $records_for_period = $responseContent->data;
-            }
+        if ($startDate && $endDate) {
+            $records_for_period = ASTEL::getData($startDate, $endDate);
         }
 
-        $response = ASTEL::getData();
-        if ($response->getStatusCode() == 200) {
-            $responseContent = json_decode($response->getContent());
-            $records = $responseContent->data;
-        }
-
+        // Получаем все данные
+        $records = ASTEL::getData();
 
         return view('cabinet.utilities.energy', compact('records', 'records_for_period'));
     }

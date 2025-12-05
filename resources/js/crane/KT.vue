@@ -103,7 +103,7 @@
                     </v-window-item>
 
                     <v-window-item :value="2">
-                        <v-row>
+                        <v-row class="mt-3">
                             <v-col cols="8">
                                 <v-text-field
                                     v-model="container_number"
@@ -1176,7 +1176,7 @@
     }
 </script>
 
-<style scoped>
+<style>
     .is_shipping {
         width: 100%;background-color: #70aee2 !important;border-color: #70aee2 !important;
     }
@@ -1193,12 +1193,15 @@
         font-size: 24px !important;
         font-weight: normal !important;
     }
-    .v-dialog__content {
+    /*.v-dialog__content {
         top: 30% !important;
         position: absolute !important;
-    }
+    }*/
     .v-autocomplete-content .v-select-list .v-subheader {
         color: blue;
         font-size: 14px;
+    }
+    #input-217 {
+        font-size: 24px !important;
     }
 </style>

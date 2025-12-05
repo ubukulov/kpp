@@ -48,6 +48,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'/*, 'middleware' => ['t
         Route::resource('/employee', 'EmployeeController');
         Route::get('/employee/{id}/badge', 'EmployeeController@badge')->name('admin.employee.badge');
         Route::get('/employee/badges/{ids}', 'EmployeeController@badges');
+        Route::get('/employee/ajax/list', 'EmployeeController@list')->name('admin.employee.list');
 
         # Driver's routes
         Route::get('/drivers', 'DriverController@index')->name('admin.drivers.index');

@@ -58,6 +58,7 @@ class KppController extends Controller
 
     public function orderPermitByKpp(Request $request)
     {
+        $kpp_name = Auth::user()->kpp_name;
         $company = $this->companyRepository->getById($request->input('company_id'));
         $data = $request->except(['path_docs_fac', 'path_docs_back']);
         $data['company'] = $company->short_en_name;
@@ -68,7 +69,8 @@ class KppController extends Controller
         $data['from_company'] = (isset($data['from_company'])) ? mb_strtoupper($data['from_company']) : null;
         $data['foreign_car'] = (isset($data['foreign_car'])) ? mb_strtoupper($data['foreign_car']) : 0;
         $data['incoming_container_number'] = (isset($data['incoming_container_number'])) ? strtoupper($data['incoming_container_number']) : null;
-        $data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
+        $data['date_in'] = ($kpp_name == 'kpp1') ? null : date("Y-m-d H:i:s", strtotime($request->input('date_in')));
+        //$data['date_in'] = date("Y-m-d H:i:s", strtotime($request->input('date_in')));
         $data['kpp_name'] = Auth::user()->kpp_name;
         // Маршруты
         if (isset($data['direction_id']) && $data['direction_id'] != 0 && $data['direction_id'] != 6) {
@@ -87,7 +89,7 @@ class KppController extends Controller
             return response('Запрещено. Пропуск уже оформлен c такими данными.', 403);
         }*/
 
-        $data['status'] = 'exit_permitted';
+        //$data['status'] = ($kpp_name == 'kpp1') ? 'printed' : 'exit_permitted';
         $permit = $this->permitRepository->create($data);
         if(!$permit) {
             abort(500, "Произошло ошибка при создание пропуска.");
@@ -167,7 +169,7 @@ class KppController extends Controller
                 {
                     $message
                         ->from('webcont@dlg.kz')
-                        ->to(['propuskkpp@dlg.kz', 'b.gulsim@partner.samsung.com', 'r.bekbauva@partner.samsung.com', 'Zhotanova.Dinara@htl.kz'])
+                        ->to(['propuskkpp@dlg.kz', 'b.gulsim@partner.samsung.com', 'r.bekbauva@partner.samsung.com', 'Zhotanova.Dinara@htl.kz', 'ayagoz.k@partner.samsung.com'])
                         ->subject('Уведомление о прибытии ТС в ILC');
                 });
             }
@@ -212,13 +214,14 @@ class KppController extends Controller
         }
 
         if ($permit->status == 'awaiting_print') {
-            $permit->status = 'printed';
-            $permit->date_in = date('Y-m-d H:i:s');
+            $permit->status = ($kpp_name == 'kpp1') ? 'printed' : 'exit_permitted';
+            //$permit->date_in = date('Y-m-d H:i:s');
             $permit->save();
         }
 
         $id = $permit->id;
-        $date_in = date("d.m.Y H:i", strtotime($permit->date_in));
+        //$date_in = date("d.m.Y H:i", strtotime($permit->date_in));
+        $entry = ($kpp_name == 'kpp1') ? "Печать: " . date("d.m.Y H:i", strtotime($permit->created_at)) : "Въезд: " . date("d.m.Y H:i");
         $mark_car = $permit->mark_car;
         $gov_number = $permit->gov_number;
         $fio = $permit->last_name;
@@ -253,7 +256,7 @@ class KppController extends Controller
 ^BY3,3,58^FT459,72^BCN,,N,N
 ^FD$id^FS
 ^FT238,120^AZN,27,27,TT0003M_^FH\^CI17^F8^FD$company / $type^FS^CI0
-^FT46,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВъезд: $date_in^FS^CI0
+^FT46,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FD$entry^FS^CI0
 ^FT440,164^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВыезд: ______________^FS^CI0
 ^FT46,207^AZN,28,29,TT0003M_^FH\^CI17^F8^FDВодитель:^FS^CI0
 ^FT440,207^AZN,28,29,TT0003M_^FH\^CI17^F8^FDТранспорт:^FS^CI0
@@ -297,10 +300,11 @@ HERE;
                 //->whereNotNull('date_in')
                 ->whereDate('created_at', Carbon::today())
                 ->whereNull('date_out')
+                ->whereStatus('printed')
                 ->latest('id')
-                ->limit(1)
                 ->first();
-            if($permit && is_null($permit->date_out)) {
+
+            if($permit) {
                 $permit->date_in = $data['entryDate'];
                 $permit->status = 'exit_permitted';
                 $permit->save();
@@ -338,7 +342,7 @@ HERE;
             $data = $request->all();
 
             $permit = Permit::where('gov_number', $data['plateNumber'])
-                ->whereBetween('created_at', [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->endOfDay()]) // Последние 7 дней
+                ->whereBetween('created_at', [Carbon::today()->subDays(7)->startOfDay(), Carbon::today()->endOfDay()]) // Последние 7 дней
                 ->whereNotNull('date_in')
                 ->whereNull('date_out')
                 ->where('status', '=', 'exit_permitted')
@@ -375,7 +379,7 @@ HERE;
             $data = $request->all();
 
             $permit = Permit::where('gov_number', $data['plateNumber'])
-                ->whereBetween('created_at', [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->endOfDay()]) // Последние 7 дней
+                ->whereBetween('created_at', [Carbon::today()->subDays(7)->startOfDay(), Carbon::today()->endOfDay()]) // Последние 7 дней
                 ->whereNotNull('date_in')
                 ->whereNull('date_out')
                 ->where('status', '=', 'exit_permitted')

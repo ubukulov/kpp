@@ -15,6 +15,9 @@
                         </div>
 
                         <div class="col-6 text-right">
+                            <a href="{{ asset('files/instructions/ЛК.Инструкция по добавлению сотрудника .pdf') }}" target="_blank">
+                                <i class="fa fa-download"></i>&nbsp;Скачать инструкцию
+                            </a>
                             <a href="{{ route('cabinet.employees.create') }}" class="btn btn-dark">Добавить</a>
                             &nbsp;&nbsp;<button type="button" @click="printBadge()" class="btn btn-success">Распечатать</button>
                         </div>

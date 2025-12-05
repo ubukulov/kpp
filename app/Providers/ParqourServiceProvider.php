@@ -13,7 +13,7 @@ class ParqourServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('parqour', Parqour::class);
+        $this->app->singleton('parqour', Parqour::class);
     }
 
     /**

@@ -109,7 +109,7 @@ export default {
     methods: {
         ...mapActions(['hideModal']),
         getCraneUsers(){
-            axios.get('/container-controller/get-crane-users')
+            axios.get('/cabinet/webcont/container-controller/get-crane-users')
                 .then(res => {
                     this.crane_users = res.data
                 })
@@ -118,7 +118,7 @@ export default {
                 })
         },
         getSlingerUsers(){
-            axios.get('/container-controller/get-slinger-users')
+            axios.get('/cabinet/webcont/container-controller/get-slinger-users')
                 .then(res => {
                     this.slinger_users = res.data
                 })
@@ -127,7 +127,7 @@ export default {
                 })
         },
         getTechniques(){
-            axios.get('/container-controller/get-techniques')
+            axios.get('/cabinet/webcont/container-controller/get-techniques')
                 .then(res => {
                     this.techniques = res.data
                 })

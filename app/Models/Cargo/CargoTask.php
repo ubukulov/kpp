@@ -3,6 +3,7 @@
 namespace App\Models\Cargo;
 
 use App\Models\Company;
+use App\Models\Spine;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -74,5 +75,10 @@ class CargoTask extends Model
             }
         }
         return $count == 0;
+    }
+
+    public function getSpine()
+    {
+        return Spine::where(['task_number' => $this->getNumber(), 'kind' => 'cargo'])->first() ?? null;
     }
 }

@@ -19,14 +19,14 @@
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class
                      with font-awesome or any other icon font library -->
-                {{--<li class="nav-item">
+                <li class="nav-item">
                     <a href="{{ route('cabinet') }}" class="nav-link @if(request()->is('cabinet')) active @endif">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>
                             Панель клиента
                         </p>
                     </a>
-                </li>--}}
+                </li>
 
                 @role('buhgalteriya')
                     <li class="nav-item">
@@ -86,7 +86,7 @@
                 @endrole
 
                 @if(Auth::user()->company->ashana == 0)
-                <li class="nav-item has-treeview">
+                <li class="nav-item has-treeview @if(request()->is('cabinet/ashana/*')) menu-open @endif">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-copy"></i>
                         <p>
@@ -98,7 +98,7 @@
 
                     <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('cabinet/wms/*')) display: block; @endif" >
                         <li class="nav-item">
-                            <a href="{{ route('cabinet.ashana.index') }}" class="nav-link @if(request()->is('cabinet/ashana*')) active @endif">
+                            <a href="{{ route('cabinet.ashana.index') }}" class="nav-link @if(request()->is('cabinet/ashana/history*')) active @endif">
                                 <i class="nav-icon fas fa-chart-pie"></i>
                                 <p>
                                     История
@@ -125,6 +125,16 @@
                         </li>
                         @endrole
 
+                        @role('ashana-isklyucheniya')
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.ashana.exceptions') }}" class="nav-link @if(request()->is('cabinet/ashana/exceptions*')) active @endif">
+                                <i class="nav-icon fas fa-chart-pie"></i>
+                                <p>
+                                    Исключения
+                                </p>
+                            </a>
+                        </li>
+                        @endrole
                     </ul>
                 </li>
                 @endif
@@ -311,6 +321,9 @@
                     </a>
                 </li>
 
+                @endrole
+
+                @role('razovyy-propusk')
                 <li class="nav-item">
                     <a href="{{ route('cabinet.permits.index') }}" class="nav-link @if(request()->is('cabinet/permits*')) active @endif">
                         <i style="font-size: 25px; vertical-align: super;" class="nav-icon fas fa-align-justify"></i>
@@ -319,7 +332,6 @@
                         </p>
                     </a>
                 </li>
-
                 @endrole
 
                 @role('parqour-gosti')
@@ -381,7 +393,7 @@
                     </li>
                 @endif
 
-                @role('kt-settlement')
+                @role('modul-webcont')
 
                 <li class="nav-item has-treeview @if(request()->is('cabinet/webcont/*')) menu-open @endif">
                     <a href="#" class="nav-link">
@@ -394,15 +406,53 @@
                     </a>
                     <ul class="nav nav-treeview" style="margin-left: 15px; @if(request()->is('cabinet/webcont/*')) display: block; @else display: none; @endif">
 
+                        @role('kt-settlement')
                         <li class="nav-item">
                             <a href="{{ route('cabinet.webcont.reports') }}" class="nav-link @if(request()->is('cabinet/webcont/reports*')) active @endif">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Отчеты</p>
                             </a>
                         </li>
+                        @endrole
+
+                        @role('kt-controller')
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.webcont.kt.controller') }}" class="nav-link @if(request()->is('cabinet/webcont/container-controller*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Конт: Контроллер</p>
+                            </a>
+                        </li>
+                        @endrole
+
+                        @role('technique-controller')
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.webcont.technique.controller') }}" class="nav-link @if(request()->is('cabinet/webcont/technique-controller*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Авто: Контроллер</p>
+                            </a>
+                        </li>
+                        @endrole
+
+                        @role('cargo-controller')
+                        <li class="nav-item">
+                            <a href="{{ route('cabinet.webcont.cargo.controller') }}" class="nav-link @if(request()->is('cabinet/webcont/cargo-controller*')) active @endif">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Груз: Контроллер</p>
+                            </a>
+                        </li>
+                        @endrole
                     </ul>
                 </li>
                 @endrole
+
+                <li class="nav-item">
+                    <a href="{{ route('cabinet.service.index') }}" class="nav-link  @if(request()->is('cabinet/services*')) active @endif">
+                        <i class="nav-icon fas fa-copy"></i>
+                        <p>
+                            Заявки в техслужбу
+                        </p>
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a href="{{ route('logout') }}" class="nav-link">

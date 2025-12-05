@@ -25,7 +25,34 @@
                 <!-- /.card-header -->
                 <div class="card-body">
 
-                    @include('partials.emp_filters')
+                    <div id="emp_filters">
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" checked class="form-check-input" name="emp_status" value="works" id="emp_status1">
+                            <label class="form-check-label" for="emp_status1">Работает</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" name="emp_status" value="fired" id="emp_status2">
+                            <label class="form-check-label" for="emp_status2">Уволен</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" name="emp_status" value="on_decree" id="emp_status3">
+                            <label class="form-check-label" for="emp_status3">На декрете</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" name="emp_status" value="on_holiday" id="emp_status4">
+                            <label class="form-check-label" for="emp_status4">В отпуске</label>
+                        </div>
+
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" name="emp_status" value="at_the_hospital" id="emp_status5">
+                            <label class="form-check-label" for="emp_status5">На больничном</label>
+                        </div>
+                    </div>
+                    <hr>
+
 
                     <table id="emp_table" class="table table-bordered table-striped">
                         <thead>
@@ -35,7 +62,6 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            {{--<th>ИИН</th>--}}
                             <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
@@ -44,53 +70,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($employees as $employee)
-                        <tr>
-                            <th><input v-model="ids" name="{{ $employee->id }}" value="{{ $employee->id }}" type="checkbox" ></th>
-                            <td>{{ $employee->id }}</td>
-                            <td>{{ $employee->full_name }}</td>
-                            <td>
-                                {{ $employee->short_ru_name }}
-                            </td>
-                            <td>
-                                {{ $employee->department_name }}
-                            </td>
-                            {{--<td>
-                                {{ $employee->iin }}
-                            </td>--}}
-                            <td>
-                                @if(array_key_exists($employee->id, $ckud_users_numbers))
-                                    <i title="В СКУД есть" style="font-size: 20px; color: green;" class="fa fa-check-circle" aria-hidden="true"></i> &nbsp;
-                                @else
-                                    <i title="В СКУД нет" style="font-size: 20px; color: red;" class="fa fa-minus" aria-hidden="true"></i>
-                                @endif
-                            </td>
-                            <td>
-                                {{ $employee->position_name }}
-                            </td>
-                            <td>
-                                    {{ trans("words.".$employee->status) }}
-                            </td>
-                            <td>
-                                @if(strlen($employee->uuid) == 7)
-                                    <i title="Новый бейджик" style="font-size: 20px; color: green;" class="fa fa-id-card" aria-hidden="true"></i> &nbsp;
-                                @endif
-                                <a target="_blank" href="{{ route('admin.employee.badge', ['id' => $employee->id]) }}">
-                                    <i class="fa fa-print"></i>
-                                </a>
-                                &nbsp;&nbsp;
 
-                                @if($employee->badge == 1)
-                                    <i style="font-size: 20px; color: green;" class="fa fa-check-circle"></i>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('employee.edit', ['employee' => $employee->id]) }}">Ред.</a>
-                                &nbsp;&nbsp;
-                                <button type="button" class="btn btn-success" @click="authByUser({{ $employee->id }})">Войти</button>
-                            </td>
-                        </tr>
-                        @endforeach
                         </tbody>
                         <tfoot>
                         <tr>
@@ -99,7 +79,6 @@
                             <th>ФИО</th>
                             <th>Компания</th>
                             <th>Отдел</th>
-                            {{--<th>ИИН</th>--}}
                             <th>СКУД</th>
                             <th>Должность</th>
                             <th>Статус</th>
@@ -128,38 +107,38 @@
 
     <script>
         $(function () {
-            $("#emp_table").DataTable({
-                "responsive": true,
-                "autoWidth": false,
-                "language": {
-                    "url": "/dist/Russian.json"
+            var table = $("#emp_table").DataTable({
+                serverSide: true,
+                processing: true,
+                responsive: true,
+                autoWidth: false,
+                ajax: {
+                    url: "{{ route('admin.employee.list') }}",
+                    data: function (d) {
+                        d.emp_status = $('input:checkbox[name="emp_status"]:checked')
+                            .map(function () { return this.value })
+                            .get();
+                    }
+                },
+                columns: [
+                    { data: 'checkbox', orderable: false, searchable: false },
+                    { data: 'id' },
+                    { data: 'full_name', searchable: true },
+                    { data: 'short_ru_name' , searchable: true },
+                    { data: 'department_name' , searchable: true },
+                    { data: 'skud' },
+                    { data: 'position_name', searchable: true },
+                    { data: 'status' },
+                    { data: 'badge', orderable: false, searchable: false },
+                    { data: 'action', orderable: false, searchable: false },
+                ],
+                language: {
+                    url: "/dist/Russian.json"
                 }
             });
 
-            $.fn.dataTable.ext.search.push(
-                function( settings, searchData, index, rowData, counter ) {
-
-                    var offices = $('input:checkbox[name="emp_status"]:checked').map(function() {
-                        return this.value;
-                    }).get();
-
-
-                    if (offices.length === 0) {
-                        return true;
-                    }
-
-                    if (offices.indexOf(searchData[7]) !== -1) {
-                        return true;
-                    }
-
-                    return false;
-                }
-            );
-
-            var table = $('#emp_table').DataTable();
-
-            $('input:checkbox').on('change', function () {
-                table.draw();
+            $('input[class="form-check-input"]').on('change', function () {
+                table.ajax.reload();
             });
         });
     </script>
@@ -175,7 +154,7 @@
             methods: {
                 printBadge(){
                     console.log("ids: ",this.ids);
-                    if(this.ids.length != 0) {
+                    if(this.ids.length !== 0) {
                         window.open('/admin/employee/badges/'+this.ids.join(), '_blank');
                     }
                 },

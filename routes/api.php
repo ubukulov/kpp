@@ -1,84 +1,80 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\API\ApiController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\TechniqueController;
+use App\Http\Controllers\API\KitchenController;
+use App\Http\Controllers\API\WebcontController;
+use App\Http\Controllers\API\AggregationController;
+use App\Http\Controllers\API\InventSamsungController;
+use App\Http\Controllers\API\FirebaseController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+Route::post('/auth/login', [ApiController::class, 'loginUser']);
 
-/*Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('v2')->group(function () {
+    Route::get('get-companies', [ApiController::class, 'getCompanies']);
+    Route::get('get-bt', [ApiController::class, 'getBt']);
+    Route::get('get-lift-capacity', [ApiController::class, 'getLiftCapacity']);
 });
 
-Route::post('/order-permit-by-driver', 'DriverController@orderPermitByDriver');
+Route::middleware('auth:sanctum')->group(function () {
 
-Route::group(['namespace' => 'API'], function(){
-    Route::get('/get-driver-info-by-phone/{phone}', 'ApiController@getDriverInfoByPhone');
-    //Route::get('/get-companies-info', 'ApiController@getCompaniesInfo');
-    Route::post('/sync-permit-status-with-other-platform', 'ApiController@changePermitStatus');
-    Route::post('/authentication', 'ApiController@authentication');
-});*/
+    Route::get('/get-companies-info', [ApiController::class, 'getCompaniesInfo']);
+    Route::get('get-all-roles', [ApiController::class, 'getAllRoles']);
+    Route::get('/get-roles', [UserController::class, 'getUserRoles']);
+    Route::get('printers', [ApiController::class, 'getPrinters']);
 
-Route::post('/auth/login', 'API\ApiController@loginUser');
-Route::group(['prefix' => 'v2'], function (){
-    Route::get('get-companies', 'API\ApiController@getCompanies');
-});
-Route::group(['namespace' => 'API', 'middleware' => 'auth:sanctum'], function(){
-    Route::get('/get-companies-info', 'ApiController@getCompaniesInfo');
-    Route::get('/get-roles', 'UserController@getUserRoles');
-    Route::group(['prefix' => 'user'], function(){
-        Route::get('/get-user-info', 'UserController@getUserInfoByToken');
+    Route::prefix('user')->group(function () {
+        Route::get('/get-user-info', [UserController::class, 'getUserInfoByToken']);
     });
 
     # Technique
-    Route::prefix('technique')->group(function(){
-        Route::get('/get-technique-places', 'TechniqueController@getTechniquePlaces');
-        Route::post('/get-information-by-qr-code', 'TechniqueController@getInformationByQRCode');
-        Route::post('/receive-technique-to-place', 'TechniqueController@receiveTechniqueToPlace');
-        Route::post('/move-technique-to-other-place', 'TechniqueController@moveTechniqueToOtherPlace');
-        Route::post('/shipping-technique', 'TechniqueController@shippingTechnique');
+    Route::prefix('technique')->group(function () {
+        Route::get('/get-technique-places', [TechniqueController::class, 'getTechniquePlaces']);
+        Route::post('/get-information-by-qr-code', [TechniqueController::class, 'getInformationByQRCode']);
+        Route::post('/receive-technique-to-place', [TechniqueController::class, 'receiveTechniqueToPlace']);
+        Route::post('/move-technique-to-other-place', [TechniqueController::class, 'moveTechniqueToOtherPlace']);
+        Route::post('/shipping-technique', [TechniqueController::class, 'shippingTechnique']);
     });
 
     # Ashana
-    Route::prefix('ashana')->group(function(){
-        Route::get('/get-items', 'KitchenController@getItems');
-        Route::post('/get-items-by-filter', 'KitchenController@getItemsByFilter');
-        Route::post('get-user-by-uuid', 'KitchenController@getUserByUuid');
-        Route::post('fix-changes', 'KitchenController@fixChanges');
+    Route::prefix('ashana')->group(function () {
+        Route::get('/get-items', [KitchenController::class, 'getItems']);
+        Route::post('/get-items-by-filter', [KitchenController::class, 'getItemsByFilter']);
+        Route::post('get-user-by-uuid', [KitchenController::class, 'getUserByUuid']);
+        Route::post('fix-changes', [KitchenController::class, 'fixChanges']);
     });
 
     # Webcont
-    Route::prefix('webcont')->group(function(){
-        Route::get('get-webcont-containers-zones', 'WebcontController@getContainersZones');
-        Route::get('get-webcont-techniques', 'WebcontController@getTechniques');
-        Route::post('get-container-info', 'WebcontController@getContainerInfo');
-        Route::get('get-free-rows', 'WebcontController@getFreeRows');
-        Route::get('get-free-slingers', 'WebcontController@getFreeSlingers');
+    Route::prefix('webcont')->group(function () {
+        Route::get('get-webcont-containers-zones', [WebcontController::class, 'getContainersZones']);
+        Route::get('get-webcont-techniques', [WebcontController::class, 'getTechniques']);
+        Route::post('get-container-info', [WebcontController::class, 'getContainerInfo']);
+        Route::get('get-free-rows', [WebcontController::class, 'getFreeRows']);
+        Route::get('get-free-slingers', [WebcontController::class, 'getFreeSlingers']);
+        Route::get('get-container-tasks', [WebcontController::class, 'getContainerTasks']);
+        Route::get('get-container-task/{id}/details', [WebcontController::class, 'getContainerTaskDetails']);
     });
 
     # Aggregation JTI
-    Route::post('aggregation', 'AggregationController@aggregation');
-    Route::get('get-aggregation-codes', 'AggregationController@getAggregationCodes');
-    Route::get('get-aggregation-qty', 'AggregationController@getAggregationQty');
-    Route::post('delete-aggregation-sscc', 'AggregationController@deleteAggregationSscc');
-    Route::get('get-aggregations-ordercodes', 'AggregationController@getAggregationOrderCodes');
-    Route::post('aggregation-order', 'AggregationController@aggregationOrder');
-    Route::get('get-aggregation-order-scanqty', 'AggregationController@getAggregationOrderScanQty');
+    Route::post('aggregation', [AggregationController::class, 'aggregation']);
+    Route::get('get-aggregation-codes', [AggregationController::class, 'getAggregationCodes']);
+    Route::get('get-aggregation-qty', [AggregationController::class, 'getAggregationQty']);
+    Route::post('delete-aggregation-sscc', [AggregationController::class, 'deleteAggregationSscc']);
+    Route::get('get-aggregations-ordercodes', [AggregationController::class, 'getAggregationOrderCodes']);
+    Route::post('aggregation-order', [AggregationController::class, 'aggregationOrder']);
+    Route::get('get-aggregation-order-scanqty', [AggregationController::class, 'getAggregationOrderScanQty']);
 
     # Inventory Samsung
-    Route::get('invent-list', 'InventSamsungController@getInventCodeList');
-    Route::post('inventory', 'InventSamsungController@inventory');
-    Route::get('inventory', 'InventSamsungController@getInventory');
-    Route::get('inventory/{id}', 'InventSamsungController@getInventoryById');
+    Route::get('invent-list', [InventSamsungController::class, 'getInventCodeList']);
+    Route::post('inventory', [InventSamsungController::class, 'inventory']);
+    Route::get('inventory', [InventSamsungController::class, 'getInventory']);
+    Route::get('inventory/{id}', [InventSamsungController::class, 'getInventoryById']);
 
     # Parking
-    Route::post('parking', 'InventSamsungController@parking');
+    Route::post('parking', [InventSamsungController::class, 'parking']);
+
+    # Firebase
+    Route::post('save-fcm-token', [FirebaseController::class, 'saveFcmToken']);
 });
